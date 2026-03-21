@@ -1,0 +1,108 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{8DC64CE1-E9D4-4859-8FCF-E3B2DD1C253A}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="loader.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\SimpleNumbersDLL\SimpleNumbers.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\CalcPriceDLL\CalcPrice.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\ExplorerDLL\Explorer.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\RunTaskFindDLL\RunTaskFind.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\RunTaskShellExecuteDLL\RunTaskShellExecute.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\RunTasksDLL\RunTasks.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="loader">
+        <MSBuild Projects="loader.dproj"/>
+    </Target>
+    <Target Name="loader:Clean">
+        <MSBuild Projects="loader.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="loader:Make">
+        <MSBuild Projects="loader.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="SimpleNumbers">
+        <MSBuild Projects="..\SimpleNumbersDLL\SimpleNumbers.dproj"/>
+    </Target>
+    <Target Name="SimpleNumbers:Clean">
+        <MSBuild Projects="..\SimpleNumbersDLL\SimpleNumbers.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SimpleNumbers:Make">
+        <MSBuild Projects="..\SimpleNumbersDLL\SimpleNumbers.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="CalcPrice">
+        <MSBuild Projects="..\CalcPriceDLL\CalcPrice.dproj"/>
+    </Target>
+    <Target Name="CalcPrice:Clean">
+        <MSBuild Projects="..\CalcPriceDLL\CalcPrice.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CalcPrice:Make">
+        <MSBuild Projects="..\CalcPriceDLL\CalcPrice.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Explorer">
+        <MSBuild Projects="..\ExplorerDLL\Explorer.dproj"/>
+    </Target>
+    <Target Name="Explorer:Clean">
+        <MSBuild Projects="..\ExplorerDLL\Explorer.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Explorer:Make">
+        <MSBuild Projects="..\ExplorerDLL\Explorer.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="RunTaskFind">
+        <MSBuild Projects="..\RunTaskFindDLL\RunTaskFind.dproj"/>
+    </Target>
+    <Target Name="RunTaskFind:Clean">
+        <MSBuild Projects="..\RunTaskFindDLL\RunTaskFind.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="RunTaskFind:Make">
+        <MSBuild Projects="..\RunTaskFindDLL\RunTaskFind.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="RunTaskShellExecute">
+        <MSBuild Projects="..\RunTaskShellExecuteDLL\RunTaskShellExecute.dproj"/>
+    </Target>
+    <Target Name="RunTaskShellExecute:Clean">
+        <MSBuild Projects="..\RunTaskShellExecuteDLL\RunTaskShellExecute.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="RunTaskShellExecute:Make">
+        <MSBuild Projects="..\RunTaskShellExecuteDLL\RunTaskShellExecute.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="RunTasks">
+        <MSBuild Projects="..\RunTasksDLL\RunTasks.dproj"/>
+    </Target>
+    <Target Name="RunTasks:Clean">
+        <MSBuild Projects="..\RunTasksDLL\RunTasks.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="RunTasks:Make">
+        <MSBuild Projects="..\RunTasksDLL\RunTasks.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="loader;SimpleNumbers;CalcPrice;Explorer;RunTaskFind;RunTaskShellExecute;RunTasks"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="loader:Clean;SimpleNumbers:Clean;CalcPrice:Clean;Explorer:Clean;RunTaskFind:Clean;RunTaskShellExecute:Clean;RunTasks:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="loader:Make;SimpleNumbers:Make;CalcPrice:Make;Explorer:Make;RunTaskFind:Make;RunTaskShellExecute:Make;RunTasks:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

@@ -1,76 +1,108 @@
-library RunTaskFind;
+п»їlibrary RunTaskFind;
+
+{$I ..\..\Common\pool_config.inc}
 
 uses
   Winapi.Windows,
   System.SysUtils,
   System.Classes,
+  System.Math,
+  System.Generics.Collections,
   system.StrUtils,
+{$ifdef use_otl}
+  OtlTaskControl,
+  OtlTask,
+  uOmniThreadPoolManager in '..\..\common\uOmniThreadPoolManager.pas',
+{$else}
+  uAutonomiusThreadPool in '..\..\common\uAutonomiusThreadPool.pas',
+{$endif}
   intf_dll in '..\..\Common\intf_dll.pas',
+  intf_dll_manager in '..\..\common\intf_dll_manager.pas',
   intf_common in '..\..\common\intf_common.pas',
-  intf_tasks in '..\..\common\intf_tasks.pas',
-  uAutonomiusThreadPool in '..\..\common\uAutonomiusThreadPool.pas';
+  intf_tasks in '..\..\common\intf_tasks.pas';
 
 type
+  /// <summary>
+  /// РР·РѕР»РёСЂРѕРІР°РЅРЅС‹Р№ РєРѕРЅС‚РµРєСЃС‚ РѕРґРЅРѕРіРѕ СЃРєР°РЅРёСЂРѕРІР°РЅРёСЏ.
+  /// РЎРѕР·РґР°С‘С‚СЃСЏ Р·Р°РЅРѕРІРѕ РїСЂРё РєР°Р¶РґРѕРј Start() вЂ” РіР°СЂР°РЅС‚РёСЂСѓРµС‚ РѕС‚СЃСѓС‚СЃС‚РІРёРµ
+  /// РіРѕРЅРѕРє РґР°РЅРЅС‹С… РїСЂРё РїРѕРІС‚РѕСЂРЅС‹С… РІС‹Р·РѕРІР°С… РёР»Рё РѕРґРЅРѕРІСЂРµРјРµРЅРЅС‹С… СЃРєР°РЅР°С….
+  /// </summary>
+  TScanContext = class
+  public
+    ResultList: TList<WideString>;
+    ExtList: TStringList;
+    FileCount: Integer;
+    LastCallbackTime: TDateTime;
+    StartCallback: TProc<WideString>;
+    RunCallback: TProc<WideString>;
+    SyncCallback: TProc<WideString>;
+    BreakCallback: TProc<WideString>;
+    FinishCallback: TProc<WideString>;
+    Terminated: boolean;
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
   TRunTaskFindInDir = class(TInterfacedObject, IDLLIntf, IRunTask, IRunTaskFindInDir)
   private
-    FResultList: TArray<WideString>;
-    FThreadManager: TThreadPoolManager;
-    FExtList: TStringList;
+    FResultList: TList<WideString>;     // РєРѕРїРёСЂСѓРµС‚СЃСЏ СЃСЋРґР° РїРѕ Р·Р°РІРµСЂС€РµРЅРёРё
+    FThreadManager: TOmniThreadPoolManager;
+    FTaskCtrl: TResultType;              // С‚РµРєСѓС‰Р°СЏ Р°РєС‚РёРІРЅР°СЏ Р·Р°РґР°С‡Р°
+    FScanCtx: TScanContext;              // РєРѕРЅС‚РµРєСЃС‚ С‚РµРєСѓС‰РµРіРѕ СЃРєР°РЅРёСЂРѕРІР°РЅРёСЏ
     FStartCallback: TProc<WideString>;
     FRunCallback: TProc<WideString>;
     FSyncCallback: TProc<WideString>;
     FBreakCallback: TProc<WideString>;
     FFinishCallback: TProc<WideString>;
-    procedure ScanDir(ARooDir: WideString);
-    procedure DoStartCallback(AMsg: WideString);
-    procedure DoRunCallback(AMsg: WideString);
-    procedure DoSyncCallback(AMsg: WideString);
-    procedure DoBreakCallback(AMsg: WideString);
-    procedure DoFinishCallback(AMsg: WideString);
+    procedure ScanDir(ACtx: TScanContext; ARootDir: WideString);
+    procedure DoCallback(const ACtx: TScanContext; ACallback: TProc<WideString>; AMsg: WideString);
+    procedure RunScan(ACommand, AParams: WideString);
   public
     constructor Create;
     destructor Destroy; override;
     function GetDescription: WideString; safecall;
     procedure Init; safecall;
     procedure Fin; safecall;
-    function Start(ACommand: WideString; AParams: WideString): TThread; safecall;
-    procedure Stop(AThread: TThread); safecall;
+    function Start(ACommand: WideString; AParams: WideString): TResultType; safecall;
+    procedure Stop(const AResult: TResultType); safecall;
     function Info: WideString; safecall;
-    procedure SetCallbacks(StartCallback,  //уведомляем о запуске
-                           RunCallback,    //отображаем ход выполнения
-                           BreakCallback,  //уведомляем о прерывании
-                           FinishCallback, //уведомляем о завершении
-                           SyncCallback:   //выполняем синхронизацию
+    procedure SetCallbacks(StartCallback,
+                           RunCallback,
+                           BreakCallback,
+                           FinishCallback,
+                           SyncCallback:
                            TProc<WideString>); safecall;
     function ResultList: TArray<WideString>; safecall;
   end;
 
   TRunTaskFindInExeFile = class(TInterfacedObject, IDLLIntf, IRunTask, IRunTaskFindInExeFile)
   private
-    FResultList: TArray<WideString>;
-    FThreadManager: TThreadPoolManager;
+    FResultList: TList<WideString>;
+    FThreadManager: TOmniThreadPoolManager;
+    FTaskCtrl: TResultType;
     FStartCallback: TProc<WideString>;
     FBreakCallback: TProc<WideString>;
     FFinishCallback: TProc<WideString>;
     FErrorCallback: TProc<WideString>;
-    procedure CalcTextOnExeFile(AFileName: WideString; AFindText: WideString);
+    procedure CalcTextOnExeFile(AFileName: WideString; AFindText: WideString; AResultList: TList<WideString>);
     procedure DoStartCallback(AMsg: WideString);
     procedure DoBreakCallback(AMsg: WideString);
     procedure DoFinishCallback(AMsg: WideString);
     procedure DoErrorCallback(AMsg: WideString);
+    procedure RunExeSearch(ACommand, AFindText: WideString);
   public
     constructor Create;
     destructor Destroy; override;
     function GetDescription: WideString; safecall;
     procedure Init; safecall;
     procedure Fin; safecall;
-    function Start(ACommand: WideString; AParams: WideString): TThread; safecall;
-    procedure Stop(AThread: TThread); safecall;
+    function Start(ACommand: WideString; AParams: WideString): TResultType; safecall;
+    procedure Stop(const AResult: TResultType); safecall;
     function Info: WideString; safecall;
-    procedure SetCallbacks(StartCallback,  //уведомляем о запуске
-                           BreakCallback,  //уведомляем о прерывании
-                           ErrorCallback,  //уведомляем об ошибке
-                           FinishCallback:   //выполняем синхронизацию
+    procedure SetCallbacks(StartCallback,
+                           BreakCallback,
+                           ErrorCallback,
+                           FinishCallback:
                            TProc<WideString>); safecall;
     function ResultList: TArray<WideString>; safecall;
   end;
@@ -91,139 +123,247 @@ exports
   InitRunTaskFindInDir,
   InitRunTaskFindInExeFile;
 
-{ TRunTaskFindInDir }
+constructor TScanContext.Create;
+begin
+  inherited Create;
+  ResultList := TList<WideString>.Create;
+  ExtList := TStringList.Create;
+  FileCount := 0;
+  LastCallbackTime := 0;
+  Terminated := false;
+end;
+
+destructor TScanContext.Destroy;
+begin
+  FreeAndNil(ExtList);
+  FreeAndNil(ResultList);
+  inherited;
+end;
+
+{ ==================== TRunTaskFindInDir ==================== }
 
 constructor TRunTaskFindInDir.Create;
 begin
-  FResultList := nil;
-  FExtList := TStringList.Create;
-  FThreadManager := TThreadPoolManager.Create;
+  FResultList := TList<WideString>.Create;
+  FThreadManager := TOmniThreadPoolManager.Create;
+  FTaskCtrl := nil;
+  FScanCtx := nil;
+  FStartCallback := nil;
+  FRunCallback := nil;
+  FSyncCallback := nil;
+  FBreakCallback := nil;
+  FFinishCallback := nil;
 end;
 
 destructor TRunTaskFindInDir.Destroy;
 begin
+{$ifdef use_otl}
+  if Assigned(FTaskCtrl) then
+    FTaskCtrl.Terminate(3000);
+{$else}
+  if Assigned(FTaskCtrl) then
+    FTaskCtrl.Terminate;
+{$endif}
+  FreeAndNil(FScanCtx);
   FreeAndNil(FThreadManager);
-  FreeAndNil(FExtList);
-  FResultList := nil;
+  FreeAndNil(FResultList);
   inherited;
 end;
 
-procedure TRunTaskFindInDir.DoBreakCallback(AMsg: WideString);
+procedure TRunTaskFindInDir.DoCallback(const ACtx: TScanContext; ACallback: TProc<WideString>; AMsg: WideString);
 begin
-  if Assigned(FBreakCallback) then
-    FBreakCallback(AMsg);
+  if Assigned(ACallback) then
+    ACallback(AMsg);
 end;
 
-procedure TRunTaskFindInDir.DoFinishCallback(AMsg: WideString);
-begin
-  if Assigned(FFinishCallback) then
-    FFinishCallback(AMsg);
-end;
-
-procedure TRunTaskFindInDir.DoRunCallback(AMsg: WideString);
-begin
-  if Assigned(FRunCallback) then
-    FRunCallback(AMsg);
-end;
-
-procedure TRunTaskFindInDir.DoStartCallback(AMsg: WideString);
-begin
-  if Assigned(FStartCallback) then
-    FStartCallback(AMsg);
-end;
-
-procedure TRunTaskFindInDir.DoSyncCallback(AMsg: WideString);
-begin
-  if Assigned(FSyncCallback) then
-    FSyncCallback(AMsg);
-end;
-
-procedure TRunTaskFindInDir.Fin;
-begin
-
-end;
-
-function TRunTaskFindInDir.GetDescription: WideString;
-begin
-  Result := 'Асинхронный рекурсивный поиск файлов по маске в указанной директории';
-end;
-
-function TRunTaskFindInDir.Info: WideString;
-begin
-  Result := 'Для работы указываются 2 параметра: '#13#10 +
-            '1. ACommand: первоначальный каталог для поиска. Может быть пустым. '#13#10 +
-            'В этом случае поиск идёт по всем локальным дискам'#13#10+
-            '2. AParams: маски файлов через запятую (например, txt,bmp). Если не заданы, выбираются все файлы.'#13#10 +
-            'Результаты поиска заносятся в ResultList';
-end;
-
-procedure TRunTaskFindInDir.Init;
-begin
-
-end;
-
-function TRunTaskFindInDir.ResultList: TArray<WideString>;
-begin
-  Result := FResultList;
-end;
-
-procedure TRunTaskFindInDir.ScanDir(ARooDir: WideString);
+procedure TRunTaskFindInDir.ScanDir(ACtx: TScanContext; ARootDir: WideString);
 var
+  DirStack: TStack<WideString>;
+  curDir: WideString;
   SR: TSearchRec;
   Res: Integer;
   ResFilePath: string;
   i: integer;
   FileExt: string;
 begin
-  // Обходим файлы в текущем каталоге
-  Res := FindFirst(IncludeTrailingPathDelimiter(ARooDir) + '*.*', faAnyFile, SR);
+  DirStack := TStack<WideString>.Create;
   try
-    while Res = 0 do
+    DirStack.Push(ARootDir);
+
+    while DirStack.Count > 0 do
     begin
-      // Игнорируем . и ..
-      if (SR.Name = '.') or (SR.Name = '..') then
-      begin
-        Res := FindNext(SR);
-        Continue;
-      end;
+//      if TThread.CheckTerminated then Exit;
+      if ACtx.Terminated then
+        exit;
 
-      ResFilePath := IncludeTrailingPathDelimiter(ARooDir) + SR.Name;
-      DoRunCallback(ResFilePath);
+      curDir := DirStack.Pop;
 
-      if (SR.Attr and faDirectory) <> 0 then
-      begin
-        // Это папка: рекурсивно углубляемся
-        ScanDir(ResFilePath);
-      end
-        else
-      begin
-        if Assigned(FExtList) and (FExtList.Count > 0) then
+      Res := FindFirst(IncludeTrailingPathDelimiter(curDir) + '*.*', faAnyFile, SR);
+      try
+        while Res = 0 do
         begin
-          // Проверяем расширение файла
-          FileExt := LowerCase(ExtractFileExt(SR.Name));
-          for i := 0 to FExtList.Count - 1 do
+//          if TThread.CheckTerminated then Exit;
+          if ACtx.Terminated then
+            exit;
+
+          if (SR.Name = '.') or (SR.Name = '..') then
           begin
-            if (FileExt = FExtList[i]) then
+            Res := FindNext(SR);
+            Continue;
+          end;
+
+          ResFilePath := IncludeTrailingPathDelimiter(curDir) + SR.Name;
+
+          if (SR.Attr and faDirectory) <> 0 then
+          begin
+            DirStack.Push(ResFilePath);
+          end
+          else
+          begin
+            inc(ACtx.FileCount);
+
+            DoCallback(ACtx, ACtx.RunCallback, ResFilePath);
+
+            if ACtx.ExtList.Count > 0 then
             begin
-              SetLength(FResultList, length(FResultList) + 1);
-              FResultList[High(FResultList)] := ResFilePath;
-              DoSyncCallback(ResFilePath);
-              Break;
+              FileExt := LowerCase(ExtractFileExt(SR.Name));
+              for i := 0 to ACtx.ExtList.Count - 1 do
+              begin
+                if FileExt = ACtx.ExtList[i] then
+                begin
+                  ACtx.ResultList.Add(ResFilePath);
+                  DoCallback(ACtx, ACtx.SyncCallback, ResFilePath);
+                  Break;
+                end;
+              end;
+            end
+            else
+            begin
+              ACtx.ResultList.Add(ResFilePath);
+              DoCallback(ACtx, ACtx.SyncCallback, ResFilePath);
             end;
           end;
-        end
-          else
-        begin
-          SetLength(FResultList, length(FResultList) + 1);
-          FResultList[High(FResultList)] := ResFilePath;
-          DoSyncCallback(ResFilePath);
-        end;
-      end;
 
-      Res := FindNext(SR);
+          Res := FindNext(SR);
+        end;
+      finally
+        FindClose(SR);
+      end;
     end;
   finally
-    FindClose(SR);
+    FreeAndNil(DirStack);
+  end;
+end;
+
+procedure TRunTaskFindInDir.RunScan(ACommand, AParams: WideString);
+var
+  exts: TArray<string>;
+  ext: string;
+  FileExtMsg: WideString;
+  i: integer;
+  lDisks: TStringList;
+  c: char;
+  s: string;
+  SrcCount: Integer;
+begin
+  // РЎРѕР·РґР°С‘Рј РР—РћР›РР РћР’РђРќРќР«Р™ РєРѕРЅС‚РµРєСЃС‚ вЂ” РЅРёРєР°РєРёС… РіРѕРЅРѕРє СЃ РїСЂРµРґС‹РґСѓС‰РёРј/СЃР»РµРґСѓСЋС‰РёРј СЃРєР°РЅРѕРј
+  FScanCtx := TScanContext.Create;
+  try
+    // РџР°СЂСЃРёРј СЂР°СЃС€РёСЂРµРЅРёСЏ
+    exts := SplitString(AParams, ',');
+    for i := low(exts) to High(exts) do
+    begin
+      ext := trim(AnsiReplaceText(Exts[i], '.', ''));
+      if ext <> '' then
+        FScanCtx.ExtList.Add('.' + ext);
+    end;
+    if FScanCtx.ExtList.Count > 0 then
+      FileExtMsg := ' РїРѕ С„Р°Р№Р»Р°Рј СЃ СЂР°СЃС€РёСЂРµРЅРёСЏРјРё: ' + FScanCtx.ExtList.DelimitedText
+    else
+      FileExtMsg := ' РїРѕ РІСЃРµРј С„Р°Р№Р»Р°Рј';
+
+    // РљРѕРїРёСЂСѓРµРј callback'Рё РІ РєРѕРЅС‚РµРєСЃС‚ (С‡С‚РѕР±С‹ Start() РЅРµ РјРѕРі РёС… РёР·РјРµРЅРёС‚СЊ РІРѕ РІСЂРµРјСЏ СЂР°Р±РѕС‚С‹)
+    FScanCtx.StartCallback := FStartCallback;
+    FScanCtx.RunCallback := FRunCallback;
+    FScanCtx.SyncCallback := FSyncCallback;
+    FScanCtx.BreakCallback := FBreakCallback;
+    FScanCtx.FinishCallback := FFinishCallback;
+    FScanCtx.LastCallbackTime := Now;
+
+    if DirectoryExists(ACommand) then
+    begin
+      // РЎРєР°РЅРёСЂРѕРІР°РЅРёРµ РѕРґРЅРѕРіРѕ РєР°С‚Р°Р»РѕРіР°
+      DoCallback(FScanCtx, FScanCtx.StartCallback,
+        'Р—Р°РїСѓС‰РµРЅРѕ СЃРєР°РЅРёСЂРѕРІР°РЅРёРµ РєР°С‚Р°Р»РѕРіР° ' + ACommand + FileExtMsg);
+      ScanDir(FScanCtx, ACommand);
+//      if not TThread.CheckTerminated then
+      if not FScanCtx.Terminated then
+        DoCallback(FScanCtx, FScanCtx.FinishCallback,
+          'CРєР°РЅРёСЂРѕРІР°РЅРёРµ РєР°С‚Р°Р»РѕРіР° ' + ACommand + ' Р·Р°РІРµСЂС€РµРЅРѕ');
+    end
+    else
+    begin
+      // РЎРєР°РЅРёСЂРѕРІР°РЅРёРµ Р»РѕРєР°Р»СЊРЅС‹С… РґРёСЃРєРѕРІ
+      lDisks := TStringList.Create;
+      try
+        if ACommand <> '' then
+        begin
+          exts := SplitString(ACommand, ';');
+          for i := Low(exts) to High(exts) do
+          begin
+            ext := exts[i];
+            if (ext <> '') and DirectoryExists(ext) then
+              lDisks.Add(ext);
+          end;
+        end
+        else
+        begin
+          for c := 'A' to 'Z' do
+          begin
+            s := c + ':';
+            if GetDriveType(PChar(s)) = DRIVE_FIXED then
+              lDisks.Add(s);
+          end;
+        end;
+
+        if lDisks.Count > 0 then
+        begin
+          lDisks.Delimiter := ';';
+          if lDisks.Count > 1 then
+            DoCallback(FScanCtx, FScanCtx.StartCallback,
+              'Р—Р°РїСѓС‰РµРЅРѕ СЃРєР°РЅРёСЂРѕРІР°РЅРёРµ Р»РѕРєР°Р»СЊРЅС‹С… РґРёСЃРєРѕРІ ' + lDisks.DelimitedText + FileExtMsg)
+          else
+            DoCallback(FScanCtx, FScanCtx.StartCallback,
+              'Р—Р°РїСѓС‰РµРЅРѕ СЃРєР°РЅРёСЂРѕРІР°РЅРёРµ Р»РѕРєР°Р»СЊРЅРѕРіРѕ РґРёСЃРєР° ' + lDisks[0] + FileExtMsg);
+
+          for i := 0 to lDisks.Count - 1 do
+          begin
+//            if TThread.CheckTerminated then Exit;
+            if FScanCtx.Terminated then
+              exit;
+            ScanDir(FScanCtx, lDisks[i]);
+          end;
+
+//          if not TThread.CheckTerminated then
+          if not FScanCtx.Terminated then
+            DoCallback(FScanCtx, FScanCtx.FinishCallback,
+              'CРєР°РЅРёСЂРѕРІР°РЅРёРµ Р»РѕРєР°Р»СЊРЅС‹С… РґРёСЃРєРѕРІ Р·Р°РІРµСЂС€РµРЅРѕ');
+        end;
+      finally
+        FreeAndNil(lDisks);
+      end;
+    end;
+  finally
+    // РџРµСЂРµРЅРѕСЃРёРј СЂРµР·СѓР»СЊС‚Р°С‚С‹ РІ FResultList (РїРѕС‚РѕРєРѕР±РµР·РѕРїР°СЃРЅРѕ вЂ” РїРѕС‚РѕРє СѓР¶Рµ Р·Р°РІРµСЂС€РёР»СЃСЏ)
+    if Assigned(FScanCtx) then
+    begin
+      SrcCount := FScanCtx.ResultList.Count;
+      FResultList.Clear;
+      FResultList.Capacity := SrcCount;
+      for i := 0 to SrcCount - 1 do
+        FResultList.Add(FScanCtx.ResultList[i]);
+      FreeAndNil(FScanCtx);
+    end;
   end;
 end;
 
@@ -237,114 +377,99 @@ begin
   FSyncCallback := SyncCallback;
 end;
 
-function TRunTaskFindInDir.Start(ACommand, AParams: WideString): TThread;
-var
-  exts: TArray<string>;
-  ext: string;
-  FileExtMsg: WideString;
-  i: integer;
+function TRunTaskFindInDir.Start(ACommand: WideString; AParams: WideString): TResultType;
 begin
-  FExtList.Clear;
-  exts := SplitString(AParams, ',');
-  for i := low(exts) to High(exts) do
-  begin
-    ext := trim(AnsiReplaceText(Exts[i], '.', ''));
-    if ext <> '' then
-      FExtList.Add('.' + ext);
-  end;
-  if FExtList.Count > 0 then
-    FileExtMsg := ' по файлам с расширениями: ' + FExtList.DelimitedText
-  else
-    FileExtMsg := ' по всем файлам';
+  // Р•СЃР»Рё РїСЂРµРґС‹РґСѓС‰РёР№ СЃРєР°РЅ РµС‰С‘ СЂР°Р±РѕС‚Р°РµС‚ вЂ” РѕСЃС‚Р°РЅР°РІР»РёРІР°РµРј
+{$ifdef use_otl}
+  if Assigned(FTaskCtrl) then
+    FTaskCtrl.Terminate(3000);
+{$else}
+  if Assigned(FTaskCtrl) then
+    FTaskCtrl.Terminate;
+{$endif}
 
-  FResultList := nil;
-
-  if DirectoryExists(ACommand) then
-  begin
-    Result := FThreadManager.Start(
+  // Р—Р°РїСѓСЃРєР°РµРј РЅРѕРІС‹Р№ СЃРєР°РЅ
+  Result := FThreadManager.Start(
     procedure
     begin
-      DoStartCallback('Запущено сканирование каталога ' + ACommand + FileExtMsg);
-      ScanDir(ACommand);
-      DoFinishCallback('Cканирование каталога ' + ACommand + ' завершено')
-    end)
-  end
-    else
-  begin
-    Result := FThreadManager.Start(
-    procedure
-    var
-      c: char;
-      s: string;
-      i: integer;
-      lDisks: TStringList;
-    begin
-
-      lDisks := TStringList.Create;
-      try
-        if ACommand <> '' then
-        begin
-          exts := SplitString(ACommand, ';');
-          for i := Low(exts) to High(exts) do
-          begin
-            ext := exts[i];
-            if (ext <> '') and DirectoryExists(ext) then
-              lDisks.Add(ext);
-          end;
-        end
-          else
-        begin
-          for c := 'A' to 'Z' do
-          begin
-            s := c + ':';
-            if GetDriveType(PChar(s)) = DRIVE_FIXED then
-              lDisks.Add(s);
-          end;
-        end;
-        if lDisks.Count > 0 then
-        begin
-          lDisks.Delimiter := ';';
-          if lDisks.Count > 1 then
-            DoStartCallback('Запущено сканирование локальных дисков ' +  lDisks.DelimitedText + FileExtMsg)
-          else
-            DoStartCallback('Запущено сканирование локального диска ' +  lDisks[0] + FileExtMsg);
-          for i := 0 to lDisks.Count - 1 do
-          begin
-            s := lDisks[i];
-            ScanDir(s);
-          end;
-          DoFinishCallback('Cканирование локальных дисков завершено')
-        end;
-      finally
-        FreeAndNil(lDisks);
-      end;
+      RunScan(ACommand, AParams);
     end);
-  end;
+  FTaskCtrl := Result;
 end;
 
-procedure TRunTaskFindInDir.Stop(AThread: TThread);
+procedure TRunTaskFindInDir.Stop(const AResult: TResultType);
 begin
-  DoBreakCallback('Сканирование прервано');
-  FThreadManager.Stop(AThread);
+  if Assigned(FScanCtx) then
+  begin
+    DoCallback(FScanCtx, FScanCtx.BreakCallback, 'РЎРєР°РЅРёСЂРѕРІР°РЅРёРµ РїСЂРµСЂРІР°РЅРѕ');
+    FScanCtx.Terminated := true;
+  end;
+  FThreadManager.Stop(AResult);
 end;
 
-{ TRunTaskFindInExeFile }
+function TRunTaskFindInDir.ResultList: TArray<WideString>;
+begin
+  Result := FResultList.ToArray;
+end;
 
-procedure TRunTaskFindInExeFile.CalcTextOnExeFile(AFileName,
-  AFindText: WideString);
+function TRunTaskFindInDir.GetDescription: WideString;
+begin
+  Result := 'РђСЃРёРЅС…СЂРѕРЅРЅС‹Р№ СЂРµРєСѓСЂСЃРёРІРЅС‹Р№ РїРѕРёСЃРє С„Р°Р№Р»РѕРІ РїРѕ РјР°СЃРєРµ РІ СѓРєР°Р·Р°РЅРЅРѕР№ РґРёСЂРµРєС‚РѕСЂРёРё';
+end;
+
+function TRunTaskFindInDir.Info: WideString;
+begin
+  Result := 'Р”Р»СЏ СЂР°Р±РѕС‚С‹ СѓРєР°Р·С‹РІР°СЋС‚СЃСЏ 2 РїР°СЂР°РјРµС‚СЂР°: '#13#10 +
+            '1. ACommand: РїРµСЂРІРѕРЅР°С‡Р°Р»СЊРЅС‹Р№ РєР°С‚Р°Р»РѕРі РґР»СЏ РїРѕРёСЃРєР°. РњРѕР¶РµС‚ Р±С‹С‚СЊ РїСѓСЃС‚С‹Рј. '#13#10 +
+            'Р’ СЌС‚РѕРј СЃР»СѓС‡Р°Рµ РїРѕРёСЃРє РёРґС‘С‚ РїРѕ РІСЃРµРј Р»РѕРєР°Р»СЊРЅС‹Рј РґРёСЃРєР°Рј'#13#10+
+            '2. AParams: РјР°СЃРєРё С„Р°Р№Р»РѕРІ С‡РµСЂРµР· Р·Р°РїСЏС‚СѓСЋ (РЅР°РїСЂРёРјРµСЂ, txt,bmp). Р•СЃР»Рё РЅРµ Р·Р°РґР°РЅС‹, РІС‹Р±РёСЂР°СЋС‚СЃСЏ РІСЃРµ С„Р°Р№Р»С‹.'#13#10 +
+            'Р РµР·СѓР»СЊС‚Р°С‚С‹ РїРѕРёСЃРєР° Р·Р°РЅРѕСЃСЏС‚СЃСЏ РІ ResultList';
+end;
+
+procedure TRunTaskFindInDir.Init;
+begin
+end;
+
+procedure TRunTaskFindInDir.Fin;
+begin
+end;
+
+{ ==================== TRunTaskFindInExeFile ==================== }
+
+// Boyer-Moore: РїРѕСЃС‚СЂРѕРµРЅРёРµ С‚Р°Р±Р»РёС†С‹ СЃРґРІРёРіРѕРІ
+function BuildBadCharTable(const Pattern: TBytes): TArray<Integer>;
+var
+  i, m: Integer;
+begin
+  m := Length(Pattern);
+  SetLength(Result, 256);
+  for i := 0 to 255 do
+    Result[i] := m;
+  for i := 0 to m - 2 do
+    Result[Pattern[i] and $FF] := m - 1 - i;
+end;
+
+procedure TRunTaskFindInExeFile.CalcTextOnExeFile(AFileName, AFindText: WideString; AResultList: TList<WideString>);
+const
+  ChunkSize = 4 * 1024 * 1024;  // 4 РњР‘ С‡Р°РЅРєРё
 var
   FS: TFileStream;
-  FileBytes, FindBytes: TBytes;
   Exts: TArray<string>;
   ext: string;
   lExts: TStringList;
-  i, j, pos: integer;
+  i, j: integer;
+  FindBytes: TBytes;
+  badTable: TArray<Integer>;
+  n, m, s: Integer;
+  chunk: TBytes;
+  chunkLen: Integer;
+  offsetInFile: Int64;
+  shift: Integer;
 begin
   lExts := TStringList.Create;
   try
-    FResultList := nil;
-    Exts := SplitString(AFindText,',');
-    for i := Low(exts) to High(Exts) do
+    Exts := SplitString(AFindText, ',');
+    for i := Low(Exts) to High(Exts) do
     begin
       ext := AnsiReplaceText(Exts[i], '.', '');
       if trim(ext) <> '' then
@@ -352,50 +477,114 @@ begin
     end;
     if lExts.Count = 0 then
       Exit;
+
     FS := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
     try
-      SetLength(FileBytes, FS.Size);
-      if length(FileBytes) > 0 then
-        FS.Read(FileBytes[0], length(FileBytes));
+      n := FS.Size;
+      if n = 0 then
+        Exit;
+
+      for i := 0 to lExts.Count - 1 do
+      begin
+        if TThread.CheckTerminated then Exit;
+        ext := lExts[i];
+        FindBytes := TEncoding.UTF8.GetBytes(ext);
+        m := Length(FindBytes);
+        if m = 0 then Continue;
+
+        // Boyer-Moore bad character table
+        badTable := BuildBadCharTable(FindBytes);
+
+        // Р§С‚РµРЅРёРµ С‡Р°РЅРєР°РјРё СЃ РїРµСЂРµРєСЂС‹С‚РёРµРј
+        offsetInFile := 0;
+        while offsetInFile < n do
+        begin
+          if TThread.CheckTerminated then Exit;
+          FS.Position := offsetInFile;
+          chunkLen := Min(ChunkSize + m - 1, n - offsetInFile);
+          SetLength(chunk, chunkLen);
+          FS.ReadBuffer(chunk[0], chunkLen);
+
+          // РџРѕРёСЃРє РІ С‡Р°РЅРєРµ (Р‘РѕР№РµСЂ-РњСѓСЂ)
+          s := 0;
+          while s <= chunkLen - m do
+          begin
+            j := m - 1;
+            while (j >= 0) and (chunk[s + j] = FindBytes[j]) do
+              Dec(j);
+            if j < 0 then
+            begin
+              // РќР°Р№РґРµРЅРѕ!
+              AResultList.Add(IntToStr(offsetInFile + s) + '=' + ext);
+              Inc(s);
+            end
+            else
+            begin
+              // РЎРґРІРёРі РїРѕ С‚Р°Р±Р»РёС†Рµ РїР»РѕС…РёС… СЃРёРјРІРѕР»РѕРІ
+              if s + m >= chunkLen then
+                shift := m
+              else
+                shift := badTable[chunk[s + m - 1] and $FF];
+              Inc(s, Max(1, shift));
+            end;
+          end;
+
+          // РЎРґРІРёРі СЃ РїРµСЂРµРєСЂС‹С‚РёРµРј РґР»СЏ РїРѕРёСЃРєР° РЅР° РіСЂР°РЅРёС†Р°С… С‡Р°РЅРєРѕРІ
+          if chunkLen < m then
+            offsetInFile := offsetInFile + chunkLen
+          else
+            offsetInFile := offsetInFile + chunkLen - m + 1;
+        end;
+      end;
     finally
       FS.Free;
-    end;
-
-    for i := 0 to lExts.Count - 1 do
-    begin
-      ext := lExts[i];
-      FindBytes := TEncoding.UTF8.GetBytes(ext);
-      pos := 0;
-      while pos <= length(FileBytes) - length(FindBytes) do
-      begin
-        for j := Low(FindBytes) to High(FindBytes) do
-        begin
-          if FileBytes[Pos + j] <> FindBytes[j] then
-            break;
-          if j = High(FindBytes) then
-          begin
-            SetLength(FResultList, length(FResultList) + 1);
-            FResultList[High(FResultList)] := IntToStr(Pos) + '=' + ext;
-          end;
-        end;
-        inc(pos);
-      end;
     end;
   finally
     FreeAndNil(lExts);
   end;
 end;
 
+procedure TRunTaskFindInExeFile.RunExeSearch(ACommand, AFindText: WideString);
+var
+  LocalList: TList<WideString>;
+  i: Integer;
+begin
+  // Р›РѕРєР°Р»СЊРЅС‹Р№ СЃРїРёСЃРѕРє СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ вЂ” РёР·РѕР»СЏС†РёСЏ РѕС‚ РґСЂСѓРіРёС… РїРѕРёСЃРєРѕРІ
+  LocalList := TList<WideString>.Create;
+  try
+    CalcTextOnExeFile(ACommand, AFindText, LocalList);
+    // РљРѕРїРёСЂСѓРµРј СЂРµР·СѓР»СЊС‚Р°С‚С‹ РІ FResultList (РїРѕС‚РѕРєРѕР±РµР·РѕРїР°СЃРЅРѕ вЂ” РїРѕС‚РѕРє СѓР¶Рµ Р·Р°РІРµСЂС€РёР»СЃСЏ)
+    FResultList.Clear;
+    FResultList.Capacity := LocalList.Count;
+    for i := 0 to LocalList.Count - 1 do
+      FResultList.Add(LocalList[i]);
+  finally
+    FreeAndNil(LocalList);
+  end;
+end;
+
 constructor TRunTaskFindInExeFile.Create;
 begin
-  FResultList := nil;
-  FThreadManager := TThreadPoolManager.Create;
+  FResultList := TList<WideString>.Create;
+  FThreadManager := TOmniThreadPoolManager.Create;
+  FTaskCtrl := nil;
+  FStartCallback := nil;
+  FBreakCallback := nil;
+  FFinishCallback := nil;
+  FErrorCallback := nil;
 end;
 
 destructor TRunTaskFindInExeFile.Destroy;
 begin
+{$ifdef use_otl}
+  if Assigned(FTaskCtrl) then
+    FTaskCtrl.Terminate(3000);
+{$else}
+  if Assigned(FTaskCtrl) then
+    FTaskCtrl.Terminate;
+{$endif}
   FreeAndNil(FThreadManager);
-  FResultList := nil;
+  FreeAndNil(FResultList);
   inherited;
 end;
 
@@ -425,30 +614,28 @@ end;
 
 procedure TRunTaskFindInExeFile.Fin;
 begin
-
 end;
 
 function TRunTaskFindInExeFile.GetDescription: WideString;
 begin
-  Result := 'Асинхронный поиск последовательностей символов в exe-файле';
+  Result := 'РђСЃРёРЅС…СЂРѕРЅРЅС‹Р№ РїРѕРёСЃРє РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚РµР№ СЃРёРјРІРѕР»РѕРІ РІ exe-С„Р°Р№Р»Рµ';
 end;
 
 function TRunTaskFindInExeFile.Info: WideString;
 begin
-  Result := 'Для работы указываются 2 параметра: '#13#10 +
-            '1. ACommand: Путь к exe-файлу. Файл должен существовать. '#13#10 +
-            '2. AParams: Последовательности символов для поиска, разделённые запятой.'#13#10 +
-            'Результаты поиска заносятся в ResultList';
+  Result := 'Р”Р»СЏ СЂР°Р±РѕС‚С‹ СѓРєР°Р·С‹РІР°СЋС‚СЃСЏ 2 РїР°СЂР°РјРµС‚СЂР°: '#13#10 +
+            '1. ACommand: РџСѓС‚СЊ Рє exe-С„Р°Р№Р»Сѓ. Р¤Р°Р№Р» РґРѕР»Р¶РµРЅ СЃСѓС‰РµСЃС‚РІРѕРІР°С‚СЊ. '#13#10 +
+            '2. AParams: РџРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚Рё СЃРёРјРІРѕР»РѕРІ РґР»СЏ РїРѕРёСЃРєР°, СЂР°Р·РґРµР»С‘РЅРЅС‹Рµ Р·Р°РїСЏС‚РѕР№.'#13#10 +
+            'Р РµР·СѓР»СЊС‚Р°С‚С‹ РїРѕРёСЃРєР° Р·Р°РЅРѕСЃСЏС‚СЃСЏ РІ ResultList';
 end;
 
 procedure TRunTaskFindInExeFile.Init;
 begin
-
 end;
 
 function TRunTaskFindInExeFile.ResultList: TArray<WideString>;
 begin
-  Result := FResultList;
+  Result := FResultList.ToArray;
 end;
 
 procedure TRunTaskFindInExeFile.SetCallbacks(StartCallback,
@@ -460,36 +647,48 @@ begin
   FFinishCallback := FinishCallback;
 end;
 
-function TRunTaskFindInExeFile.Start(ACommand, AParams: WideString): TThread;
+function TRunTaskFindInExeFile.Start(ACommand: WideString; AParams: WideString): TResultType;
 begin
   if not FileExists(ACommand) then
   begin
-    DoErrorCallback('Файл ' + ACommand + ' не найден');
-    Exit;
+    DoErrorCallback('Р¤Р°Р№Р» ' + ACommand + ' РЅРµ РЅР°Р№РґРµРЅ');
+    Exit(nil);
   end;
   if ExtractFileExt(ACommand) <> '.exe' then
   begin
-    DoErrorCallback('Файл ' + ACommand + ' не является приложением');
-    Exit;
+    DoErrorCallback('Р¤Р°Р№Р» ' + ACommand + ' РЅРµ СЏРІР»СЏРµС‚СЃСЏ РїСЂРёР»РѕР¶РµРЅРёРµРј');
+    Exit(nil);
   end;
   if trim(AParams) = '' then
   begin
-    DoErrorCallback('Не задан текст для поиска');
-    Exit;
+    DoErrorCallback('РќРµ Р·Р°РґР°РЅ С‚РµРєСЃС‚ РґР»СЏ РїРѕРёСЃРєР°');
+    Exit(nil);
   end;
+
+  // Р•СЃР»Рё РїСЂРµРґС‹РґСѓС‰РёР№ РїРѕРёСЃРє РµС‰С‘ СЂР°Р±РѕС‚Р°РµС‚ вЂ” РѕСЃС‚Р°РЅР°РІР»РёРІР°РµРј
+{$ifdef use_otl}
+  if Assigned(FTaskCtrl) then
+    FTaskCtrl.Terminate(3000);
+{$else}
+  if Assigned(FTaskCtrl) then
+    FTaskCtrl.Terminate;
+{$endif}
+
   Result := FThreadManager.Start(
   procedure
   begin
-    DoStartCallback('Запущен поиск "' + AParams + '"в файле ' + ACommand);
-    CalcTextOnExeFile(ACommand, AParams);
-    DoFinishCallback('Поиск в файле ' + ACommand + ' завершён');
-  end)
+    DoStartCallback('Р—Р°РїСѓС‰РµРЅ РїРѕРёСЃРє "' + AParams + '" РІ С„Р°Р№Р»Рµ ' + ACommand);
+    RunExeSearch(ACommand, AParams);
+    if not TThread.CheckTerminated then
+      DoFinishCallback('РџРѕРёСЃРє РІ С„Р°Р№Р»Рµ ' + ACommand + ' Р·Р°РІРµСЂС€С‘РЅ');
+  end);
+  FTaskCtrl := Result;
 end;
 
-procedure TRunTaskFindInExeFile.Stop(AThread: TThread);
+procedure TRunTaskFindInExeFile.Stop(const AResult: TResultType);
 begin
-  DoBreakCallback('Сканирование прервано');
-  FThreadManager.Stop(AThread);
+  DoBreakCallback('РџРѕРёСЃРє РїСЂРµСЂРІР°РЅ');
+  FThreadManager.Stop(AResult);
 end;
 
 begin

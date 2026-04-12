@@ -7,6 +7,7 @@ uses
   VCL.Forms,
   Winapi.Windows,
   intf_dll in '..\..\Common\intf_dll.pas',
+  intf_dll_manager in '..\..\common\intf_dll_manager.pas',
   intf_common in '..\..\common\intf_common.pas' ,
   uCalcPrice in 'uCalcPrice.pas' {frmCalcPrice};
 
@@ -75,7 +76,6 @@ end;
 procedure TDLLCalcPrice.Run(ACallbackProc: TProc<WideString>; MainAppHandle: HWnd);
 begin
   Application.Handle := MainAppHandle;
-  Application.MainFormOnTaskBar := (GetWindowLong(MainAppHandle, GWL_EXSTYLE) and WS_EX_TOOLWINDOW) <> 0;
   FCalcPrice.CallbackProc := ACallbackProc;
   FCalcPrice.Show;
 end;

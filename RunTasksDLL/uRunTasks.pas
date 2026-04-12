@@ -1,4 +1,6 @@
-unit uRunTasks;
+п»їunit uRunTasks;
+
+{$I pool_config.inc}
 
 interface
 
@@ -10,7 +12,10 @@ uses
   VirtualTrees, cxClasses, dxLayoutControl, vstHelper, System.Generics.Collections,
   dxLayoutcxEditAdapters, dxLayoutControlAdapters, cxContainer, cxEdit,
   Vcl.Menus, cxButtonEdit, Vcl.StdCtrls, cxButtons, cxTextEdit, cxMaskEdit,
-  cxDropDownEdit, IOUtils, cxPC, dxDockControl, dxDockPanel;
+{$ifdef use_otl}
+  OtlTaskControl, OtlTask,
+{$endif}
+  cxDropDownEdit, IOUtils, cxPC, dxDockControl, dxDockPanel, dxCoreGraphics;
 
 type
   TRunTaskStatus = (rtsNone, rtsExecute, rtsBreak, rtsFinish, rtsError);
@@ -33,20 +38,20 @@ type
     FDTStart: TDateTime;
     FCanShowResult: boolean;
     FTaskIntf: IRunTask;
-    FThread: TThread;
+    FTaskCtrl: TResultType;
     FParams: WideString;
     FCommand: WideString;
     FResultList: TList<WideString>;
   public
     constructor Create; override;
     destructor Destroy; override;
-    property dtStart: TDateTime read FDTStart write FDTStart;  //время запуска задания
-    property dtEnd: TDateTime read FDTEnd write FDTEnd;        //время окончания задания
-    property info: string read FInfo write FInfo;              //информация о задании
-    property Status: TRunTaskStatus read FStatus write FStatus; //статус
-    property Thread: TThread read FThread write FThread;        //ссылка на поток задания
-    property CanShowResult: boolean read FCanShowResult write FCanShowResult; //можно ли показать результат (для поиска)
-    property TaskIntf: IRunTask read FTaskIntf write FTaskIntf;  //какой интерфейс выполняет задачу
+    property dtStart: TDateTime read FDTStart write FDTStart;  // РІСЂРµРјСЏ Р·Р°РїСѓСЃРєР° Р·Р°РґР°РЅРёСЏ
+    property dtEnd: TDateTime read FDTEnd write FDTEnd;        // РІСЂРµРјСЏ РѕРєРѕРЅС‡Р°РЅРёСЏ Р·Р°РґР°РЅРёСЏ
+    property info: string read FInfo write FInfo;              // РёРЅС„РѕСЂРјР°С†РёСЏ Рѕ Р·Р°РґР°РЅРёРё
+    property Status: TRunTaskStatus read FStatus write FStatus; // СЃС‚Р°С‚СѓСЃ
+    property TaskCtrl: TResultType read FTaskCtrl write FTaskCtrl; // OTL-Р·Р°РґР°С‡Р° Р·Р°РґР°РЅРёСЏ
+    property CanShowResult: boolean read FCanShowResult write FCanShowResult; // РјРѕР¶РЅРѕ Р»Рё РїРѕРєР°Р·Р°С‚СЊ СЂРµР·СѓР»СЊС‚Р°С‚ (РґР»СЏ РїРѕРёСЃРєР°)
+    property TaskIntf: IRunTask read FTaskIntf write FTaskIntf;  // РєР°РєРѕР№ РёРЅС‚РµСЂС„РµР№СЃ РІС‹РїРѕР»РЅСЏРµС‚ Р·Р°РґР°С‡Сѓ
     property Command: WideString read FCommand write FCommand;
     property Params: WideString read FParams write FParams;
     property ResultList: TList<WideString> read FResultList;
@@ -108,7 +113,7 @@ type
     procedure initRunTasks(AFindInDir: IRunTaskFindInDir;
                            AFindInExeFile: IRunTaskFindInExeFile;
                            AShellExecute: IRunTaskShellExecute);
-    property IntfList: TInterfaceList read FIntfList;
+    property IntfList: TInterfaceList read FIntfList write FIntfList;
   end;
 
 var
@@ -119,7 +124,7 @@ implementation
 uses
   math;
 
-const RunTaskStatusStr: array[TRunTaskStatus] of string = ('', 'Выполняется', 'Прервано', 'Завершено', 'Ошибка');
+const RunTaskStatusStr: array[TRunTaskStatus] of string = ('', 'Р’С‹РїРѕР»РЅСЏРµС‚СЃСЏ', 'РџСЂРµСЂРІР°РЅРѕ', 'Р—Р°РєРѕРЅС‡РµРЅРѕ', 'РћС€РёР±РєР°');
 
 {$R *.dfm}
 
@@ -166,12 +171,12 @@ begin
       use1Column := Supports(obj.TaskIntf, IRunTaskFindInDir);
       if use1Column then
       begin
-        vstResults.Header.Columns[0].Text := 'Файл';
+        vstResults.Header.Columns[0].Text := 'Р¤Р°Р№Р»';
         vstResults.Header.Columns[1].Options := vstResults.Header.Columns[1].Options - [coVisible];
       end
         else
       begin
-        vstResults.Header.Columns[0].Text := 'Текст для поиска';
+        vstResults.Header.Columns[0].Text := 'РўРµРєСЃС‚ РґР»СЏ РїРѕРёСЃРєР°';
         vstResults.Header.Columns[1].Options := vstResults.Header.Columns[1].Options + [coVisible];
       end;
 
@@ -283,9 +288,9 @@ begin
       begin
         if (infocommand = '') or (infoparams = '') then
           obj.info := cbTasks.Text + '. ' + liCommand.CaptionOptions.Text +
-          iif_str(infocommand = '', ': локальные диски. ', ': ' + command + '. ') +
+          iif_str(infocommand = '', ': Р»РѕРєР°Р»СЊРЅС‹Рµ РґРёСЃРєРё. ', ': ' + command + '. ') +
           liParams.CaptionOptions.Text +
-          iif_str(infoparams = '', ': все файлы', ': ' + params);
+          iif_str(infoparams = '', ': РІСЃРµ С„Р°Р№Р»С‹', ': ' + params);
         obj.CanShowResult := true;
         IRunTaskFindInDir(curIntf).SetCallbacks(
         procedure(AMsg: WideString)  //StartCallback
@@ -306,7 +311,7 @@ begin
         obj.TaskIntf := IRunTaskFindInDir(curIntf);
         obj.Command := command;
         obj.Params := params;
-        obj.Thread := IRunTaskFindInDir(curIntf).Start(command, params);
+        obj.TaskCtrl := IRunTaskFindInDir(curIntf).Start(command, params);
       end
         else if supports(curIntf, IRunTaskFindInExeFile) then
       begin
@@ -332,7 +337,7 @@ begin
         obj.TaskIntf := IRunTaskFindInExeFile(curIntf);
         obj.Command := command;
         obj.Params := params;
-        obj.Thread := IRunTaskFindInExeFile(curIntf).Start(command, params);
+        obj.TaskCtrl := IRunTaskFindInExeFile(curIntf).Start(command, params);
       end
         else if supports(curIntf, IRunTaskShellExecute) then
       begin
@@ -358,7 +363,7 @@ begin
         obj.TaskIntf := IRunTaskShellExecute(curIntf);
         obj.Command := command;
         obj.Params := params;
-        obj.Thread := IRunTaskShellExecute(curIntf).Start(command, params);
+        obj.TaskCtrl := IRunTaskShellExecute(curIntf).Start(command, params);
       end;
     finally
       vstRunTasks.EndUpdate;
@@ -374,7 +379,7 @@ begin
   if Assigned(obj) then
   begin
     if obj.Status = rtsExecute then
-      obj.TaskIntf.Stop(obj.Thread);
+      obj.TaskIntf.Stop(obj.TaskCtrl);
   end;
 end;
 
@@ -388,24 +393,24 @@ begin
   beParams.Text := '';
   if Supports(curIntf, IRunTaskFindInDir) then
   begin
-    liCommand.CaptionOptions.Text := 'Каталог для поиска';
-    liParams.CaptionOptions.Text := 'Расширения файлов через запятую';
+    liCommand.CaptionOptions.Text := 'РљР°С‚Р°Р»РѕРі';
+    liParams.CaptionOptions.Text := 'Р Р°СЃС€РёСЂРµРЅРёСЏ С‡РµСЂРµР· Р·Р°РїСЏС‚СѓСЋ';
     beCommand.Properties.OnButtonClick := btnSelectDir;
     beCommand.Properties.Buttons[0].Visible := true;
     beParams.Properties.Buttons[0].Visible := false;
   end
     else if Supports(curIntf, IRunTaskFindInExeFile) then
   begin
-    liCommand.CaptionOptions.Text := 'Путь к exe-файлу';
-    liParams.CaptionOptions.Text := 'Текст для поиска, разделённый запятыми';
+    liCommand.CaptionOptions.Text := 'РџСѓС‚СЊ Рє exe-С„Р°Р№Р»Сѓ';
+    liParams.CaptionOptions.Text := 'РўРµРєСЃС‚ РґР»СЏ РїРѕРёСЃРєР°';
     beCommand.Properties.OnButtonClick := btnSelectExeFile;
     beCommand.Properties.Buttons[0].Visible := true;
     beParams.Properties.Buttons[0].Visible := false;
   end
     else if Supports(curIntf, IRunTaskShellExecute) then
   begin
-    liCommand.CaptionOptions.Text := 'Команда для выполнения';
-    liParams.CaptionOptions.Text := 'Рабочий каталог';
+    liCommand.CaptionOptions.Text := 'РљРѕРјР°РЅРґР° РґР»СЏ РІС‹РїРѕР»РЅРµРЅРёСЏ';
+    liParams.CaptionOptions.Text := 'Р Р°Р±РѕС‡Р°СЏ РґРёСЂРµРєС‚РѕСЂРёСЏ';
     beCommand.Properties.Buttons[0].Visible := false;
     beParams.Properties.Buttons[0].Visible := true;
     beParams.Properties.OnButtonClick := btnSelectDir;
@@ -428,7 +433,20 @@ begin
 end;
 
 procedure TfrmRunTasks.FormDestroy(Sender: TObject);
+var
+  obj: TRunTaskRecord;
+  node: PVirtualNode;
 begin
+  node := vstRunTasks.GetFirst;
+  while Assigned(node) do
+  begin
+    obj := vstRunTasks.Obj<TRunTaskRecord>(node);
+    if Assigned(obj) and (obj.Status = rtsExecute) and Assigned(obj.TaskIntf) then
+    begin
+      obj.TaskIntf.Stop(obj.TaskCtrl);
+    end;
+    node := vstRunTasks.GetNext(node);
+  end;
   FreeAndNil(FIntfList);
 end;
 
@@ -508,7 +526,7 @@ procedure TfrmRunTasks.vstRunTasksDrawText(Sender: TBaseVirtualTree;
 var
   DrawRect: TRect;
 begin
-  DefaultDraw := False; // Ручное рисование
+  DefaultDraw := False;
   DrawRect := CellRect;
   DrawTextW(TargetCanvas.Handle, PWideChar(Text), Length(Text), DrawRect,
     DT_WORDBREAK or DT_NOPREFIX or DT_EDITCONTROL or DT_END_ELLIPSIS);
@@ -567,7 +585,7 @@ begin
   FStatus := rtsNone;
   FInfo := '';
   FCanShowResult := false;
-  FThread := nil;
+  FTaskCtrl := nil;
   FTaskIntf := nil;
   FResultList := TList<WideString>.Create;
   FCommand := '';
@@ -576,6 +594,8 @@ end;
 
 destructor TRunTaskRecord.Destroy;
 begin
+  if Assigned(FTaskCtrl) then
+    FTaskCtrl.Terminate(3000);
   if Assigned(FTaskIntf) then
     FTaskIntf := nil;
   FreeAndNil(FResultList);

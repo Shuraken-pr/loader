@@ -371,7 +371,7 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       LineMode = lmBands
       LineStyle = lsSolid
       TabOrder = 2
-      TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
+      TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
       TreeOptions.SelectionOptions = [toFullRowSelect, toSelectNextNodeOnRemoval]
       OnFreeNode = vstThread1FreeNode
       OnGetText = vstThread1GetText

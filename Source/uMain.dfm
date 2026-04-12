@@ -514,8 +514,6 @@ object frmMain: TfrmMain
     Height = 530
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 877
-    ExplicitHeight = 522
     object vstLog: TVirtualStringTree
       Left = 14
       Top = 14
@@ -625,7 +623,6 @@ object frmMain: TfrmMain
     object btnSimpleNumbers: TdxBarLargeButton
       Category = 0
       Visible = ivAlways
-      OnClick = btnSimpleNumbersClick
       LargeImageIndex = 0
       SyncImageIndex = False
       ImageIndex = 0
@@ -633,19 +630,16 @@ object frmMain: TfrmMain
     object btnCalcPrice: TdxBarLargeButton
       Category = 0
       Visible = ivAlways
-      OnClick = btnCalcPriceClick
       LargeImageIndex = 1
     end
     object btnExplorer: TdxBarLargeButton
       Category = 0
       Visible = ivAlways
-      OnClick = btnExplorerClick
       LargeImageIndex = 2
     end
     object btnRunTasks: TdxBarLargeButton
       Category = 0
       Visible = ivAlways
-      OnClick = btnRunTasksClick
       LargeImageIndex = 3
     end
   end

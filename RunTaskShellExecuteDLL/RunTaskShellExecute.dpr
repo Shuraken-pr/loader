@@ -1,4 +1,6 @@
-library RunTaskShellExecute;
+п»їlibrary RunTaskShellExecute;
+
+{$I ..\..\Common\pool_config.inc}
 
 uses
   Winapi.Windows,
@@ -6,18 +8,28 @@ uses
   System.Classes,
   system.StrUtils,
   System.Generics.Collections,
+{$ifdef use_otl}
+  OtlTaskControl,
+  uOmniThreadPoolManager in '..\..\common\uOmniThreadPoolManager.pas',
+{$else}
+  uAutonomiusThreadPool in '..\..\common\uAutonomiusThreadPool.pas',
+{$endif}
   intf_dll in '..\..\Common\intf_dll.pas',
+  intf_dll_manager in '..\..\common\intf_dll_manager.pas',
   intf_common in '..\..\common\intf_common.pas',
-  intf_tasks in '..\..\common\intf_tasks.pas',
-  uAutonomiusThreadPool in '..\..\common\uAutonomiusThreadPool.pas';
+  intf_tasks in '..\..\common\intf_tasks.pas';
 
 type
   TRunTaskShellExecute = class(TInterfacedObject, IDLLIntf, IRunTask, IRunTaskShellExecute)
   private
     FProcessNumber: integer;
     FRunDict: TDictionary<integer, THandle>;
-    FThreadDict: TDictionary<TThread, integer>;
+    FThreadDict: TDictionary<TResultType, integer>;
+{$ifdef use_otl}
+    FThreadManager: TOmniThreadPoolManager;
+{$else}
     FThreadManager: TThreadPoolManager;
+{$endif}
     FStartCallback: TProc<WideString>;
     FBreakCallback: TProc<WideString>;
     FErrorCallback: TProc<WideString>;
@@ -34,13 +46,13 @@ type
     function GetDescription: WideString; safecall;
     procedure Init; safecall;
     procedure Fin; safecall;
-    function Start(ACommand: WideString; AParams: WideString): TThread; safecall;
-    procedure Stop(AThread: TThread); safecall;
+    function Start(ACommand: WideString; AParams: WideString): TResultType; safecall;
+    procedure Stop(const AResult: TResultType); safecall;
     function Info: WideString; safecall;
-    procedure SetCallbacks(StartCallback,  //уведомляем о запуске
-                           BreakCallback,  //уведомляем о прерывании
-                           ErrorCallback,  //уведомляем об ошибке
-                           FinishCallback:   //выполняем синхронизацию
+    procedure SetCallbacks(StartCallback,  // СѓРІРµРґРѕРјР»СЏРµРј Рѕ Р·Р°РїСѓСЃРєРµ
+                           BreakCallback,  // СѓРІРµРґРѕРјР»СЏРµРј Рѕ РїСЂРµСЂС‹РІР°РЅРёРё
+                           ErrorCallback,  // СѓРІРµРґРѕРјР»СЏРµРј РѕР± РѕС€РёР±РєРµ
+                           FinishCallback:   // РІС‹РїРѕР»РЅСЏРµРј СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёСЋ
                            TProc<WideString>); safecall;
   end;
 
@@ -58,9 +70,13 @@ exports
 
 constructor TRunTaskShellExecute.Create;
 begin
+{$ifdef use_otl}
+  FThreadManager := TOmniThreadPoolManager.Create;
+{$else}
   FThreadManager := TThreadPoolManager.Create;
+{$endif}
   FRunDict := TDictionary<integer, THandle>.Create;
-  FThreadDict := TDictionary<TThread, integer>.Create;
+  FThreadDict := TDictionary<TResultType, integer>.Create;
   FProcessNumber := 0;
 end;
 
@@ -131,31 +147,29 @@ begin
     end;
   end
     else
-    DoErrorCallback('Ошибка запуска: ' + SysErrorMessage(GetLastError))
+    DoErrorCallback('РћС€РёР±РєР° Р·Р°РїСѓСЃРєР°: ' + SysErrorMessage(GetLastError))
 end;
 
 procedure TRunTaskShellExecute.Fin;
 begin
-
 end;
 
 function TRunTaskShellExecute.GetDescription: WideString;
 begin
-  Result := 'Асинхронное выполнение shell команды';
+  Result := 'РђСЃРёРЅС…СЂРѕРЅРЅРѕРµ РІС‹РїРѕР»РЅРµРЅРёРµ shell РєРѕРјР°РЅРґС‹';
 end;
 
 function TRunTaskShellExecute.Info: WideString;
 begin
-  Result := 'Для работы необходимо задать 2 параметра: '#13#10+
-            '1. Команду для выполнения, например, '#13#10 +
+  Result := 'Р”Р»СЏ СЂР°Р±РѕС‚С‹ РЅРµРѕР±С…РѕРґРёРјРѕ Р·Р°РґР°С‚СЊ 2 РїР°СЂР°РјРµС‚СЂР°: '#13#10+
+            '1. РљРѕРјР°РЅРґСѓ РґР»СЏ РІС‹РїРѕР»РЅРµРЅРёСЏ, РЅР°РїСЂРёРјРµСЂ, '#13#10 +
             '"C:\Program Files\7-Zip\7z.exe" a "archive.7z" "C:\MyFiles\*" '#13#10+
-            'Убедитесь, что все пути указаны верно. '#13#10 +
-            '2. Рабочий каталог. Необязательный параметр';
+            'РЈР±РµРґРёС‚РµСЃСЊ, С‡С‚Рѕ РІСЃРµ РїСѓС‚Рё СѓРєР°Р·Р°РЅС‹ РІРµСЂРЅРѕ. '#13#10 +
+            '2. Р Р°Р±РѕС‡РёР№ РєР°С‚Р°Р»РѕРі. РќРµРѕР±СЏР·Р°С‚РµР»СЊРЅС‹Р№ РїР°СЂР°РјРµС‚СЂ';
 end;
 
 procedure TRunTaskShellExecute.Init;
 begin
-
 end;
 
 procedure TRunTaskShellExecute.SetCallbacks(StartCallback, BreakCallback, ErrorCallback,
@@ -167,7 +181,7 @@ begin
   FFinishCallback := FinishCallback;
 end;
 
-function TRunTaskShellExecute.Start(ACommand, AParams: WideString): TThread;
+function TRunTaskShellExecute.Start(ACommand, AParams: WideString): TResultType;
 begin
   inc(FProcessNumber);
   Result := FThreadManager.Start(
@@ -176,49 +190,47 @@ begin
     pn: integer;
   begin
     pn := FProcessNumber;
-    DoStartCallback('Выполнение команды ' + ACommand + ' запущено!');
+    DoStartCallback('Р’С‹РїРѕР»РЅРµРЅРёРµ РєРѕРјР°РЅРґС‹ ' + ACommand + ' Р·Р°РїСѓС‰РµРЅРѕ!');
     ExecuteShellCommand(ACommand, AParams, pn);
     if Assigned(FRunDict) then
       FRunDict.Remove(pn);
-    DoFinishCallback('Выполнение команды ' + ACommand + ' завершено!')
+    if not TThread.CheckTerminated then
+      DoFinishCallback('Р’С‹РїРѕР»РЅРµРЅРёРµ РєРѕРјР°РЅРґС‹ ' + ACommand + ' Р·Р°РІРµСЂС€РµРЅРѕ!')
   end
   );
   FThreadDict.AddOrSetValue(Result, FProcessNumber);
 end;
 
-procedure TRunTaskShellExecute.Stop(AThread: TThread);
+procedure TRunTaskShellExecute.Stop(const AResult: TResultType);
 var
   hProcess: THandle;
   pn: integer;
 begin
-  if FThreadDict.TryGetValue(AThread, pn) then
+  if FThreadDict.TryGetValue(AResult, pn) then
     if FRunDict.TryGetValue(pn, hProcess) then
     begin
       FRunDict.Remove(pn);
       TerminateProcess(hProcess, 1);
     end;
 
-  if FThreadManager.Stop(AThread) then
+  if FThreadManager.Stop(AResult) then
   begin
-    FThreadDict.Remove(AThread);
-    DoBreakCallback('Выполнение команды прервано');
+    FThreadDict.Remove(AResult);
+    DoBreakCallback('Р’С‹РїРѕР»РЅРµРЅРёРµ РєРѕРјР°РЅРґС‹ РїСЂРµСЂРІР°РЅРѕ');
   end;
 end;
 
 procedure TRunTaskShellExecute.TerminateProcesses;
 var
   hProcess: THandle;
-  pairThreadDict: TPair<TThread, integer>;
+  pairThreadDict: TPair<TResultType, integer>;
 begin
   for pairThreadDict in FThreadDict do
   begin
-    if pairThreadDict.Key.ThreadID <> 0 then
+    if FRunDict.TryGetValue(pairThreadDict.Value, hProcess) then
     begin
-      if FRunDict.TryGetValue(pairThreadDict.Value, hProcess) then
-      begin
-        FRunDict.Remove(pairThreadDict.Value);
-        TerminateProcess(hProcess, 0);
-      end;
+      FRunDict.Remove(pairThreadDict.Value);
+      TerminateProcess(hProcess, 0);
     end;
   end;
 end;

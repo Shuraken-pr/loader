@@ -1691,8 +1691,6 @@ object frmScanLocalDisks: TfrmScanLocalDisks
     Height = 519
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 756
-    ExplicitHeight = 511
     object vstExplorer: TVirtualStringTree
       Left = 14
       Top = 109
@@ -1848,7 +1846,6 @@ object frmScanLocalDisks: TfrmScanLocalDisks
     Top = 0
     Width = 20
     Height = 519
-    ExplicitHeight = 511
   end
   object dxFloatDockSite1: TdxFloatDockSite
     Left = 20

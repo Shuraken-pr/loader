@@ -1,4 +1,4 @@
-unit main;
+ï»¿unit main;
 
 interface
 
@@ -43,11 +43,10 @@ type
   private
     FCallbackProc: TProc<WideString>;
     procedure DoCallbackProc(AMsg: WideString);
-    { Private declarations }
-    procedure CheckAndFillSimpleNumbers(const crit: TCriticalSection; var NumList: TList<Integer>;
-      var ASNLists: TStringList; const AVST: TVirtualStringTree; const AFileName: string);
+    procedure CheckAndFillSimpleNumbers(var NextNum: Integer; MaxNum: Integer;
+      var ASNLists: TStringList; ListsCS: TCriticalSection;
+      const AVST: TVirtualStringTree; const AFileName: string);
   public
-    { Public declarations }
     property CallbackProc: TProc<WideString> read FCallbackProc write FCallbackProc;
     procedure Run(MaxNum: integer; isSilent: boolean = false);
   end;
@@ -81,83 +80,67 @@ end;
 
 procedure TfrmSimpleNumbers.Run(MaxNum: integer; isSilent: boolean);
 var
-  i: integer;
   thread1, thread2: TThread;
   lthreads: TStringList;
-  cs: TCriticalSection;
-  NL: TList<integer>;
+  NextNum: Integer;
+  ListsCS: TCriticalSection;
   delta: TDateTime;
   vst1, vst2: TVirtualStringTree;
 begin
-  NL := TList<integer>.Create;
+  if isSilent then
+  begin
+    vst1 := nil;
+    vst2 := nil;
+  end
+    else
+  begin
+    vst1 := vstThread1;
+    vst2 := vstThread2;
+    vst1.Clear;
+    vst2.Clear;
+  end;
+
+  NextNum := 0;
+  ListsCS := TCriticalSection.Create;
   try
-    if isSilent then
-    begin
-      vst1 := nil;
-      vst2 := nil;
-    end
-      else
-    begin
-      vst1 := vstThread1;
-      vst2 := vstThread2;
-      vst1.Clear;
-      vst2.Clear;
-    end;
-    NL.Add(1);
-    NL.Add(2);
-    i := 3;
-    while i < maxNum do
-    begin
-      NL.Add(i);
-      inc(i, 2);
-    end;
-
-    cs := TCriticalSection.Create;
+    lthreads := TStringList.Create;
     try
-      lthreads := TStringList.Create;
+      thread1 := TThread.CreateAnonymousThread(procedure
+      begin
+        CheckAndFillSimpleNumbers(NextNum, MaxNum, lthreads, ListsCS, vst1, 'thread1.txt');
+      end);
+      thread1.FreeOnTerminate := false;
+
+      thread2 := TThread.CreateAnonymousThread(procedure
+      begin
+        CheckAndFillSimpleNumbers(NextNum, MaxNum, lthreads, ListsCS, vst2, 'thread2.txt');
+      end);
+      thread2.FreeOnTerminate := false;
+
+      Screen.Cursor := crSQLWait;
+      delta := Now;
+      DoCallbackProc('Ð Ð°ÑÑ‡Ñ‘Ñ‚ Ð¿Ñ€Ð¾ÑÑ‚Ñ‹Ñ… Ñ‡Ð¸ÑÐµÐ» Ð´Ð²ÑƒÐ¼Ñ Ð¿Ð¾Ñ‚Ð¾ÐºÐ°Ð¼Ð¸ Ð·Ð°Ð¿ÑƒÑ‰ÐµÐ½. Ð”Ð¸Ð°Ð¿Ð°Ð·Ð¾Ð½: 1..' + IntToStr(maxNum));
       try
-        thread1 := TThread.CreateAnonymousThread(procedure
-        begin
-          CheckAndFillSimpleNumbers(cs, NL, lthreads, vst1, 'thread1.txt');
-        end
-        );
-        thread1.FreeOnTerminate := false;
+        thread1.Start;
+        thread2.Start;
 
-        thread2 := TThread.CreateAnonymousThread(procedure
-        begin
-          CheckAndFillSimpleNumbers(cs, NL, lthreads, vst2, 'thread2.txt');
-        end
-        );
-        thread2.FreeOnTerminate := false;
-        Screen.Cursor := crSQLWait;
-        delta := Now;
-        DoCallbackProc(Format('Ðàñ÷¸ò ïðîñòûõ ÷èñåë äâóìÿ ïîòîêàìè çàïóùåí. Äèàïàçîí: 1..%d', [maxNum]));
-        try
-          thread1.Start;
-          thread2.Start;
+        thread1.WaitFor;
+        thread2.WaitFor;
 
-          thread1.WaitFor;
-          thread2.WaitFor;
-
-          if Assigned(thread1) then
-            FreeAndNil(thread1);
-          if Assigned(thread2) then
-            FreeAndNil(thread2);
-        finally
-          Screen.Cursor := crDefault;
-          DoCallbackProc(Format('Ðàñ÷¸ò ïðîñòûõ ÷èñåë äâóìÿ ïîòîêàìè çàâåðø¸í çà %s',
-          [FormatDateTime('hh:nn:ss.zzz', Now - delta)]));
-        end;
+        FreeAndNil(thread1);
+        FreeAndNil(thread2);
       finally
-        if lthreads.Count > 0 then
-          lthreads.SaveToFile('threads.txt');
-        FreeAndNil(lthreads);
+        Screen.Cursor := crDefault;
+        DoCallbackProc('Ð Ð°ÑÑ‡Ñ‘Ñ‚ Ð¿Ñ€Ð¾ÑÑ‚Ñ‹Ñ… Ñ‡Ð¸ÑÐµÐ» Ð´Ð²ÑƒÐ¼Ñ Ð¿Ð¾Ñ‚Ð¾ÐºÐ°Ð¼Ð¸ Ð·Ð°Ð²ÐµÑ€ÑˆÑ‘Ð½ Ð·Ð° '+
+          FormatDateTime('hh:nn:ss.zzz', Now - delta));
       end;
     finally
-      FreeAndNil(cs);
+      if lthreads.Count > 0 then
+        lthreads.SaveToFile('threads.txt');
+      FreeAndNil(lthreads);
     end;
   finally
-    FreeAndNil(NL);
+    FreeAndNil(ListsCS);
   end;
 end;
 
@@ -169,24 +152,27 @@ begin
   Run(maxNum);
 end;
 
-procedure TfrmSimpleNumbers.CheckAndFillSimpleNumbers(const crit: TCriticalSection;
-  var NumList: TList<Integer>;  var ASNLists: TStringList;
+procedure TfrmSimpleNumbers.CheckAndFillSimpleNumbers(var NextNum: Integer;
+  MaxNum: Integer; var ASNLists: TStringList; ListsCS: TCriticalSection;
   const AVST: TVirtualStringTree; const AFileName: string);
 var
   ANum: integer;
   FList: TStringList;
+  idx: Integer;
 begin
   FList := TStringList.Create;
   try
-    while NumList.Count > 0 do
-    begin
-      crit.Enter;
-      try
-        ANum := NumList[0];
-        NumList.Delete(0);
-      finally
-        crit.Leave;
+    repeat
+      // ÐÑ‚Ð¾Ð¼Ð°Ñ€Ð½Ð¾ Ð¿Ð¾Ð»ÑƒÑ‡Ð°ÐµÐ¼ ÑÐ»ÐµÐ´ÑƒÑŽÑ‰Ð¸Ð¹ Ð¸Ð½Ð´ÐµÐºÑ â€” Ð±ÐµÐ· Delete(0) Ð¸ Ð±ÐµÐ· CS
+      idx := TInterlocked.Increment(NextNum) - 1;
+
+      case idx of
+        0: ANum := 1;
+        1: ANum := 2;
+      else
+        ANum := 3 + (idx - 2) * 2;  // 3, 5, 7, 9, ...
       end;
+      if ANum > MaxNum then Break;
 
       if CheckSimpleNumber(ANum) then
       begin
@@ -196,21 +182,18 @@ begin
           var
             sn: TVSTSimpleNum;
           begin
-            if Assigned(AVST) then
-            begin
-              sn := AVST.Add<TVSTSimpleNum>;
-              if Assigned(sn) then
-                sn.SimpleNumber := ANum;
-            end;
+            sn := AVST.Add<TVSTSimpleNum>;
+            if Assigned(sn) then
+              sn.SimpleNumber := ANum;
           end);
-        crit.Enter;
+        ListsCS.Enter;
         try
           ASNLists.Add(IntToStr(ANum));
         finally
-          crit.Leave;
+          ListsCS.Leave;
         end;
       end;
-    end;
+    until False;
   finally
     if FList.Count > 0 then
       FList.SaveToFile(AFileName);

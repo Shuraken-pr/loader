@@ -5,6 +5,7 @@ uses
   uMain in 'uMain.pas' {frmMain},
   vstHelper in '..\..\common\vstHelper.pas',
   intf_dll in '..\..\common\intf_dll.pas',
+  intf_dll_manager in '..\..\common\intf_dll_manager.pas',
   DllManager in '..\..\common\DllManager.pas';
 
 {$R *.res}

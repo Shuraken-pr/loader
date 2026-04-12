@@ -11,7 +11,8 @@ uses
   dxLayoutControlAdapters, cxCheckBox, cxContainer, cxEdit, Vcl.Menus,
   Vcl.StdCtrls, cxButtons, cxTextEdit, cxMaskEdit, cxDropDownEdit,
   cxCheckComboBox, System.Threading, System.SyncObjs, cxLabel, intf_tasks,
-  DateUtils, cxImage, cxMemo, Vcl.Imaging.jpeg, cxPC, dxDockControl, dxDockPanel;
+  DateUtils, cxImage, cxMemo, Vcl.Imaging.jpeg, cxPC, dxDockControl, dxDockPanel,
+  System.Generics.Collections;
 
 type
   TExplorerRecord = class(TBaseRecord)
@@ -56,18 +57,19 @@ type
     procedure vstExplorerChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
   private
     FDTStartUpdateInfo: TDateTime;
-    FThread: TThread;
+    FTaskCtrl: TResultType;
     FCallbackProc: TProc<WideString>;
     FExtList: TStringList;
     FCrit: TCriticalSection;
     FRunTaskFind: IRunTaskFindInDir;
+    FPathToNode: TDictionary<string, PVirtualNode>;
+    FPathBuffer: TList<string>;
     procedure DoCallbackProc(AMsg: WideString);
     procedure FillVst(APath: string);
+    procedure FillVstFromBuffer;
     procedure FillLocalDrives;
     procedure UpdateScanInfo(APath: string);
-    { Private declarations }
   public
-    { Public declarations }
     property CallbackProc: TProc<WideString> read FCallbackProc write FCallbackProc;
     property FindIntf: IRunTaskFindInDir read FRunTaskFind write FRunTaskFind;
   end;
@@ -90,10 +92,10 @@ begin
   FDTStartUpdateInfo := now;
   if Assigned(FRunTaskFind) then
   begin
-    if FThread <> nil then
+    if FTaskCtrl <> nil then
     begin
-      FRunTaskFind.Stop(FThread);
-      FThread := nil;
+      FRunTaskFind.Stop(FTaskCtrl);
+      FTaskCtrl := nil;
       btnScanDir.Caption := 'Сканировать';
       UpdateScanInfo('');
       Exit;
@@ -101,6 +103,9 @@ begin
       else
     begin
       btnScanDir.Caption := 'Прервать';
+      vstExplorer.Clear;
+      FPathToNode.Clear;
+      FPathBuffer.Clear;
     end;
     dir := '';
     ext := edFilterExt.Text;
@@ -131,6 +136,7 @@ begin
       TThread.Synchronize(nil,
       procedure
       begin
+        FillVstFromBuffer;
         with vstExplorer, vstExplorer.Header do
         begin
           SortColumn := 1;
@@ -142,12 +148,14 @@ begin
     procedure(AMsg: WideString)  //FinishCallback, уведомляем о завершении
     begin
       DoCallbackProc(AMsg);
-      FThread := nil;
+      FTaskCtrl := nil;
       btnScanDir.Caption := 'Сканировать';
       UpdateScanInfo('');
       TThread.Synchronize(nil,
       procedure
       begin
+        // Сбрасываем остаток буфера перед сортировкой
+        FillVstFromBuffer;
         with vstExplorer, vstExplorer.Header do
         begin
           SortColumn := 1;
@@ -156,16 +164,17 @@ begin
         end;
       end);
     end,
-    procedure(APath: WideString)  //SyncCallback, выполняем синхронизацию
+    procedure(APath: WideString)  //SyncCallback, добавляем путь в буфер
     begin
-      TThread.Synchronize(nil,
-      procedure
-      begin
-        FillVst(APath);
-      end);
+      FCrit.Enter;
+      try
+        FPathBuffer.Add(APath);
+      finally
+        FCrit.Leave;
+      end;
     end
     );
-    FThread := FRunTaskFind.Start(dir, ext);
+    FTaskCtrl := FRunTaskFind.Start(dir, ext);
   end;
 end;
 
@@ -196,49 +205,61 @@ procedure TfrmScanLocalDisks.FillVst(APath: string);
 var
   curV, childV: PVirtualNode;
   exp: TExplorerRecord;
-  i, start_num, end_num: integer;
+  i, end_num: integer;
   curPath, FullPath: string;
   PathArray: TArray<string>;
 begin
+  PathArray := SplitString(APath, '\');
+  curV := vstExplorer.RootNode;
+  FullPath := '';
+  end_num := High(PathArray);
+
+  for i := Low(PathArray) to end_num do
+  begin
+    curPath := PathArray[i];
+    if FullPath = '' then
+      FullPath := curPath
+    else
+      FullPath := IncludeTrailingPathDelimiter(FullPath) + curPath;
+
+    if FPathToNode.TryGetValue(FullPath, childV) then
+    begin
+      curV := childV;
+    end
+    else
+    begin
+      childV := vstExplorer.AddChild(curV);
+      exp := vstExplorer.Add<TExplorerRecord>(childV);
+      exp.Value := curPath;
+      exp.FullPath := FullPath;
+      exp.FIsFile := i = end_num;
+      FPathToNode.Add(FullPath, childV);
+      curV := childV;
+    end;
+  end;
+end;
+
+procedure TfrmScanLocalDisks.FillVstFromBuffer;
+var
+  paths: TArray<string>;
+  path: string;
+begin
+  // Забираем всё из буфера
+  FCrit.Enter;
+  try
+    if FPathBuffer.Count = 0 then
+      Exit;
+    paths := FPathBuffer.ToArray;
+    FPathBuffer.Clear;
+  finally
+    FCrit.Leave;
+  end;
+
+  // Обновляем VST одним BeginUpdate/EndUpdate
   vstExplorer.BeginUpdate;
   try
-    PathArray := SplitString(APath, '\');
-    curV := vstExplorer.RootNode;
-    FullPath := '';
-    start_num := Low(PathArray);
-    end_num := High(PathArray);
-    for i := start_num to end_num do
-    begin
-      curPath := PathArray[i];
-      if FullPath = '' then
-        FullPath := curPath
-      else
-        FullPath := IncludeTrailingPathDelimiter(FullPath) + curPath;
-      childV := vstExplorer.GetFirstChild(curV);
-      while childV <> nil do
-      begin
-        exp := vstExplorer.Obj<TExplorerRecord>(childV);
-        if Assigned(exp) then
-        begin
-          if (exp.Value = curPath) and (exp.FullPath = FullPath) then
-          begin
-            curV := childV;
-            break;
-          end;
-        end;
-        childV := vstExplorer.GetNextSibling(childV);
-      end;
-
-      if not Assigned(childV) then
-      begin
-        childV := vstExplorer.AddChild(curV);
-        exp := vstExplorer.Add<TExplorerRecord>(childV);
-        exp.Value := curPath;
-        exp.FullPath := FullPath;
-        exp.FIsFile := i = end_num;
-        curV := childV;
-      end;
-    end;
+    for path in paths do
+      FillVst(path);
   finally
     vstExplorer.EndUpdate;
   end;
@@ -249,6 +270,8 @@ begin
   FExtList := TStringList.Create;
   vstExplorer.NodeDataSize := SizeOf(TExplorerRecord);
   FCrit := TCriticalSection.Create;
+  FPathToNode := TDictionary<string, PVirtualNode>.Create;
+  FPathBuffer := TList<string>.Create;
   FRunTaskFind := nil;
   FillLocalDrives;
 end;
@@ -258,6 +281,8 @@ begin
   FreeAndNil(FExtList);
   FCallbackProc := nil;
   FreeAndNil(FCrit);
+  FreeAndNil(FPathToNode);
+  FreeAndNil(FPathBuffer);
   if Assigned(FRunTaskFind) then
     FRunTaskFind := nil;
 end;

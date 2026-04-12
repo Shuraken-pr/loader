@@ -1,4 +1,4 @@
-unit uMain;
+﻿unit uMain;
 
 interface
 
@@ -9,9 +9,24 @@ uses
   System.Actions, Vcl.ActnList, System.ImageList, Vcl.ImgList, cxImageList,
   dxLayoutContainer, dxLayoutControl, cxClasses, dxBar, dxRibbon, vstHelper,
   VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, DLLManager, intf_dll, intf_common, intf_tasks;
+  VirtualTrees, DLLManager, intf_dll, intf_common, System.Generics.Collections;
 
 type
+  /// <summary>
+  /// Связь кнопки с DLL: кнопка, описание DLL, опциональная доп. инициализация.
+  /// </summary>
+  TButtonEntry = class
+    Button: TdxBarLargeButton;
+    DllInfo: TDLLInfo;
+    // Опциональная процедура инициализации зависимостей перед Run().
+    // Если nil — зависимости загружены автоматически через IUsesDllManager.
+    InitProc: TProc;
+  end;
+
+  TButtonEntryList = class(TObjectList<TButtonEntry>)
+    procedure AddEntry(Button: TdxBarLargeButton; DllInfo: TDLLInfo; InitProc: TProc);
+  end;
+
   TVSTLog = class(TBaseRecord)
   private
     FMsg: WideString;
@@ -43,31 +58,22 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure vstLogFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure btnSimpleNumbersClick(Sender: TObject);
-    procedure btnCalcPriceClick(Sender: TObject);
-    procedure btnExplorerClick(Sender: TObject);
-    procedure btnRunTasksClick(Sender: TObject);
   private
-    { Private declarations }
     FDllManager: TDllManager;
-    FSimpleNumbers: ISimpleNumbers;
-    FCalcPrice: ICalcPrice;
-    FRunTaskFindInDir: IRunTaskFindInDir;
-    FRunTaskFindInExeFile: IRunTaskFindInExeFile;
-    FRunTaskShellExecute: IRunTaskShellExecute;
-    FExplorer: IExplorer;
-    FRunTasks: IRunTasks;
-    procedure CheckIntf<T: IDllIntf>(var AIntf: T; DI: TDLLInfo; dxButton: TdxBarLargeButton = nil);
+    FButtons: TButtonEntryList;
     procedure AddMsg(const AMsg: WideString);
-    procedure CheckIntfAndRun<T: IDllIntf>(Intf: T);
+    procedure OnButtonClick(Sender: TObject);
+    procedure LoadAllDlls;
   public
-    { Public declarations }
   end;
 
 var
   frmMain: TfrmMain;
 
 implementation
+
+uses
+  intf_dll_manager, intf_tasks;
 
 {$R *.dfm}
 
@@ -91,86 +97,119 @@ begin
     log.Msg := AMsg;
 end;
 
-procedure TfrmMain.btnCalcPriceClick(Sender: TObject);
-begin
-  CheckIntfAndRun<ICalcPrice>(FCalcPrice);
-end;
-
-procedure TfrmMain.btnExplorerClick(Sender: TObject);
-begin
-  if Assigned(FRunTaskFindInDir) then
-    FExplorer.initFindIntf(FRunTaskFindInDir);
-  CheckIntfAndRun<IExplorer>(FExplorer);
-end;
-
-procedure TfrmMain.btnRunTasksClick(Sender: TObject);
-begin
-  FRunTasks.initRunTasks(FRunTaskFindInDir, FRunTaskFindInExeFile, FRunTaskShellExecute);
-  CheckIntfAndRun<IRunTasks>(FRunTasks);
-end;
-
-procedure TfrmMain.btnSimpleNumbersClick(Sender: TObject);
-begin
-  CheckIntfAndRun<ISimpleNumbers>(FSimpleNumbers);
-end;
-
-procedure TfrmMain.CheckIntf<T>(var AIntf: T; DI: TDLLInfo;
-  dxButton: TdxBarLargeButton);
-begin
-  if dxButton <> nil then
-    dxButton.Visible := ivNever;
-  if FDllManager.Load<T>(DI, false) then
-    AIntf := FDllManager.GetIntf<T>(DI)
-  else
-    AIntf := nil;
-  if Assigned(AIntf) and (dxButton <> nil) then
-  begin
-    dxButton.Caption := AIntf.GetDescription;
-    dxButton.Visible := ivAlways;
-  end;
-end;
-
-procedure TfrmMain.CheckIntfAndRun<T>(Intf: T);
+/// <summary>
+/// Единый обработчик для всех кнопок.
+/// Получает интерфейс через IDllIntfRun.Run(callback, Handle).
+/// </summary>
+procedure TfrmMain.OnButtonClick(Sender: TObject);
 var
+  btn: TdxBarLargeButton;
+  entry: TButtonEntry;
   intfRun: IDllIntfRun;
+  i: Integer;
 begin
-  if Assigned(intf) and Supports(Intf, IDLLIntfRun, intfRun) then
-    intfRun.Run(procedure(AMsg: WideString)
+  btn := Sender as TdxBarLargeButton;
+  entry := nil;
+
+  // Найти запись реестра по кнопке
+  for i := 0 to FButtons.Count - 1 do
+  begin
+    if FButtons[i].Button = btn then
     begin
-      AddMsg(AMsg);
-    end, Application.Handle);
+      entry := FButtons[i];
+      Break;
+    end;
+  end;
+
+  if not Assigned(entry) then
+  begin
+    AddMsg('Кнопка не найдена в реестре: ' + btn.Caption);
+    Exit;
+  end;
+
+  // Получить интерфейс IDllIntfRun из DllManager
+  if not Supports(FDllManager.GetIntf(entry.DllInfo.guid), IDllIntfRun, intfRun) then
+  begin
+    AddMsg('Интерфейс IDllIntfRun не поддерживается: ' + btn.Caption);
+    Exit;
+  end;
+
+  // Опциональная инициализация (для обратной совместимости)
+  if Assigned(entry.InitProc) then
+    entry.InitProc();
+
+  // Запуск
+  intfRun.Run(procedure(AMsg: WideString)
+  begin
+    AddMsg(AMsg);
+  end, Application.Handle);
+end;
+
+/// <summary>
+/// Загрузить все DLL и привязать кнопки к единому обработчику.
+/// </summary>
+procedure TfrmMain.LoadAllDlls;
+var
+  i: Integer;
+  entry: TButtonEntry;
+  baseIntf: IDllIntf;
+begin
+  for i := 0 to FButtons.Count - 1 do
+  begin
+    entry := FButtons[i];
+
+    // Скрыть кнопку до успешной загрузки
+    entry.Button.Visible := ivNever;
+
+    // Загрузить DLL (автоматически вызовет SetDllManager если IUsesDllManager)
+    FDllManager.Load(entry.DllInfo, False);
+
+    if FDllManager.IsLoaded(entry.DllInfo.intfName) then
+    begin
+      // Получить описание и обновить кнопку
+      if Supports(FDllManager.GetIntf(entry.DllInfo.guid), IDllIntf, baseIntf) then
+      begin
+        entry.Button.Caption := baseIntf.GetDescription;
+      end;
+      entry.Button.Visible := ivAlways;
+      entry.Button.OnClick := OnButtonClick;  // единый обработчик
+    end
+    else
+    begin
+      AddMsg('Не удалось загрузить: ' + entry.DllInfo.FileName);
+    end;
+  end;
 end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   vstLog.NodeDataSize := SizeOf(TVSTLog);
   FDllManager := TDllManager.Create;
-  CheckIntf<ISimpleNumbers>(FSimpleNumbers, DISimpleNumbers, btnSimpleNumbers);
-  CheckIntf<ICalcPrice>(FCalcPrice, DICalcPrice, btnCalcPrice);
-  CheckIntf<IRunTaskFindInDir>(FRunTaskFindInDir, DIRunTaskFindInDir);
-  CheckIntf<IRunTaskFindInExeFile>(FRunTaskFindInExeFile, DIRunTaskFindInExeFile);
-  CheckIntf<IRunTaskShellExecute>(FRunTaskShellExecute, DIRunTaskShellExecute);
-  CheckIntf<IExplorer>(FExplorer, DIExplorer, btnExplorer);
-  CheckIntf<IRunTasks>(FRunTasks, DIRunTasks, btnRunTasks);
+  FButtons := TButtonEntryList.Create;
+
+  // Реестр кнопок: кнопка + TDLLInfo + опциональная инициализация
+
+  FButtons.AddEntry(btnSimpleNumbers, DISimpleNumbers, nil);
+  FButtons.AddEntry(btnCalcPrice, DICalcPrice, nil);
+  FButtons.AddEntry(btnExplorer, DIExplorer, nil);
+  FButtons.AddEntry(btnRunTasks, DIRunTasks, nil);
+
+  LoadAllDlls;
 end;
 
 procedure TfrmMain.FormDestroy(Sender: TObject);
+var
+  DllMgrIntf: IDllManager;
 begin
-  if Assigned(FSimpleNumbers) then
-    FSimpleNumbers := nil;
-  if Assigned(FCalcPrice) then
-    FCalcPrice := nil;
-  if Assigned(FRunTaskFindInDir) then
-    FRunTaskFindInDir := nil;
-  if Assigned(FRunTaskFindInExeFile) then
-    FRunTaskFindInExeFile := nil;
-  if Assigned(FRunTaskShellExecute) then
-    FRunTaskShellExecute := nil;
-  if Assigned(FExplorer) then
-    FExplorer := nil;
-  if Assigned(FRunTasks) then
-    FRunTasks := nil;
-  FreeAndNil(FDllManager);
+  // Освобождаем через интерфейс — корректный RefCount
+  if Assigned(FDllManager) then
+  begin
+    DllMgrIntf := FDllManager;
+    FDllManager := nil;
+    DllMgrIntf.UnloadAll;
+    DllMgrIntf := nil;  // RefCount=0 → вызывается Destroy
+  end;
+  FreeAndNil(FButtons);
 end;
 
 procedure TfrmMain.vstLogFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -190,12 +229,26 @@ begin
   cellText := '';
   log := Sender.Obj<TVSTLog>(Node);
   if Assigned(log) then
-    begin
+  begin
     case column of
       0: CellText := FormatDateTime('dd.mm.yyyy hh:nn:ss', log.LogDate);
       1: CellText := log.Msg;
     end;
   end;
+end;
+
+{ TButtonEntryList }
+
+procedure TButtonEntryList.AddEntry(Button: TdxBarLargeButton;
+  DllInfo: TDLLInfo; InitProc: TProc);
+var
+  res: TButtonEntry;
+begin
+  res := TButtonEntry.Create;
+  res.Button := Button;
+  res.DllInfo := DLLInfo;
+  res.InitProc := InitProc;
+  Add(res);
 end;
 
 end.

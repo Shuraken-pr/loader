@@ -9,6 +9,7 @@
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <MainSource>loader.dpr</MainSource>
+        <ProjectName Condition="'$(ProjectName)'==''">loader</ProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -127,6 +128,7 @@
         </DCCReference>
         <DCCReference Include="..\..\common\vstHelper.pas"/>
         <DCCReference Include="..\..\common\intf_dll.pas"/>
+        <DCCReference Include="..\..\common\intf_dll_manager.pas"/>
         <DCCReference Include="..\..\common\DllManager.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
@@ -815,6 +817,9 @@
                     <Platform Name="Win64">
                         <Operation>1</Operation>
                     </Platform>
+                    <Platform Name="Win64x">
+                        <Operation>1</Operation>
+                    </Platform>
                 </DeployClass>
                 <DeployClass Name="ProjectiOSDeviceDebug">
                     <Platform Name="iOSDevice32">
@@ -1107,6 +1112,7 @@
                 <ProjectRoot Platform="OSXARM64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="Win64x" Name="$(PROJECTNAME)"/>
             </Deployment>
             <Platforms>
                 <Platform value="Win32">True</Platform>

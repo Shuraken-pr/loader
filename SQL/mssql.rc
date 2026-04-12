@@ -1,0 +1,3 @@
+CheckMSSQL RCDATA "CheckLogTablesMSSQL.sql"
+CreateMSSQL RCDATA "CreateTableMSSQLTemplate.sql"
+TrgMSSQL RCDATA "logTriggerMSSQLTemplate.sql"

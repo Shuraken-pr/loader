@@ -9,7 +9,8 @@ uses
   System.Actions, Vcl.ActnList, System.ImageList, Vcl.ImgList, cxImageList,
   dxLayoutContainer, dxLayoutControl, cxClasses, dxBar, dxRibbon, vstHelper,
   VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, DLLManager, intf_dll, intf_common, System.Generics.Collections;
+  VirtualTrees, DllManager, intf_dll, intf_common, System.Generics.Collections,
+  VirtualTrees.Types;
 
 type
   /// <summary>
@@ -53,11 +54,17 @@ type
     btnCalcPrice: TdxBarLargeButton;
     btnExplorer: TdxBarLargeButton;
     btnRunTasks: TdxBarLargeButton;
+    btnLogData: TdxBarLargeButton;
     procedure vstLogGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure vstLogFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure vstLogDrawText(Sender: TBaseVirtualTree; TargetCanvas: TCanvas;
+      Node: PVirtualNode; Column: TColumnIndex; const Text: string;
+      const CellRect: TRect; var DefaultDraw: Boolean);
+    procedure vstLogMeasureItem(Sender: TBaseVirtualTree; TargetCanvas: TCanvas;
+      Node: PVirtualNode; var NodeHeight: TDimension);
   private
     FDllManager: TDllManager;
     FButtons: TButtonEntryList;
@@ -73,7 +80,7 @@ var
 implementation
 
 uses
-  intf_dll_manager, intf_tasks;
+  intf_dll_manager, intf_tasks, System.Math;
 
 {$R *.dfm}
 
@@ -94,7 +101,10 @@ var
 begin
   log := vstLog.Add<TVSTLog>;
   if Assigned(log) then
+  begin
+    vstLog.MultiLine[log.Node] := true;
     log.Msg := AMsg;
+  end;
 end;
 
 /// <summary>
@@ -193,6 +203,7 @@ begin
   FButtons.AddEntry(btnCalcPrice, DICalcPrice, nil);
   FButtons.AddEntry(btnExplorer, DIExplorer, nil);
   FButtons.AddEntry(btnRunTasks, DIRunTasks, nil);
+  FButtons.AddEntry(btnLogData, DILogData, nil);
 
   LoadAllDlls;
 end;
@@ -212,6 +223,18 @@ begin
   FreeAndNil(FButtons);
 end;
 
+procedure TfrmMain.vstLogDrawText(Sender: TBaseVirtualTree;
+  TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+  const Text: string; const CellRect: TRect; var DefaultDraw: Boolean);
+var
+  DrawRect: TRect;
+begin
+  DefaultDraw := False;
+  DrawRect := CellRect;
+  DrawTextW(TargetCanvas.Handle, PWideChar(Text), Length(Text), DrawRect,
+    DT_WORDBREAK or DT_NOPREFIX or DT_EDITCONTROL or DT_END_ELLIPSIS);
+end;
+
 procedure TfrmMain.vstLogFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
 var
   log: TVSTLog;
@@ -227,14 +250,30 @@ var
   log: TVSTLog;
 begin
   cellText := '';
-  log := Sender.Obj<TVSTLog>(Node);
-  if Assigned(log) then
+  if TextType = ttNormal then
   begin
-    case column of
-      0: CellText := FormatDateTime('dd.mm.yyyy hh:nn:ss', log.LogDate);
-      1: CellText := log.Msg;
+    log := Sender.Obj<TVSTLog>(Node);
+    if Assigned(log) then
+    begin
+      case column of
+        0: CellText := FormatDateTime('dd.mm.yyyy hh:nn:ss', log.LogDate);
+        1: CellText := log.Msg;
+      end;
     end;
   end;
+end;
+
+procedure TfrmMain.vstLogMeasureItem(Sender: TBaseVirtualTree;
+  TargetCanvas: TCanvas; Node: PVirtualNode; var NodeHeight: TDimension);
+var
+  maxNodeHeight: TDimension;
+  i: integer;
+begin
+  maxNodeHeight := vstLog.DefaultNodeHeight;
+  for i := 0 to Sender.Header.Columns.Count - 1 do
+    maxNodeHeight := Max(maxNodeHeight, vstLog.ComputeNodeHeight(TargetCanvas, Node, i, vstLog.Text[Node, i]));
+  if maxNodeHeight > vstLog.DefaultNodeHeight then
+    NodeHeight := vstLog.DefaultNodeHeight * (1 + maxNodeHeight div vstLog.DefaultNodeHeight);
 end;
 
 { TButtonEntryList }

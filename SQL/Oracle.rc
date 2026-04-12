@@ -1,0 +1,3 @@
+CheckOracle RCDATA "CheckLogTablesOracle.sql"
+CreateOracle RCDATA "CreateTableOracleTemplate.sql"
+TrgOracle RCDATA "logTriggerOracleTemplate.sql"

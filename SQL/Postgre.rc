@@ -1,0 +1,3 @@
+CheckPostgre RCDATA "CheckLogTablesPostgre.sql"
+CreatePostgre RCDATA "CreateTablePostgreTemplate.sql"
+TrgPostgre RCDATA "logTriggerPostgreTemplate.sql"

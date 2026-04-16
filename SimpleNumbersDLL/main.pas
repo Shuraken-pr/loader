@@ -13,13 +13,6 @@ uses
   System.SyncObjs, System.Threading;
 
 type
-  TVSTSimpleNum = class(TBaseRecord)
-  private
-    FSimpleNumber: integer;
-  public
-    property SimpleNumber: integer read FSimpleNumber write FSimpleNumber;
-  end;
-
   TfrmSimpleNumbers = class(TForm)
     lcMainGroup_Root: TdxLayoutGroup;
     lcMain: TdxLayoutControl;
@@ -36,15 +29,17 @@ type
     vstThread2: TVirtualStringTree;
     liThread2: TdxLayoutItem;
     procedure btnRunClick(Sender: TObject);
-    procedure vstThread1FreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstThread1GetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     FCallbackProc: TProc<WideString>;
+    FList1: TList<integer>;
+    FList2: TList<integer>;
     procedure DoCallbackProc(AMsg: WideString);
     procedure CheckAndFillSimpleNumbers(var NextNum: Integer; MaxNum: Integer;
-      var ASNLists: TStringList; ListsCS: TCriticalSection;
+      var ASNLists: TStringList; var ResultList: TList<integer>; ListsCS: TCriticalSection;
       const AVST: TVirtualStringTree; const AFileName: string);
   public
     property CallbackProc: TProc<WideString> read FCallbackProc write FCallbackProc;
@@ -101,19 +96,21 @@ begin
   end;
 
   NextNum := 0;
+  FList1.Clear;
+  FList2.Clear;
   ListsCS := TCriticalSection.Create;
   try
     lthreads := TStringList.Create;
     try
       thread1 := TThread.CreateAnonymousThread(procedure
       begin
-        CheckAndFillSimpleNumbers(NextNum, MaxNum, lthreads, ListsCS, vst1, 'thread1.txt');
+        CheckAndFillSimpleNumbers(NextNum, MaxNum, lthreads, Flist1, ListsCS, vst1, 'thread1.txt');
       end);
       thread1.FreeOnTerminate := false;
 
       thread2 := TThread.CreateAnonymousThread(procedure
       begin
-        CheckAndFillSimpleNumbers(NextNum, MaxNum, lthreads, ListsCS, vst2, 'thread2.txt');
+        CheckAndFillSimpleNumbers(NextNum, MaxNum, lthreads, Flist2, ListsCS, vst2, 'thread2.txt');
       end);
       thread2.FreeOnTerminate := false;
 
@@ -153,7 +150,7 @@ begin
 end;
 
 procedure TfrmSimpleNumbers.CheckAndFillSimpleNumbers(var NextNum: Integer;
-  MaxNum: Integer; var ASNLists: TStringList; ListsCS: TCriticalSection;
+  MaxNum: Integer; var ASNLists: TStringList; var ResultList: TList<integer>; ListsCS: TCriticalSection;
   const AVST: TVirtualStringTree; const AFileName: string);
 var
   ANum: integer;
@@ -177,18 +174,10 @@ begin
       if CheckSimpleNumber(ANum) then
       begin
         FList.Add(IntToStr(ANum));
-        if Assigned(AVST) then
-          TThread.Synchronize(nil, procedure
-          var
-            sn: TVSTSimpleNum;
-          begin
-            sn := AVST.Add<TVSTSimpleNum>;
-            if Assigned(sn) then
-              sn.SimpleNumber := ANum;
-          end);
         ListsCS.Enter;
         try
           ASNLists.Add(IntToStr(ANum));
+          ResultList.add(ANum);
         finally
           ListsCS.Leave;
         end;
@@ -196,7 +185,14 @@ begin
     until False;
   finally
     if FList.Count > 0 then
+    begin
       FList.SaveToFile(AFileName);
+      if Assigned(AVST) then
+        TThread.Synchronize(nil, procedure
+        begin
+          AVST.RootNodeCount := FList.Count;
+        end);
+    end;
   end;
 end;
 
@@ -208,30 +204,25 @@ end;
 
 procedure TfrmSimpleNumbers.FormCreate(Sender: TObject);
 begin
-  vstThread1.NodeDataSize := SizeOf(TVSTSimpleNum);
-  vstThread2.NodeDataSize := SizeOf(TVSTSimpleNum);
   FCallbackProc := nil;
+  FList1 := TList<integer>.Create;
+  FList2 := TList<integer>.Create;
 end;
 
-procedure TfrmSimpleNumbers.vstThread1FreeNode(Sender: TBaseVirtualTree;
-  Node: PVirtualNode);
-var
-  simpleNumber: TVSTSimpleNum;
+procedure TfrmSimpleNumbers.FormDestroy(Sender: TObject);
 begin
-  simpleNumber := Sender.Obj<TVSTSimpleNum>(Node);
-  if Assigned(simpleNumber) then
-    FreeAndNil(simpleNumber);
+  FreeAndNil(FList1);
+  FreeAndNil(FList2);
 end;
 
 procedure TfrmSimpleNumbers.vstThread1GetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
   Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
-var
-  simpleNumber: TVSTSimpleNum;
 begin
   CellText := '';
-  simpleNumber := Sender.Obj<TVSTSimpleNum>(Node);
-  if Assigned(simpleNumber) then
-    CellText := IntToStr(simpleNumber.SimpleNumber);
+  if (Sender.Tag = 1) and (int(node.Index) <= FList1.Count - 1) then
+    CellText := IntToStr(flist1[Node.Index])
+  else if (Sender.Tag = 2) and (int(node.Index) <= FList2.Count - 1) then
+    CellText := IntToStr(flist2[Node.Index]);
 end;
 
 end.

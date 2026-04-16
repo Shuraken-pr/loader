@@ -296,6 +296,7 @@ object frmSimpleNumbers: TfrmSimpleNumbers
     AC418000AC418000AC418000AC41C001AC41C001AC41E003AC41F007AC41FC1F
     AC41FFFFAC41}
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   TextHeight = 15
   object lcMain: TdxLayoutControl
     Left = 0
@@ -356,6 +357,7 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       OnClick = btnRunClick
     end
     object vstThread1: TVirtualStringTree
+      Tag = 1
       Left = 28
       Top = 123
       Width = 425
@@ -373,7 +375,6 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       TabOrder = 2
       TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
       TreeOptions.SelectionOptions = [toFullRowSelect, toSelectNextNodeOnRemoval]
-      OnFreeNode = vstThread1FreeNode
       OnGetText = vstThread1GetText
       Touch.InteractiveGestures = [igPan, igPressAndTap]
       Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
@@ -386,6 +387,7 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       Height = 508
     end
     object vstThread2: TVirtualStringTree
+      Tag = 2
       Left = 483
       Top = 123
       Width = 446
@@ -403,7 +405,6 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       TabOrder = 4
       TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
       TreeOptions.SelectionOptions = [toFullRowSelect, toSelectNextNodeOnRemoval]
-      OnFreeNode = vstThread1FreeNode
       OnGetText = vstThread1GetText
       Touch.InteractiveGestures = [igPan, igPressAndTap]
       Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]

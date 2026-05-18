@@ -10,7 +10,7 @@ uses
   dxLayoutContainer, dxLayoutControl, cxClasses, dxBar, dxRibbon, vstHelper,
   VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
   VirtualTrees, DllManager, intf_dll, intf_common, System.Generics.Collections,
-  VirtualTrees.Types;
+  intf_dll_manager, VirtualTrees.Types;
 
 type
   /// <summary>
@@ -66,7 +66,7 @@ type
     procedure vstLogMeasureItem(Sender: TBaseVirtualTree; TargetCanvas: TCanvas;
       Node: PVirtualNode; var NodeHeight: TDimension);
   private
-    FDllManager: TDllManager;
+    FDllManager: IDllManager;
     FButtons: TButtonEntryList;
     procedure AddMsg(const AMsg: WideString);
     procedure OnButtonClick(Sender: TObject);
@@ -80,7 +80,7 @@ var
 implementation
 
 uses
-  intf_dll_manager, intf_tasks, System.Math;
+  intf_tasks, System.Math;
 
 {$R *.dfm}
 
@@ -209,16 +209,12 @@ begin
 end;
 
 procedure TfrmMain.FormDestroy(Sender: TObject);
-var
-  DllMgrIntf: IDllManager;
 begin
   // Освобождаем через интерфейс — корректный RefCount
   if Assigned(FDllManager) then
   begin
-    DllMgrIntf := FDllManager;
-    FDllManager := nil;
-    DllMgrIntf.UnloadAll;
-    DllMgrIntf := nil;  // RefCount=0 → вызывается Destroy
+    FDllManager.UnloadAll;
+    FDllManager := nil;  // RefCount=0 → вызывается Destroy
   end;
   FreeAndNil(FButtons);
 end;

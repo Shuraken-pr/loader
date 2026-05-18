@@ -41,6 +41,8 @@ var
 
 implementation
 
+uses Math;
+
 {$R *.dfm}
 
 { TfrmCalcPrice }
@@ -71,30 +73,38 @@ begin
   UpPriceWithoutNDS := UpPriceWithNDS/koefficient;
   DownPriceWithoutNDS := UpPriceWithoutNDS;
 
-  //цикл проверки цены без НДС, пока не получим нужный результат
-  while not CheckNum(UpPriceWithoutNDS) and not CheckNum(DownPriceWithoutNDS) do
-  begin
-    if DownPriceWithNDS > 0.01 then
-    begin
-      //уменьшаем цену с НДС на 0.01
-      DownPriceWithNDS := Round(DownPriceWithNDS*100 - 1)/100;
-      DownPriceWithoutNDS := DownPriceWithNDS/koefficient;
-    end;
-    //повышаем цену с НДС на 0.01
-    UpPriceWithNDS := Round(UpPriceWithNDS*100 + 1)/100;
-    UpPriceWithoutNDS := UpPriceWithNDS/koefficient;
-  end;
-
-  //проверяем, какая цена корректная: которую увеличивали или уменьшали.
-  if CheckNum(UpPriceWithoutNDS) then
+  if IsZero(ProcNDS) then
   begin
     CorrectedPriceWithNDS := UpPriceWithNDS;
     CorrectedPriceWithoutNDS := UpPriceWithoutNDS;
   end
     else
   begin
-    CorrectedPriceWithNDS := DownPriceWithNDS;
-    CorrectedPriceWithoutNDS := DownPriceWithoutNDS;
+    //цикл проверки цены без НДС, пока не получим нужный результат
+    while not CheckNum(UpPriceWithoutNDS) and not CheckNum(DownPriceWithoutNDS) do
+    begin
+      if DownPriceWithNDS > 0.01 then
+      begin
+        //уменьшаем цену с НДС на 0.01
+        DownPriceWithNDS := Round(DownPriceWithNDS*100 - 1)/100;
+        DownPriceWithoutNDS := DownPriceWithNDS/koefficient;
+      end;
+      //повышаем цену с НДС на 0.01
+      UpPriceWithNDS := Round(UpPriceWithNDS*100 + 1)/100;
+      UpPriceWithoutNDS := UpPriceWithNDS/koefficient;
+    end;
+
+    //проверяем, какая цена корректная: которую увеличивали или уменьшали.
+    if CheckNum(UpPriceWithoutNDS) then
+    begin
+      CorrectedPriceWithNDS := UpPriceWithNDS;
+      CorrectedPriceWithoutNDS := UpPriceWithoutNDS;
+    end
+      else
+    begin
+      CorrectedPriceWithNDS := DownPriceWithNDS;
+      CorrectedPriceWithoutNDS := DownPriceWithoutNDS;
+    end;
   end;
   //выводим результат.
   Msg := 'Вычисление цены завершено: ' +

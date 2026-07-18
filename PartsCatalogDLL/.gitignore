@@ -1,0 +1,15 @@
+*.dcu
+*.*`*
+*.*~*
+*.dsk
+*.exe
+*.dll
+*.local
+*.dsv
+*.ident*
+*.txt
+__history/
+__recovery/
+Win32/Debug/
+Win64/Debug/
+*.sql~

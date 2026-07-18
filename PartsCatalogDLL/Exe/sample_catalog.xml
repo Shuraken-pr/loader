@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<catalog version="1.0">
+  <category name="Механические">
+    <category name="Гайки">
+      <attribute name="Дата изготовления" type="date"/>
+      <attribute name="Материал" type="string"/>
+      
+      <part code="12345">
+        <value attribute="Дата изготовления">01.01.2026</value>
+        <value attribute="Материал">Сталь</value>
+      </part>
+      <part code="12346">
+        <value attribute="Дата изготовления">15.11.2025</value>
+        <value attribute="Материал">Латунь</value>
+      </part>
+    </category>
+  </category>
+
+  <category name="Электрические">
+    <category name="Платы">
+      <attribute name="Страна происхождения" type="string"/>
+      <attribute name="В наличии" type="boolean"/>
+      
+      <part code="348686896">
+        <value attribute="Страна происхождения">Китай</value>
+        <value attribute="В наличии">false</value>
+      </part>
+      <part code="348686897">
+        <value attribute="Страна происхождения">Россия</value>
+        <value attribute="В наличии">true</value>
+      </part>
+    </category>
+  </category>
+</catalog>

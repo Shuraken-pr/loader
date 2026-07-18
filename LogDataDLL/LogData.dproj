@@ -113,7 +113,6 @@
             <Form>Oracle.res</Form>
         </RcCompile>
         <RcCompile Include="..\SQL\Postgre.rc">
-            <ModuleName>Postgre.rc</ModuleName>
             <Form>Postgre.res</Form>
         </RcCompile>
         <DCCReference Include="..\..\Common\intf_dll.pas"/>
@@ -129,13 +128,13 @@
         <DCCReference Include="uLogData.pas">
             <Form>frmLogData</Form>
         </DCCReference>
-        <RcCompile Include="..\..\SQL\Postgre.rc">
+        <RcCompile Include="..\SQL\Postgre.rc">
             <Form>Postgre.res</Form>
         </RcCompile>
-        <RcCompile Include="..\..\SQL\Oracle.rc">
+        <RcCompile Include="..\SQL\Oracle.rc">
             <Form>Oracle.res</Form>
         </RcCompile>
-        <RcCompile Include="..\..\SQL\mssql.rc">
+        <RcCompile Include="..\SQL\mssql.rc">
             <Form>MSSQL.res</Form>
         </RcCompile>
         <BuildConfiguration Include="Base">

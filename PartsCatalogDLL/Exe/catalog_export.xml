@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<catalog version="1.0">
+  <category name="Механические">
+    <category name="Болты Российские">
+      <attribute name="Диаметр" type="number"/>
+      <attribute name="материал" type="string"/>
+      <attribute name="Страна изготовления" type="string"/>
+      <part code="1234">
+        <value attribute="Диаметр">45</value>
+        <value attribute="материал">Бронза</value>
+        <value attribute="Страна изготовления">Россия</value>
+      </part>
+    </category>
+    <category name="Гайки">
+      <attribute name="Дата изготовления" type="date"/>
+      <attribute name="Материал" type="string"/>
+      <part code="12345">
+        <value attribute="Дата изготовления">01.01.2026</value>
+        <value attribute="Материал">Сталь</value>
+      </part>
+      <part code="12346">
+        <value attribute="Дата изготовления">15.11.2025</value>
+        <value attribute="Материал">Латунь</value>
+      </part>
+    </category>
+  </category>
+  <category name="Тестирование">
+    <category name="Автоматическое">
+      <attribute name="Тип тестирования" type="string"/>
+      <attribute name="Время тестирования (минуты)" type="number"/>
+      <part code="565">
+        <value attribute="Тип тестирования">DUnitX</value>
+        <value attribute="Время тестирования (минуты)">30</value>
+      </part>
+    </category>
+    <category name="Ручное">
+      <attribute name="Время (минуты)" type="number"/>
+      <part code="567">
+        <value attribute="Время (минуты)">45</value>
+      </part>
+    </category>
+  </category>
+  <category name="Электрические">
+    <category name="Платы">
+      <attribute name="Страна происхождения" type="string"/>
+      <attribute name="В наличии" type="boolean"/>
+      <attribute name="Дата выпуска" type="date"/>
+      <part code="348686896">
+        <value attribute="Страна происхождения">Китай</value>
+        <value attribute="В наличии">false</value>
+        <value attribute="Дата выпуска">01.05.2026</value>
+      </part>
+      <part code="348686897">
+        <value attribute="Страна происхождения">Россия</value>
+        <value attribute="В наличии">true</value>
+        <value attribute="Дата выпуска">05.06.2022</value>
+      </part>
+      <part code="4564987">
+        <value attribute="Страна происхождения">Россия</value>
+        <value attribute="В наличии">true</value>
+        <value attribute="Дата выпуска">05.06.2026</value>
+      </part>
+    </category>
+  </category>
+</catalog>

@@ -6,14 +6,22 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, dxCore, dxRibbonSkins, dxRibbonCustomizationForm,
-  VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, dxBar, cxClasses, dxRibbon, uDMConn, System.Actions,
+  dxBar, cxClasses, dxRibbon, uDMConn, System.Actions,
   Vcl.ActnList, VirtualTrees.Obj, Data.DB, System.ImageList, Vcl.ImgList,
-  cxImageList, cxLocalization, VirtualTrees.Types, System.Generics.Collections,
-  System.StrUtils, vstHelper;
+  cxImageList, cxLocalization, System.Generics.Collections,
+  System.StrUtils, cxVirtualTreeListHelper, cxFilter, cxCustomData, cxStyles,
+  dxScrollbarAnnotations, cxTL, cxCheckBox, cxTextEdit, cxTLdxBarBuiltInMenu,
+  cxInplaceContainer, cxTLData;
+
+{
+Таблица
+Колонка
+Триггер
+Лог таблица
+}
 
 type
-  TVSTLogData = class(TBaseRecord)
+  TVTLogData = class(TVTBaseRecord)
   private
     FCol_length: WideString;
     FHave_trg: boolean;
@@ -24,11 +32,15 @@ type
     FHave_log: boolean;
     FLevel: integer;
     FScheme: WideString;
+    FChecked: boolean;
   public
-    constructor Create; override;
+    constructor Create(AParent: TVTBase); override;
     destructor Destroy; override;
     procedure LoadFromDS(ADS: TDataSet);
+    function  GetValue(ColIdx: Integer): Variant; override;
+    procedure SetValue(ColIdx: Integer; const AValue: Variant); override;
     property id: integer read FId write FId;
+    property Checked: boolean read FChecked write FChecked;
     property Level: integer read FLevel write FLevel;
     property scheme: WideString read FScheme write FScheme;
     property table_name: WideString read FTable_name write FTable_name;
@@ -57,7 +69,6 @@ type
     rbActions: TdxRibbon;
     bParams: TdxBar;
     bActionsDB: TdxBar;
-    vstLogData: TVirtualStringTree;
     alLogData: TActionList;
     acReconnect: TAction;
     acSave: TAction;
@@ -75,6 +86,12 @@ type
     cxLocalizer1: TcxLocalizer;
     dxBarLargeButton1: TdxBarLargeButton;
     acRefresh: TAction;
+    vtlLog: TcxVirtualTreeList;
+    colCheck: TcxTreeListColumn;
+    colTable: TcxTreeListColumn;
+    colColumn: TcxTreeListColumn;
+    colTrigger: TcxTreeListColumn;
+    colHaveLog: TcxTreeListColumn;
     procedure acReconnectExecute(Sender: TObject);
     procedure acSaveExecute(Sender: TObject);
     procedure acDelTriggersExecute(Sender: TObject);
@@ -83,9 +100,8 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure vstLogDataGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure acRefreshExecute(Sender: TObject);
+    procedure colCheckPropertiesEditValueChanged(Sender: TObject);
   private
     { Private declarations }
     FDM: TdmConn;
@@ -94,6 +110,7 @@ type
     FCreateList: TStringList;
     FTrgList: TStringList;
     FCallback: TProc<WideString>;
+    FDSLog: TVTLoadAllDataSource<TVTLogData>;
     function LoadResourceToStringList(const AResName: WideString; AList: TStringList): boolean;
     procedure FillGrid;
     procedure SetDM;
@@ -130,13 +147,12 @@ const
 
 procedure TfrmLogData.acCollapseAllExecute(Sender: TObject);
 begin
-  vstLogData.FullCollapse;
+  vtlLog.FullCollapse;
 end;
 
 procedure TfrmLogData.acDelTriggersExecute(Sender: TObject);
 var
-  Node: PVirtualNode;
-  Data: TVSTLogData;
+  Data: TVTLogData;
   TableKey: string;
   SQL: string;
   DropCount: Integer;
@@ -146,11 +162,10 @@ begin
   DropCount := 0;
   try
     // Собираем выбранные таблицы (уровень 0), у которых есть триггер
-    Node := vstLogData.GetFirst;
-    while Assigned(Node) do
+    for var i := 0 to FDSLog.RootHandle.ChildCount - 1 do
     begin
-      Data := vstLogData.Obj<TVSTLogData>(Node);
-      if Assigned(Data) and (Data.Level = 0) and (vstLogData.CheckState[Node] in [csCheckedNormal, csCheckedPressed]) then
+      Data := TVTLogData(FDSLog.RootHandle[i]);
+      if Assigned(Data) and (Data.Level = 0) and (Data.Checked) then
       begin
         if Data.have_trg then
         begin
@@ -159,7 +174,6 @@ begin
             ProcessedTables.Add(TableKey);
         end;
       end;
-      Node := vstLogData.GetNext(Node);
     end;
 
     if ProcessedTables.Count = 0 then
@@ -208,7 +222,7 @@ end;
 
 procedure TfrmLogData.acExpandAllExecute(Sender: TObject);
 begin
-  vstLogData.FullExpand;
+  vtlLog.FullExpand;
 end;
 
 procedure TfrmLogData.acReconnectExecute(Sender: TObject);
@@ -291,26 +305,23 @@ end;
 procedure TfrmLogData.FillGrid;
 var
   curtable_name, table_name: string;
-  curNode, parentNode: PVirtualNode;
+  curNode, parentNode: TVTLogData;
   level: integer;
-  logData: TVSTLogData;
 
-  procedure FillLogData(ANode: PVirtualNode; ALevel: integer);
+  procedure FillLogData(ANode: TVTLogData; ALevel: integer);
   begin
-    LogData := vstLogData.Add<TVSTLogData>(ANode);
-    LogData.LoadFromDS(FDM.qrLogData);
-    logData.Level := ALevel;
-    vstLogData.CheckType[curNode] := ctTriStateCheckBox;
+    ANode.LoadFromDS(FDM.qrLogData);
+    ANode.Level := ALevel;
     if parentNode <> nil then
-      curNode := ParentNode;
+      curNode := parentNode;
   end;
 
 begin
   if FCurBD <> tacNone then
   begin
-    vstLogData.BeginUpdate;
+    vtlLog.BeginUpdate;
     try
-      vstLogData.Clear;
+      FDSLog.Clear;
       if LoadResourceToStringList('Check' + ResStrName[FCurBD], FCheckList) then
       begin
         with FDM.qrLogData do
@@ -329,7 +340,7 @@ begin
               if curtable_name <> table_name then
               begin
                 curtable_name := table_name;
-                curNode := vstLogData.AddChild(vstLogData.RootNode);
+                curNode := FDSLog.InsertRecordHandle(FDSLog.RootHandle, true);
                 parentNode := nil;
                 level := 0;
                 FillLogData(curNode, level);
@@ -337,7 +348,7 @@ begin
               if AnsiLowerCase(FieldByName('column_name').AsWideString) <> 'id' then
               begin
                 parentNode := curNode;
-                curNode := vstLogData.AddChild(parentNode);
+                curNode := FDSLog.InsertRecordHandle(parentNode, true);
                 level := 1;
                 FillLogData(curNode, level);
               end;
@@ -354,7 +365,8 @@ begin
         FCallback('Не удалось загрузить SQL-запрос из ресурсов');
       end;
     finally
-      vstLogData.EndUpdate;
+      FDSLog.DataChanged;
+      vtlLog.EndUpdate;
     end;
   end;
 end;
@@ -364,7 +376,7 @@ begin
   FCheckList := TStringList.Create;
   FCreateList := TStringList.Create;
   FTrgList := TStringList.Create;
-  vstLogData.NodeDataSize := SizeOf(TVSTLogData);
+  FDSLog := TVTLoadAllDataSource<TVTLogData>.Create(vtlLog);
 end;
 
 procedure TfrmLogData.FormDestroy(Sender: TObject);
@@ -372,6 +384,7 @@ begin
   FreeAndNil(FTrgList);
   FreeAndNil(FCreateList);
   FreeAndNil(FCheckList);
+  FreeAndNil(FDSLog);
 end;
 
 procedure TfrmLogData.FormShow(Sender: TObject);
@@ -651,6 +664,39 @@ begin
   end;
 end;
 
+procedure TfrmLogData.colCheckPropertiesEditValueChanged(Sender: TObject);
+var
+  data, childData, parentData: TVTLogData;
+  i: integer;
+begin
+  data := FDSLog.CurrentObj;
+  if Assigned(data) then
+  begin
+    if data.Level = 0 then
+    begin
+      for i := 0 to data.ChildCount - 1 do
+        TVTLogData(data[i]).Checked := data.Checked;
+    end
+      else
+    begin
+      parentData := TVTLogData(data.Parent);
+      if Assigned(parentData) then
+      begin
+        for i := 0 to parentData.ChildCount - 1 do
+        begin
+          childData := TVTLogData(parentData[i]);
+          if childData.Checked then
+          begin
+            parentData.Checked := true;
+            exit;
+          end;
+        end;
+        parentData.Checked := false;
+      end;
+    end;
+  end;
+end;
+
 procedure TfrmLogData.ReplaceTemplateVars(ATemplate: TStringList; ASchema, ATableName,
   AColDefs, AColNames, ANewCols, AOldCols: string);
 var
@@ -726,65 +772,44 @@ end;
 
 function TfrmLogData.CollectSelectedTables: TDictionary<string, TTableInfo>;
 var
-  Node: PVirtualNode;
-  Data: TVSTLogData;
+  TableData, ColData: TVTLogData;
   TableKey: string;
   TableInfo: TTableInfo;
   ColInfo: TColumnInfo;
-  CheckedState: TCheckState;
-  LastParent: PVirtualNode;
-  LastParentData: TVSTLogData;
 begin
   Result := TDictionary<string, TTableInfo>.Create;
   try
-    LastParent := nil;
-    LastParentData := nil;
-
     // Проходим по всем узлам, собираем колонки уровня 1, которые выбраны
-    Node := vstLogData.GetFirst;
-    while Assigned(Node) do
+    for var i := 0 to FDSLog.RootHandle.ChildCount - 1 do
     begin
-      Data := vstLogData.Obj<TVSTLogData>(Node);
-      if Assigned(Data) then
+      TableData := TVTLogData(FDSLog.RootHandle[i]);
+      // Если таблица уже имеет лог-таблицу, пропускаем
+      if Assigned(TableData) and TableData.Checked and not TableData.have_log then
       begin
-        if Data.Level = 0 then
-        begin
-          // Запоминаем последний родительский узел
-          LastParent := Node;
-          LastParentData := Data;
-        end
-        else if Data.Level = 1 then
+        for var j := 0 to TableData.ChildCount - 1 do
         begin
           // Это колонка
-          CheckedState := vstLogData.CheckState[Node];
-          if CheckedState in [csCheckedNormal, csCheckedPressed] then
+          ColData := TVTLogData(TableData[j]);
+          if ColData.Checked then
           begin
-            if Assigned(LastParent) and Assigned(LastParentData) then
+            TableKey := TableData.scheme + '.' + TableData.table_name;
+
+            if not Result.ContainsKey(TableKey) then
             begin
-              // Если таблица уже имеет лог-таблицу, пропускаем
-              if not LastParentData.have_log then
-              begin
-                TableKey := LastParentData.scheme + '.' + LastParentData.table_name;
-
-                if not Result.ContainsKey(TableKey) then
-                begin
-                  TableInfo.SchemaName := LastParentData.scheme;
-                  TableInfo.TableName := LastParentData.table_name;
-                  TableInfo.Columns := TList<TColumnInfo>.Create;
-                  Result.Add(TableKey, TableInfo);
-                end;
-
-                TableInfo := Result[TableKey];
-                ColInfo.ColumnName := Data.column_name;
-                ColInfo.ColType := Data.col_type;
-                ColInfo.ColLength := Data.col_length;
-                TableInfo.Columns.Add(ColInfo);
-              end;
+              TableInfo.SchemaName := TableData.scheme;
+              TableInfo.TableName := TableData.table_name;
+              TableInfo.Columns := TList<TColumnInfo>.Create;
+              Result.Add(TableKey, TableInfo);
             end;
+
+            TableInfo := Result[TableKey];
+            ColInfo.ColumnName := ColData.column_name;
+            ColInfo.ColType := ColData.col_type;
+            ColInfo.ColLength := ColData.col_length;
+            TableInfo.Columns.Add(ColInfo);
           end;
         end;
       end;
-      Node := vstLogData.GetNext(Node);
     end;
   except
     Result.Free;
@@ -821,42 +846,12 @@ begin
     Result := '';
 end;
 
-procedure TfrmLogData.vstLogDataGetText(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-  var CellText: string);
-const
-  RusArrBool: array[boolean] of string = ('Нет', 'Да');
-var
-  data: TVSTLogData;
-begin
-  CellText := '';
-  if TextType = ttNormal then
-  begin
-    data := Sender.obj<TVSTLogData>(Node);
-    if assigned(data) then
-    begin
-      if data.level = 0 then
-      begin
-        case column of
-          0: CellText := data.scheme + '.' + data.table_name;
-          2: CellText := RusArrBool[data.have_trg];
-          3: CellText := RusArrBool[data.have_log];
-        end;
-      end
-        else
-      begin
-        if Column = 1 then
-          CellText := data.column_name;
-      end;
-    end;
-  end;
-end;
 
 { TVSTLogData }
 
-constructor TVSTLogData.Create;
+constructor TVTLogData.Create(AParent: TVTBase);
 begin
-  inherited;
+  inherited Create(AParent);
   FId := 0;
   FLevel := 0;
   FScheme := '';
@@ -866,14 +861,33 @@ begin
   FCol_length := '';
   FHave_trg := false;
   FHave_log := false;
+  FChecked := false;
 end;
 
-destructor TVSTLogData.Destroy;
+destructor TVTLogData.Destroy;
 begin
   inherited;
 end;
 
-procedure TVSTLogData.LoadFromDS(ADS: TDataSet);
+function TVTLogData.GetValue(ColIdx: Integer): Variant;
+const
+  RusArrBool: array[boolean] of string = ('Нет', 'Да');
+begin
+  Result := null;
+  case ColIdx of
+    0: Result := Checked;
+    1: if Level = 0 then
+         Result := scheme + '.' + table_name;
+    2: if Level = 1 then
+         Result := column_name;
+    3: if Level = 0 then
+         Result := RusArrBool[have_trg];
+    4: if level = 0 then
+         Result := RusArrBool[have_log]
+  end;
+end;
+
+procedure TVTLogData.LoadFromDS(ADS: TDataSet);
 begin
   FScheme := ADS.FieldByName('table_schema').AsWideString;
   FTable_name := ADS.FieldByName('table_name').AsWideString;
@@ -882,6 +896,41 @@ begin
   FCol_length := ADS.FieldByName('col_length').AsWideString;
   FHave_trg := ADS.FieldByName('have_trg').AsBoolean;
   FHave_log := ADS.FieldByName('have_log').AsBoolean;
+end;
+
+procedure TVTLogData.SetValue(ColIdx: Integer; const AValue: Variant);
+var
+  childData, parentData: TVTLogData;
+  i: integer;
+begin
+  case ColIdx of
+    0:
+    begin
+      Checked := Boolean(AValue);
+      if Level = 0 then
+      begin
+        for i := 0 to ChildCount - 1 do
+          TVTLogData(items[i]).Checked := Checked;
+      end
+        else
+      begin
+        parentData := TVTLogData(Self.Parent);
+        if Assigned(parentData) then
+        begin
+          for i := 0 to parentData.ChildCount - 1 do
+          begin
+            childData := TVTLogData(parentData[i]);
+            if childData.Checked then
+            begin
+              parentData.Checked := true;
+              exit;
+            end;
+          end;
+          parentData.Checked := false;
+        end;
+      end;
+    end;
+  end;
 end;
 
 end.

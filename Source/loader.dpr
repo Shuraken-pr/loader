@@ -6,7 +6,8 @@ uses
   vstHelper in '..\..\common\vstHelper.pas',
   intf_dll in '..\..\common\intf_dll.pas',
   intf_dll_manager in '..\..\common\intf_dll_manager.pas',
-  DllManager in '..\..\common\DllManager.pas';
+  DllManager in '..\..\common\DllManager.pas',
+  cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas';
 
 {$R *.res}
 

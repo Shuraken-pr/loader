@@ -1,4 +1,4 @@
-library Explorer;
+﻿library Explorer;
 
 uses
   System.SysUtils,
@@ -10,7 +10,8 @@ uses
   intf_dll_manager in '..\..\common\intf_dll_manager.pas',
   intf_common in '..\..\common\intf_common.pas',
   intf_tasks in '..\..\common\intf_tasks.pas',
-  uExplorer in 'uExplorer.pas' {frmScanLocalDisks};
+  uExplorer in 'uExplorer.pas' {frmScanLocalDisks},
+  cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas';
 
 type
   // TExplorerDLL реализует: IDLLIntf + IDllIntfRun + IUsesDllManager + IExplorer

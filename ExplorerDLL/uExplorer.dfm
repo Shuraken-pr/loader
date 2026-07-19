@@ -1691,42 +1691,6 @@ object frmScanLocalDisks: TfrmScanLocalDisks
     Height = 519
     Align = alClient
     TabOrder = 0
-    object vstExplorer: TVirtualStringTree
-      Left = 14
-      Top = 109
-      Width = 730
-      Height = 396
-      BevelInner = bvNone
-      BevelOuter = bvSpace
-      BevelKind = bkFlat
-      BorderStyle = bsNone
-      DefaultNodeHeight = 19
-      Header.AutoSizeIndex = -1
-      Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
-      LineMode = lmBands
-      LineStyle = lsSolid
-      TabOrder = 4
-      TreeOptions.MiscOptions = [toAcceptOLEDrop, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
-      TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
-      TreeOptions.SelectionOptions = [toFullRowSelect, toSelectNextNodeOnRemoval]
-      OnChange = vstExplorerChange
-      OnCompareNodes = vstExplorerCompareNodes
-      OnGetText = vstExplorerGetText
-      OnHeaderClick = vstExplorerHeaderClick
-      Touch.InteractiveGestures = [igPan, igPressAndTap]
-      Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-      Columns = <
-        item
-          Position = 0
-          Text = #1047#1085#1072#1095#1077#1085#1080#1077
-          Width = 100
-        end
-        item
-          Position = 1
-          Text = #1055#1086#1083#1085#1099#1081' '#1087#1091#1090#1100
-          Width = 350
-        end>
-    end
     object ccbLocalDisks: TcxCheckComboBox
       Left = 129
       Top = 33
@@ -1769,11 +1733,52 @@ object frmScanLocalDisks: TfrmScanLocalDisks
       Style.HotTrack = False
       Style.TransparentBorder = False
     end
+    object vtvExplorer: TcxVirtualTreeList
+      Left = 12
+      Top = 107
+      Width = 734
+      Height = 400
+      Align = alClient
+      Bands = <
+        item
+        end>
+      Navigator.Buttons.CustomButtons = <>
+      OptionsBehavior.MultiSort = False
+      OptionsCustomizing.ColumnMoving = False
+      OptionsData.Editing = False
+      OptionsData.Deleting = False
+      OptionsView.CellEndEllipsis = True
+      OptionsView.GridLines = tlglBoth
+      OptionsView.TreeLineStyle = tllsSolid
+      ScrollbarAnnotations.CustomAnnotations = <>
+      TabOrder = 4
+      OnColumnHeaderClick = vtvExplorerColumnHeaderClick
+      OnCompare = vtvExplorerCompare
+      OnFocusedNodeChanged = vtvExplorerFocusedNodeChanged
+      object colValue: TcxTreeListColumn
+        Caption.Text = #1047#1085#1072#1095#1077#1085#1080#1077
+        Width = 174
+        Position.ColIndex = 0
+        Position.RowIndex = 0
+        Position.BandIndex = 0
+        Summary.FooterSummaryItems = <>
+        Summary.GroupFooterSummaryItems = <>
+      end
+      object colFullPath: TcxTreeListColumn
+        Caption.Text = #1055#1086#1083#1085#1099#1081' '#1087#1091#1090#1100
+        Width = 374
+        Position.ColIndex = 1
+        Position.RowIndex = 0
+        Position.BandIndex = 0
+        Summary.FooterSummaryItems = <>
+        Summary.GroupFooterSummaryItems = <>
+      end
+    end
     object lcExplorerGroup_Root: TdxLayoutGroup
       AlignHorz = ahClient
       AlignVert = avClient
       Hidden = True
-      ItemIndex = 2
+      ItemIndex = 1
       ShowBorder = False
       Index = -1
     end
@@ -1835,9 +1840,10 @@ object frmScanLocalDisks: TfrmScanLocalDisks
       Parent = lcExplorerGroup_Root
       AlignHorz = ahClient
       AlignVert = avClient
-      Control = vstExplorer
-      ControlOptions.OriginalHeight = 375
-      ControlOptions.OriginalWidth = 708
+      Control = vtvExplorer
+      ControlOptions.OriginalHeight = 150
+      ControlOptions.OriginalWidth = 250
+      ControlOptions.ShowBorder = False
       Index = 2
     end
   end
@@ -1848,10 +1854,10 @@ object frmScanLocalDisks: TfrmScanLocalDisks
     Height = 519
   end
   object dxFloatDockSite1: TdxFloatDockSite
-    Left = 20
+    Left = 0
     Top = 0
-    Width = 758
-    Height = 519
+    Width = 476
+    Height = 375
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -12
@@ -1860,25 +1866,20 @@ object frmScanLocalDisks: TfrmScanLocalDisks
     Visible = False
     FloatLeft = 910
     FloatTop = 287
-    ExplicitLeft = 0
-    ExplicitWidth = 476
-    ExplicitHeight = 375
     DockingType = 0
     OriginalWidth = 476
     OriginalHeight = 375
     object dpShowFile: TdxDockPanel
       Left = 0
       Top = 0
-      Width = 758
-      Height = 519
+      Width = 476
+      Height = 375
       Visible = False
       AllowFloating = True
       AutoHide = False
       Caption = #1048#1085#1092#1086#1088#1084#1072#1094#1080#1103' '#1086' '#1092#1072#1081#1083#1077
       CustomCaptionButtons.Buttons = <>
       TabsProperties.CustomButtons.Buttons = <>
-      ExplicitWidth = 476
-      ExplicitHeight = 375
       DockingType = 0
       OriginalWidth = 476
       OriginalHeight = 375

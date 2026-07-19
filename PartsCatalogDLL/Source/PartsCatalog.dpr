@@ -10,7 +10,7 @@ uses
   intf_dll in '..\..\..\Common\intf_dll.pas',
   intf_dll_manager in '..\..\..\Common\intf_dll_manager.pas',
   intf_common in '..\..\..\Common\intf_common.pas',
-  cxVirtualTreeListHelper in 'cxVirtualTreeListHelper.pas',
+  cxVirtualTreeListHelper in '..\..\..\Common\cxVirtualTreeListHelper.pas',
   dmDatabase in 'dmDatabase.pas' {dmDB: TDataModule},
   fAttributeDelete in 'fAttributeDelete.pas' {fAttributeDelete},
   fAttributeEdit in 'fAttributeEdit.pas' {frmAttributeEdit},

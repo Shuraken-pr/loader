@@ -10,7 +10,8 @@ uses
   intf_common in '..\..\common\intf_common.pas',
   intf_dll_manager in '..\..\common\intf_dll_manager.pas',
   main in 'main.pas' {frmSimpleNumbers},
-  intf_tasks in '..\..\common\intf_tasks.pas';
+  intf_tasks in '..\..\common\intf_tasks.pas',
+  cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas';
 
 type
   TDllSimpleNumbers = class(TInterfacedObject, IDLLIntf, IDllIntfRun, ISimpleNumbers)

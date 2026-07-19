@@ -1458,53 +1458,6 @@ object frmRunTasks: TfrmRunTasks
     Height = 576
     Align = alClient
     TabOrder = 0
-    object vstRunTasks: TVirtualStringTree
-      Left = 14
-      Top = 185
-      Width = 989
-      Height = 377
-      BevelInner = bvNone
-      BevelOuter = bvSpace
-      BevelKind = bkFlat
-      BorderStyle = bsNone
-      DefaultNodeHeight = 19
-      Header.AutoSizeIndex = 0
-      Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
-      LineMode = lmBands
-      LineStyle = lsSolid
-      TabOrder = 6
-      TreeOptions.MiscOptions = [toAcceptOLEDrop, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning, toVariableNodeHeight, toNodeHeightResize, toEditOnClick]
-      TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
-      TreeOptions.SelectionOptions = [toFullRowSelect, toSelectNextNodeOnRemoval]
-      OnChange = vstRunTasksChange
-      OnDrawText = vstRunTasksDrawText
-      OnFreeNode = vstRunTasksFreeNode
-      OnGetText = vstRunTasksGetText
-      OnMeasureItem = vstRunTasksMeasureItem
-      Touch.InteractiveGestures = [igPan, igPressAndTap]
-      Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-      Columns = <
-        item
-          Position = 0
-          Text = #1042#1088#1077#1084#1103' '#1079#1072#1087#1091#1089#1082#1072
-          Width = 100
-        end
-        item
-          Position = 1
-          Text = #1042#1088#1077#1084#1103' '#1086#1082#1086#1085#1095#1072#1085#1080#1103
-          Width = 150
-        end
-        item
-          Position = 2
-          Text = #1048#1085#1092#1086#1088#1084#1072#1094#1080#1103' '#1086' '#1079#1072#1076#1072#1085#1080#1080
-          Width = 600
-        end
-        item
-          Position = 3
-          Text = #1057#1090#1072#1090#1091#1089
-          Width = 100
-        end>
-    end
     object cbTasks: TcxComboBox
       Left = 96
       Top = 33
@@ -1630,6 +1583,64 @@ object frmRunTasks: TfrmRunTasks
       TabOrder = 5
       Width = 895
     end
+    object vtlRunTasks: TcxVirtualTreeList
+      Left = 12
+      Top = 183
+      Width = 993
+      Height = 381
+      Bands = <
+        item
+        end>
+      Navigator.Buttons.CustomButtons = <>
+      OptionsBehavior.MultiSort = False
+      OptionsBehavior.Sorting = False
+      OptionsData.Editing = False
+      OptionsData.Deleting = False
+      OptionsView.CellAutoHeight = True
+      OptionsView.CellEndEllipsis = True
+      OptionsView.GridLines = tlglBoth
+      OptionsView.ShowRoot = False
+      OptionsView.TreeLineStyle = tllsSolid
+      ScrollbarAnnotations.CustomAnnotations = <>
+      TabOrder = 6
+      OnFocusedNodeChanged = vtlRunTasksFocusedNodeChanged
+      object colDTStart: TcxTreeListColumn
+        Caption.Text = #1042#1088#1077#1084#1103' '#1079#1072#1087#1091#1089#1082#1072
+        Width = 112
+        Position.ColIndex = 0
+        Position.RowIndex = 0
+        Position.BandIndex = 0
+        Summary.FooterSummaryItems = <>
+        Summary.GroupFooterSummaryItems = <>
+      end
+      object colDTEnd: TcxTreeListColumn
+        Caption.Text = #1042#1088#1077#1084#1103' '#1086#1082#1086#1085#1095#1072#1085#1080#1103
+        Width = 153
+        Position.ColIndex = 1
+        Position.RowIndex = 0
+        Position.BandIndex = 0
+        Summary.FooterSummaryItems = <>
+        Summary.GroupFooterSummaryItems = <>
+      end
+      object colInfo: TcxTreeListColumn
+        Caption.Text = #1048#1085#1092#1086#1088#1084#1072#1094#1080#1103' '#1086' '#1079#1072#1076#1072#1085#1080#1080
+        Width = 558
+        Position.ColIndex = 2
+        Position.RowIndex = 0
+        Position.BandIndex = 0
+        Summary.FooterSummaryItems = <>
+        Summary.GroupFooterSummaryItems = <>
+      end
+      object colStatus: TcxTreeListColumn
+        Caption.Text = #1057#1090#1072#1090#1091#1089
+        Width = 100
+        Position.ColIndex = 3
+        Position.RowIndex = 0
+        Position.BandIndex = 0
+        Summary.FooterSummaryItems = <>
+        Summary.GroupFooterSummaryItems = <>
+      end
+    end
     object lcRunTasksGroup_Root: TdxLayoutGroup
       AlignHorz = ahClient
       AlignVert = avClient
@@ -1656,15 +1667,6 @@ object frmRunTasks: TfrmRunTasks
     object liInfo: TdxLayoutItem
       Parent = lcRunTasksGroup_Root
       Index = 2
-    end
-    object liRunTasks: TdxLayoutItem
-      Parent = lcRunTasksGroup_Root
-      AlignHorz = ahClient
-      AlignVert = avClient
-      Control = vstRunTasks
-      ControlOptions.OriginalHeight = 96
-      ControlOptions.OriginalWidth = 200
-      Index = 3
     end
     object liTasks: TdxLayoutItem
       Parent = lgExecute
@@ -1737,6 +1739,16 @@ object frmRunTasks: TfrmRunTasks
       ControlOptions.ShowBorder = False
       Index = 1
     end
+    object liRunTasks: TdxLayoutItem
+      Parent = lcRunTasksGroup_Root
+      AlignHorz = ahClient
+      AlignVert = avClient
+      Control = vtlRunTasks
+      ControlOptions.OriginalHeight = 150
+      ControlOptions.OriginalWidth = 250
+      ControlOptions.ShowBorder = False
+      Index = 3
+    end
   end
   object odExeFile: TOpenDialog
     Filter = 'Exe file|*.exe'
@@ -1746,8 +1758,8 @@ object frmRunTasks: TfrmRunTasks
   object dxFloatDockSite1: TdxFloatDockSite
     Left = 0
     Top = 0
-    Width = 1017
-    Height = 576
+    Width = 545
+    Height = 536
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -12
@@ -1756,8 +1768,6 @@ object frmRunTasks: TfrmRunTasks
     Visible = False
     FloatLeft = 870
     FloatTop = 209
-    ExplicitWidth = 545
-    ExplicitHeight = 536
     DockingType = 0
     OriginalWidth = 545
     OriginalHeight = 536
@@ -1775,37 +1785,43 @@ object frmRunTasks: TfrmRunTasks
       DockingType = 0
       OriginalWidth = 545
       OriginalHeight = 536
-      object vstResults: TVirtualStringTree
+      object vtlResults: TcxVirtualTreeList
         Left = 0
         Top = 0
         Width = 545
         Height = 536
         Align = alClient
-        DefaultNodeHeight = 19
-        Header.AutoSizeIndex = 0
-        Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
-        Header.Style = hsFlatButtons
-        LineMode = lmBands
-        LineStyle = lsSolid
-        TabOrder = 0
-        TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
-        TreeOptions.SelectionOptions = [toFullRowSelect, toSelectNextNodeOnRemoval]
-        OnFreeNode = vstResultsFreeNode
-        OnGetText = vstResultsGetText
-        Touch.InteractiveGestures = [igPan, igPressAndTap]
-        Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-        Columns = <
+        Bands = <
           item
-            Position = 0
-            Text = #1060#1072#1081#1083
-            Width = 300
-          end
-          item
-            Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coAllowFocus, coEditable, coStyleColor]
-            Position = 1
-            Text = #1055#1086#1079#1080#1094#1080#1103
-            Width = 100
           end>
+        Navigator.Buttons.CustomButtons = <>
+        OptionsBehavior.MultiSort = False
+        OptionsBehavior.Sorting = False
+        OptionsData.Editing = False
+        OptionsData.Deleting = False
+        OptionsView.CellAutoHeight = True
+        OptionsView.CellEndEllipsis = True
+        OptionsView.GridLines = tlglBoth
+        OptionsView.ShowRoot = False
+        ScrollbarAnnotations.CustomAnnotations = <>
+        TabOrder = 0
+        object colFile: TcxTreeListColumn
+          Caption.Text = #1060#1072#1081#1083
+          Width = 165
+          Position.ColIndex = 0
+          Position.RowIndex = 0
+          Position.BandIndex = 0
+          Summary.FooterSummaryItems = <>
+          Summary.GroupFooterSummaryItems = <>
+        end
+        object colValue: TcxTreeListColumn
+          Width = 325
+          Position.ColIndex = 1
+          Position.RowIndex = 0
+          Position.BandIndex = 0
+          Summary.FooterSummaryItems = <>
+          Summary.GroupFooterSummaryItems = <>
+        end
       end
     end
   end

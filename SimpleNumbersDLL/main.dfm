@@ -356,59 +356,61 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       TabOrder = 1
       OnClick = btnRunClick
     end
-    object vstThread1: TVirtualStringTree
+    object vtlThread1: TcxVirtualTreeList
       Tag = 1
-      Left = 28
-      Top = 123
-      Width = 425
-      Height = 483
-      BevelInner = bvNone
-      BevelOuter = bvSpace
-      BevelKind = bkFlat
-      BorderStyle = bsNone
-      DefaultNodeHeight = 19
-      Header.AutoSizeIndex = 0
-      Header.Height = 15
-      Header.MainColumn = -1
-      LineMode = lmBands
-      LineStyle = lsSolid
+      Left = 26
+      Top = 121
+      Width = 399
+      Height = 487
+      Bands = <
+        item
+        end>
+      Navigator.Buttons.CustomButtons = <>
+      OptionsBehavior.MultiSort = False
+      OptionsBehavior.Sorting = False
+      OptionsData.Editing = False
+      OptionsData.Deleting = False
+      OptionsView.CellEndEllipsis = True
+      OptionsView.GridLines = tlglBoth
+      OptionsView.ShowRoot = False
+      ScrollbarAnnotations.CustomAnnotations = <>
       TabOrder = 2
-      TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
-      TreeOptions.SelectionOptions = [toFullRowSelect, toSelectNextNodeOnRemoval]
-      OnGetText = vstThread1GetText
-      Touch.InteractiveGestures = [igPan, igPressAndTap]
-      Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-      Columns = <>
+      object colNumberT1: TcxTreeListColumn
+        Width = 389
+        Position.ColIndex = 0
+        Position.RowIndex = 0
+        Position.BandIndex = 0
+        Summary.FooterSummaryItems = <>
+        Summary.GroupFooterSummaryItems = <>
+      end
     end
-    object spThreads: TcxSplitter
-      Left = 462
-      Top = 100
-      Width = 12
-      Height = 508
-    end
-    object vstThread2: TVirtualStringTree
+    object vtlThread2: TcxVirtualTreeList
       Tag = 2
-      Left = 483
-      Top = 123
-      Width = 446
-      Height = 483
-      BevelInner = bvNone
-      BevelOuter = bvSpace
-      BevelKind = bkFlat
-      BorderStyle = bsNone
-      DefaultNodeHeight = 19
-      Header.AutoSizeIndex = 0
-      Header.Height = 15
-      Header.MainColumn = -1
-      LineMode = lmBands
-      LineStyle = lsSolid
-      TabOrder = 4
-      TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
-      TreeOptions.SelectionOptions = [toFullRowSelect, toSelectNextNodeOnRemoval]
-      OnGetText = vstThread1GetText
-      Touch.InteractiveGestures = [igPan, igPressAndTap]
-      Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-      Columns = <>
+      Left = 432
+      Top = 121
+      Width = 499
+      Height = 487
+      Bands = <
+        item
+        end>
+      Navigator.Buttons.CustomButtons = <>
+      OptionsBehavior.MultiSort = False
+      OptionsBehavior.Sorting = False
+      OptionsData.Editing = False
+      OptionsData.Deleting = False
+      OptionsView.CellEndEllipsis = True
+      OptionsView.GridLines = tlglBoth
+      OptionsView.ShowRoot = False
+      ScrollbarAnnotations.CustomAnnotations = <>
+      TabOrder = 3
+      object colNumberT2: TcxTreeListColumn
+        Width = 456
+        Position.ColIndex = 0
+        Position.RowIndex = 0
+        Position.BandIndex = 0
+        Summary.FooterSummaryItems = <>
+        Summary.GroupFooterSummaryItems = <>
+      end
     end
     object lcMainGroup_Root: TdxLayoutGroup
       AlignHorz = ahClient
@@ -446,17 +448,6 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       ControlOptions.ShowBorder = False
       Index = 1
     end
-    object liThread1: TdxLayoutItem
-      Parent = lgLog
-      AlignHorz = ahLeft
-      AlignVert = avClient
-      CaptionOptions.Text = #1055#1077#1088#1074#1099#1081' '#1087#1086#1090#1086#1082
-      CaptionOptions.Layout = clTop
-      Control = vstThread1
-      ControlOptions.OriginalHeight = 96
-      ControlOptions.OriginalWidth = 425
-      Index = 0
-    end
     object lgLog: TdxLayoutGroup
       Parent = lcMainGroup_Root
       AlignHorz = ahClient
@@ -465,29 +456,29 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       LayoutDirection = ldHorizontal
       Index = 1
     end
-    object liSeparator: TdxLayoutItem
+    object liThread1: TdxLayoutItem
       Parent = lgLog
       AlignHorz = ahLeft
       AlignVert = avClient
-      CaptionOptions.Visible = False
+      CaptionOptions.Text = #1055#1077#1088#1074#1099#1081' '#1087#1086#1090#1086#1082
       CaptionOptions.Layout = clTop
-      Control = spThreads
-      ControlOptions.AutoColor = True
-      ControlOptions.OriginalHeight = 100
-      ControlOptions.OriginalWidth = 12
+      Control = vtlThread1
+      ControlOptions.OriginalHeight = 150
+      ControlOptions.OriginalWidth = 399
       ControlOptions.ShowBorder = False
-      Index = 1
+      Index = 0
     end
-    object liThread2: TdxLayoutItem
+    object dxLayoutItem1: TdxLayoutItem
       Parent = lgLog
       AlignHorz = ahClient
       AlignVert = avClient
       CaptionOptions.Text = #1042#1090#1086#1088#1086#1081' '#1087#1086#1090#1086#1082
       CaptionOptions.Layout = clTop
-      Control = vstThread2
-      ControlOptions.OriginalHeight = 96
-      ControlOptions.OriginalWidth = 200
-      Index = 2
+      Control = vtlThread2
+      ControlOptions.OriginalHeight = 150
+      ControlOptions.OriginalWidth = 250
+      ControlOptions.ShowBorder = False
+      Index = 1
     end
   end
 end

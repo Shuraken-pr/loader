@@ -7,10 +7,11 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, dxLayoutcxEditAdapters, dxLayoutControlAdapters,
   dxLayoutContainer, cxContainer, cxEdit, Vcl.Menus, cxSplitter,
-  VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Vcl.StdCtrls, cxButtons, cxTextEdit, cxMaskEdit, cxSpinEdit,
-  cxClasses, dxLayoutControl, System.Generics.Collections, VSTHelper,
-  System.SyncObjs, System.Threading;
+  Vcl.StdCtrls, cxButtons, cxTextEdit, cxMaskEdit, cxSpinEdit,
+  cxClasses, dxLayoutControl, System.Generics.Collections,
+  System.SyncObjs, System.Threading, cxFilter, cxCustomData, cxStyles,
+  dxScrollbarAnnotations, cxTL, cxTLdxBarBuiltInMenu, cxInplaceContainer,
+  cxTLData;
 
 type
   TfrmSimpleNumbers = class(TForm)
@@ -21,26 +22,28 @@ type
     liMaxLimSimpleNumbers: TdxLayoutItem;
     btnRun: TcxButton;
     liRun: TdxLayoutItem;
-    vstThread1: TVirtualStringTree;
-    liThread1: TdxLayoutItem;
     lgLog: TdxLayoutGroup;
-    spThreads: TcxSplitter;
-    liSeparator: TdxLayoutItem;
-    vstThread2: TVirtualStringTree;
-    liThread2: TdxLayoutItem;
+    vtlThread1: TcxVirtualTreeList;
+    liThread1: TdxLayoutItem;
+    vtlThread2: TcxVirtualTreeList;
+    dxLayoutItem1: TdxLayoutItem;
+    colNumberT1: TcxTreeListColumn;
+    colNumberT2: TcxTreeListColumn;
     procedure btnRunClick(Sender: TObject);
-    procedure vstThread1GetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
   private
     FCallbackProc: TProc<WideString>;
     FList1: TList<integer>;
     FList2: TList<integer>;
+    procedure vtlGetChildCount(Sender: TcxCustomTreeList;
+      AParentNode: TcxTreeListNode; var ACount: Integer);
+    procedure vtlGetNodeValue(Sender: TcxCustomTreeList;
+      ANode: TcxTreeListNode; AColumn: TcxTreeListColumn; var AValue: Variant);
     procedure DoCallbackProc(AMsg: WideString);
     procedure CheckAndFillSimpleNumbers(var NextNum: Integer; MaxNum: Integer;
-      var ASNLists: TStringList; var ResultList: TList<integer>; ListsCS: TCriticalSection;
-      const AVST: TVirtualStringTree; const AFileName: string);
+      var ASNLists: TStringList; var ResultList: TList<integer>;
+      ListsCS: TCriticalSection; const AFileName: string);
   public
     property CallbackProc: TProc<WideString> read FCallbackProc write FCallbackProc;
     procedure Run(MaxNum: integer; isSilent: boolean = false);
@@ -80,19 +83,19 @@ var
   NextNum: Integer;
   ListsCS: TCriticalSection;
   delta: TDateTime;
-  vst1, vst2: TVirtualStringTree;
+  vtl1, vtl2: TcxVirtualTreeList;
 begin
   if isSilent then
   begin
-    vst1 := nil;
-    vst2 := nil;
+    vtl1 := nil;
+    vtl2 := nil;
   end
     else
   begin
-    vst1 := vstThread1;
-    vst2 := vstThread2;
-    vst1.Clear;
-    vst2.Clear;
+    vtl1 := vtlThread1;
+    vtl2 := vtlThread2;
+    vtl2.Clear;
+    vtl2.Clear;
   end;
 
   NextNum := 0;
@@ -104,13 +107,13 @@ begin
     try
       thread1 := TThread.CreateAnonymousThread(procedure
       begin
-        CheckAndFillSimpleNumbers(NextNum, MaxNum, lthreads, Flist1, ListsCS, vst1, 'thread1.txt');
+        CheckAndFillSimpleNumbers(NextNum, MaxNum, lthreads, Flist1, ListsCS, 'thread1.txt');
       end);
       thread1.FreeOnTerminate := false;
 
       thread2 := TThread.CreateAnonymousThread(procedure
       begin
-        CheckAndFillSimpleNumbers(NextNum, MaxNum, lthreads, Flist2, ListsCS, vst2, 'thread2.txt');
+        CheckAndFillSimpleNumbers(NextNum, MaxNum, lthreads, Flist2, ListsCS, 'thread2.txt');
       end);
       thread2.FreeOnTerminate := false;
 
@@ -127,6 +130,15 @@ begin
         FreeAndNil(thread1);
         FreeAndNil(thread2);
       finally
+        if Assigned(vtl1) and Assigned(vtl2) then
+        begin
+          vtl1.OnGetChildCount := vtlGetChildCount;
+          vtl1.OnGetNodeValue := vtlGetNodeValue;
+          vtl2.OnGetChildCount := vtlGetChildCount;
+          vtl2.OnGetNodeValue := vtlGetNodeValue;
+          vtl1.FullRefresh;
+          vtl2.FullRefresh;
+        end;
         Screen.Cursor := crDefault;
         DoCallbackProc('Расчёт простых чисел двумя потоками завершён за '+
           FormatDateTime('hh:nn:ss.zzz', Now - delta));
@@ -150,8 +162,8 @@ begin
 end;
 
 procedure TfrmSimpleNumbers.CheckAndFillSimpleNumbers(var NextNum: Integer;
-  MaxNum: Integer; var ASNLists: TStringList; var ResultList: TList<integer>; ListsCS: TCriticalSection;
-  const AVST: TVirtualStringTree; const AFileName: string);
+  MaxNum: Integer; var ASNLists: TStringList; var ResultList: TList<integer>;
+  ListsCS: TCriticalSection; const AFileName: string);
 var
   ANum: integer;
   FList: TStringList;
@@ -173,26 +185,22 @@ begin
 
       if CheckSimpleNumber(ANum) then
       begin
-        FList.Add(IntToStr(ANum));
+        if Assigned(FList) then
+          FList.Add(IntToStr(ANum));
         ListsCS.Enter;
         try
-          ASNLists.Add(IntToStr(ANum));
-          ResultList.add(ANum);
+          if Assigned(ASNLists) then
+            ASNLists.Add(IntToStr(ANum));
+          if Assigned(ResultList) then
+            ResultList.add(ANum);
         finally
           ListsCS.Leave;
         end;
       end;
     until False;
   finally
-    if FList.Count > 0 then
-    begin
+    if Assigned(FList) and (FList.Count > 0) then
       FList.SaveToFile(AFileName);
-      if Assigned(AVST) then
-        TThread.Synchronize(nil, procedure
-        begin
-          AVST.RootNodeCount := FList.Count;
-        end);
-    end;
   end;
 end;
 
@@ -215,14 +223,30 @@ begin
   FreeAndNil(FList2);
 end;
 
-procedure TfrmSimpleNumbers.vstThread1GetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-  Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
+procedure TfrmSimpleNumbers.vtlGetChildCount(Sender: TcxCustomTreeList;
+  AParentNode: TcxTreeListNode; var ACount: Integer);
 begin
-  CellText := '';
-  if (Sender.Tag = 1) and (int(node.Index) <= FList1.Count - 1) then
-    CellText := IntToStr(flist1[Node.Index])
-  else if (Sender.Tag = 2) and (int(node.Index) <= FList2.Count - 1) then
-    CellText := IntToStr(flist2[Node.Index]);
+  ACount := 0;
+  if Assigned(Sender) and Assigned(AParentNode) and (AParentNode.Level = -1) then
+  begin
+    if (Sender.Tag = 1) and Assigned(FList1) then
+      ACount := FList1.Count
+    else if (Sender.Tag = 2) and Assigned(FList2) then
+      ACount := FList2.Count;
+  end;
+end;
+
+procedure TfrmSimpleNumbers.vtlGetNodeValue(Sender: TcxCustomTreeList;
+  ANode: TcxTreeListNode; AColumn: TcxTreeListColumn; var AValue: Variant);
+begin
+  AValue := null;
+  if Assigned(Sender) and Assigned(ANode) and (ANode.Level = 0) then
+  begin
+    if (Sender.Tag = 1) and Assigned(FList1) then
+      AValue := FList1[ANode.AbsoluteIndex]
+    else if (Sender.Tag = 2) and Assigned(FList2) then
+      AValue := FList2[ANode.AbsoluteIndex];
+  end;
 end;
 
 end.

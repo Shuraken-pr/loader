@@ -166,6 +166,7 @@
             <Form>frmRunTasks</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="..\..\Common\cxVirtualTreeListHelper.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -208,7 +209,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win32\Debug\RunTasks.dll" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\exe\RunTasks.dll" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>RunTasks.dll</RemoteName>
                         <Overwrite>true</Overwrite>

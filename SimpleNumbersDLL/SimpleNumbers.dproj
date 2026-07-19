@@ -167,6 +167,7 @@
             <Form>frmSimpleNumbers</Form>
         </DCCReference>
         <DCCReference Include="..\..\common\intf_tasks.pas"/>
+        <DCCReference Include="..\..\Common\cxVirtualTreeListHelper.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

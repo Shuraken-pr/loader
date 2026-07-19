@@ -12,7 +12,8 @@ uses
   intf_common in '..\..\common\intf_common.pas',
   intf_tasks in '..\..\common\intf_tasks.pas',
   uAutonomiusThreadPool in '..\..\common\uAutonomiusThreadPool.pas',
-  uRunTasks in 'uRunTasks.pas' {frmRunTasks};
+  uRunTasks in 'uRunTasks.pas' {frmRunTasks},
+  cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas';
 
 type
   // TRunTasks реализует: IDLLIntf + IDllIntfRun + IUsesDllManager + IRunTasks

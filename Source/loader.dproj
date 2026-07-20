@@ -130,6 +130,7 @@
         <DCCReference Include="..\..\common\intf_dll.pas"/>
         <DCCReference Include="..\..\common\intf_dll_manager.pas"/>
         <DCCReference Include="..\..\common\DllManager.pas"/>
+        <DCCReference Include="..\..\Common\cxVirtualTreeListHelper.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -157,7 +158,7 @@
                 </Source>
             </Delphi.Personality>
             <Deployment Version="4">
-                <DeployFile LocalName="Win32\Debug\loader.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\exe\loader.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>loader.exe</RemoteName>
                         <Overwrite>true</Overwrite>

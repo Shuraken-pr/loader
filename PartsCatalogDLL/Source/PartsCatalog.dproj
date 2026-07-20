@@ -160,7 +160,7 @@
         <DCCReference Include="..\..\..\Common\intf_dll.pas"/>
         <DCCReference Include="..\..\..\Common\intf_dll_manager.pas"/>
         <DCCReference Include="..\..\..\Common\intf_common.pas"/>
-        <DCCReference Include="cxVirtualTreeListHelper.pas"/>
+        <DCCReference Include="..\..\..\Common\cxVirtualTreeListHelper.pas"/>
         <DCCReference Include="dmDatabase.pas">
             <Form>dmDB</Form>
             <FormType>dfm</FormType>

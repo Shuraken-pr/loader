@@ -4,24 +4,28 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, vstHelper, cxGraphics, cxControls,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, cxControls,
   cxLookAndFeels, cxLookAndFeelPainters, dxLayoutContainer, cxSplitter,
-  VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, cxClasses, dxLayoutControl, dxLayoutcxEditAdapters,
+  cxClasses, dxLayoutControl, dxLayoutcxEditAdapters,
   dxLayoutControlAdapters, cxCheckBox, cxContainer, cxEdit, Vcl.Menus,
   Vcl.StdCtrls, cxButtons, cxTextEdit, cxMaskEdit, cxDropDownEdit,
   cxCheckComboBox, System.Threading, System.SyncObjs, cxLabel, intf_tasks,
   DateUtils, cxImage, cxMemo, Vcl.Imaging.jpeg, cxPC, dxDockControl, dxDockPanel,
-  System.Generics.Collections;
+  System.Generics.Collections, cxFilter, cxCustomData, cxStyles,
+  dxScrollbarAnnotations, cxTL, cxTLdxBarBuiltInMenu, cxInplaceContainer,
+  cxTLData, cxVirtualTreeListHelper, dxCore, dxCoreClasses;
 
 type
-  TExplorerRecord = class(TBaseRecord)
+  TExplorerRecord = class(TVTBaseRecord)
   private
     FFullPath: string;
     FValue: string;
     FIsFile: boolean;
   public
-    constructor Create; override;
+    constructor Create(AParent: TVTBase); override;
+    function  GetValue(ColIdx: Integer): Variant; override;
+    { Сохраняет значение для указанного индекса колонки. }
+    procedure SetValue(ColIdx: Integer; const AValue: Variant); override;
     property FullPath: string read FFullPath write FFullPath;
     property Value: string read FValue write FValue;
   end;
@@ -30,7 +34,6 @@ type
     lcExplorerGroup_Root: TdxLayoutGroup;
     lcExplorer: TdxLayoutControl;
     lgParams: TdxLayoutGroup;
-    vstExplorer: TVirtualStringTree;
     splitInfo: TcxSplitter;
     ccbLocalDisks: TcxCheckComboBox;
     liLocalDisks: TdxLayoutItem;
@@ -44,17 +47,19 @@ type
     dxFloatDockSite1: TdxFloatDockSite;
     mTextFile: TcxMemo;
     imGraphFile: TcxImage;
+    vtvExplorer: TcxVirtualTreeList;
     liExplorer: TdxLayoutItem;
+    colValue: TcxTreeListColumn;
+    colFullPath: TcxTreeListColumn;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnScanDirClick(Sender: TObject);
-    procedure vstExplorerGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
-    procedure vstExplorerCompareNodes(Sender: TBaseVirtualTree; Node1,
-      Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
-    procedure vstExplorerHeaderClick(Sender: TVTHeader;
-      HitInfo: TVTHeaderHitInfo);
-    procedure vstExplorerChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure vtvExplorerFocusedNodeChanged(Sender: TcxCustomTreeList;
+      APrevFocusedNode, AFocusedNode: TcxTreeListNode);
+    procedure vtvExplorerCompare(Sender: TcxCustomTreeList; ANode1,
+      ANode2: TcxTreeListNode; var ACompare: Integer);
+    procedure vtvExplorerColumnHeaderClick(Sender: TcxCustomTreeList;
+      AColumn: TcxTreeListColumn);
   private
     FDTStartUpdateInfo: TDateTime;
     FTaskCtrl: TResultType;
@@ -62,8 +67,9 @@ type
     FExtList: TStringList;
     FCrit: TCriticalSection;
     FRunTaskFind: IRunTaskFindInDir;
-    FPathToNode: TDictionary<string, PVirtualNode>;
+    FPathToNode: TDictionary<string, TExplorerRecord>;
     FPathBuffer: TList<string>;
+    FDSExplorer: TVTSmartDataSource<TExplorerRecord>;
     procedure DoCallbackProc(AMsg: WideString);
     procedure FillVst(APath: string);
     procedure FillVstFromBuffer;
@@ -103,7 +109,7 @@ begin
       else
     begin
       btnScanDir.Caption := 'Прервать';
-      vstExplorer.Clear;
+      FDSExplorer.Clear;
       FPathToNode.Clear;
       FPathBuffer.Clear;
     end;
@@ -137,12 +143,7 @@ begin
       procedure
       begin
         FillVstFromBuffer;
-        with vstExplorer, vstExplorer.Header do
-        begin
-          SortColumn := 1;
-          SortDirection := sdAscending;
-          SortTree(SortColumn, SortDirection)
-        end;
+        colFullPath.SortOrder := soAscending;
       end);
     end,
     procedure(AMsg: WideString)  //FinishCallback, уведомляем о завершении
@@ -156,12 +157,7 @@ begin
       begin
         // Сбрасываем остаток буфера перед сортировкой
         FillVstFromBuffer;
-        with vstExplorer, vstExplorer.Header do
-        begin
-          SortColumn := 1;
-          SortDirection := sdAscending;
-          SortTree(SortColumn, SortDirection)
-        end;
+        colFullPath.SortOrder := soAscending;
       end);
     end,
     procedure(APath: WideString)  //SyncCallback, добавляем путь в буфер
@@ -203,14 +199,13 @@ end;
 
 procedure TfrmScanLocalDisks.FillVst(APath: string);
 var
-  curV, childV: PVirtualNode;
-  exp: TExplorerRecord;
+  curV, childV: TExplorerRecord;
   i, end_num: integer;
   curPath, FullPath: string;
   PathArray: TArray<string>;
 begin
   PathArray := SplitString(APath, '\');
-  curV := vstExplorer.RootNode;
+  curV := FDSExplorer.RootHandle;
   FullPath := '';
   end_num := High(PathArray);
 
@@ -228,11 +223,10 @@ begin
     end
     else
     begin
-      childV := vstExplorer.AddChild(curV);
-      exp := vstExplorer.Add<TExplorerRecord>(childV);
-      exp.Value := curPath;
-      exp.FullPath := FullPath;
-      exp.FIsFile := i = end_num;
+      childV := FDSExplorer.InsertRecordHandle(curV, true);
+      childV.Value := curPath;
+      childV.FullPath := FullPath;
+      childV.FIsFile := i = end_num;
       FPathToNode.Add(FullPath, childV);
       curV := childV;
     end;
@@ -256,23 +250,24 @@ begin
   end;
 
   // Обновляем VST одним BeginUpdate/EndUpdate
-  vstExplorer.BeginUpdate;
+  vtvExplorer.BeginUpdate;
   try
     for path in paths do
       FillVst(path);
   finally
-    vstExplorer.EndUpdate;
+    FDSExplorer.DataChanged;
+    vtvExplorer.EndUpdate;
   end;
 end;
 
 procedure TfrmScanLocalDisks.FormCreate(Sender: TObject);
 begin
   FExtList := TStringList.Create;
-  vstExplorer.NodeDataSize := SizeOf(TExplorerRecord);
   FCrit := TCriticalSection.Create;
-  FPathToNode := TDictionary<string, PVirtualNode>.Create;
+  FPathToNode := TDictionary<string, TExplorerRecord>.Create;
   FPathBuffer := TList<string>.Create;
   FRunTaskFind := nil;
+  FDSExplorer := TVTSmartDataSource<TExplorerRecord>.Create(vtvExplorer);
   FillLocalDrives;
 end;
 
@@ -305,8 +300,8 @@ begin
   end;
 end;
 
-procedure TfrmScanLocalDisks.vstExplorerChange(Sender: TBaseVirtualTree;
-  Node: PVirtualNode);
+procedure TfrmScanLocalDisks.vtvExplorerFocusedNodeChanged(
+  Sender: TcxCustomTreeList; APrevFocusedNode, AFocusedNode: TcxTreeListNode);
 const
   pictureExts = '.bmp;.jpg;.jpeg;.png';
 
@@ -314,7 +309,7 @@ var
   obj: TExplorerRecord;
   ext: string;
 begin
-  obj := Sender.Obj<TExplorerRecord>(Node);
+  obj :=  FDSExplorer.Obj(AFocusedNode);
   if Assigned(obj) and obj.FIsFile then
   begin
     ext := ExtractFileExt(obj.FullPath);
@@ -341,11 +336,11 @@ begin
     dpShowFile.Visible := false;
 end;
 
-procedure TfrmScanLocalDisks.vstExplorerCompareNodes(Sender: TBaseVirtualTree;
-  Node1, Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
+procedure TfrmScanLocalDisks.vtvExplorerCompare(Sender: TcxCustomTreeList;
+  ANode1, ANode2: TcxTreeListNode; var ACompare: Integer);
 var
   obj1, obj2: TExplorerRecord;
-  intDir: integer;
+  intDir, SortCol: integer;
 
   function CompareBool(b1, b2: boolean): integer;
   begin
@@ -358,76 +353,74 @@ var
   end;
 
 begin
-  obj1 := Sender.Obj<TExplorerRecord>(Node1);
-  obj2 := Sender.Obj<TExplorerRecord>(Node2);
+  obj1 := FDSExplorer.Obj(ANode1);
+  obj2 := FDSExplorer.Obj(ANode2);
+  sortCol := -1;
+  for var i := 0 to Sender.ColumnCount - 1 do
+  begin
+    if Sender.Columns[i].SortOrder <> soNone then
+    begin
+      sortCol := i;
+      break;
+    end;
+  end;
+  if sortCol < 0 then
+    exit;
+
   if Assigned(obj1) and Assigned(obj2) then
   begin
     if obj1.FIsFile <> obj2.FIsFile then
     begin
-      if Sender.Header.SortDirection = sdAscending then
+      if Sender.Columns[sortCol].SortOrder = soAscending then
         intDir := 1
       else
         intDir := -1;
-      Result := intDir * CompareBool(obj1.FIsFile, obj2.FIsFile);
+      ACompare := intDir * CompareBool(obj1.FIsFile, obj2.FIsFile);
     end  else
     begin
-      case column of
-        0: Result := CompareText(obj1.Value, obj2.Value);
-        1: Result := CompareText(obj1.FullPath, obj2.FullPath);
+      case sortCol of
+        0: ACompare := CompareText(obj1.Value, obj2.Value);
+        1: ACompare := CompareText(obj1.FullPath, obj2.FullPath);
       end;
     end;
   end;
+
 end;
 
-procedure TfrmScanLocalDisks.vstExplorerGetText(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-  var CellText: string);
-var
-  obj: TExplorerRecord;
+procedure TfrmScanLocalDisks.vtvExplorerColumnHeaderClick(
+  Sender: TcxCustomTreeList; AColumn: TcxTreeListColumn);
 begin
-  cellText := '';
-  obj := Sender.Obj<TExplorerRecord>(Node);
-  if Assigned(obj) then
-  begin
-    case Column of
-      0: CellText := obj.Value;
-      1: CellText := obj.FullPath;
-    end;
-  end;
-end;
-
-procedure TfrmScanLocalDisks.vstExplorerHeaderClick(Sender: TVTHeader;
-  HitInfo: TVTHeaderHitInfo);
-begin
-  if HitInfo.Button = TMouseButton.mbLeft then
-  begin
-    if HitInfo.Column = Sender.SortColumn then
-    begin
-      if Sender.SortDirection = sdAscending then
-        Sender.SortDirection := sdDescending
-      else
-        Sender.SortDirection := sdAscending
-    end
-      else
-    begin
-      if ssShift in HitInfo.Shift then
-        Sender.SortDirection := sdDescending
-      else
-        Sender.SortDirection := sdAscending
-    end;
-    Sender.SortColumn := HitInfo.Column;
-    vstExplorer.SortTree(Sender.SortColumn, Sender.SortDirection)
-  end;
+  if AColumn.SortOrder = soAscending then
+    AColumn.SortOrder := soDescending
+  else
+    AColumn.SortOrder := soAscending;
 end;
 
 { TExplorerRecord }
 
-constructor TExplorerRecord.Create;
+constructor TExplorerRecord.Create(AParent: TVTBase);
 begin
-  inherited;
+  inherited Create(AParent);
   FFullPath := '';
   FValue := '';
   FIsFile := false;
+end;
+
+function TExplorerRecord.GetValue(ColIdx: Integer): Variant;
+begin
+  Result := null;
+  case ColIdx of
+    0: Result := FValue;
+    1: Result := FFullPath;
+  end;
+end;
+
+procedure TExplorerRecord.SetValue(ColIdx: Integer; const AValue: Variant);
+begin
+  case ColIdx of
+    0: FValue := AValue;
+    1: FFullPath := AValue;
+  end;
 end;
 
 end.

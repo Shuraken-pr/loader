@@ -2,6 +2,13 @@
 
 {$I pool_config.inc}
 
+(*
+Время запуска
+Время окончания
+Информация о задании
+Статус
+*)
+
 interface
 
 uses
@@ -9,29 +16,34 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, intf_tasks, cxGraphics, cxControls,
   cxLookAndFeels, cxLookAndFeelPainters, dxLayoutContainer,
   VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, cxClasses, dxLayoutControl, vstHelper, System.Generics.Collections,
+  VirtualTrees, cxClasses, dxLayoutControl, cxVirtualTreeListHelper, System.Generics.Collections,
   dxLayoutcxEditAdapters, dxLayoutControlAdapters, cxContainer, cxEdit,
   Vcl.Menus, cxButtonEdit, Vcl.StdCtrls, cxButtons, cxTextEdit, cxMaskEdit,
 {$ifdef use_otl}
   OtlTaskControl, OtlTask,
 {$endif}
-  cxDropDownEdit, IOUtils, cxPC, dxDockControl, dxDockPanel, dxCoreGraphics;
+  cxDropDownEdit, IOUtils, cxPC, dxDockControl, dxDockPanel, dxCoreGraphics,
+  cxFilter, cxCustomData, cxStyles, dxScrollbarAnnotations, cxTL,
+  cxTLdxBarBuiltInMenu, cxInplaceContainer, cxTLData;
 
 type
   TRunTaskStatus = (rtsNone, rtsExecute, rtsBreak, rtsFinish, rtsError);
 
-  TResultRecord = class(TBaseRecord)
+  TResultRecord = class(TVTBaseRecord)
   private
     FFirstValue: WideString;
     FSecondValue: WideString;
   public
-    constructor Create; override;
+    constructor Create(AParent: TVTBase); override;
+    function  GetValue(ColIdx: Integer): Variant; override;
+    procedure SetValue(ColIdx: Integer; const AValue: Variant); override;
     property FirstValue: WideString read FFirstValue write FFirstValue;
     property SecondValue: WideString read FSecondValue write FSecondValue;
   end;
 
-  TRunTaskRecord = class(TBaseRecord)
+  TRunTaskRecord = class(TVTBaseRecord)
   private
+    FID: integer;
     FDTEnd: TDateTime;
     FStatus: TRunTaskStatus;
     FInfo: string;
@@ -43,8 +55,10 @@ type
     FCommand: WideString;
     FResultList: TList<WideString>;
   public
-    constructor Create; override;
+    constructor Create(AParent: TVTBase); override;
     destructor Destroy; override;
+    function  GetValue(ColIdx: Integer): Variant; override;
+    procedure SetValue(ColIdx: Integer; const AValue: Variant); override;
     property dtStart: TDateTime read FDTStart write FDTStart;  // время запуска задания
     property dtEnd: TDateTime read FDTEnd write FDTEnd;        // время окончания задания
     property info: string read FInfo write FInfo;              // информация о задании
@@ -63,8 +77,6 @@ type
     lgExecute: TdxLayoutGroup;
     lgParams: TdxLayoutGroup;
     liInfo: TdxLayoutItem;
-    vstRunTasks: TVirtualStringTree;
-    liRunTasks: TdxLayoutItem;
     cbTasks: TcxComboBox;
     liTasks: TdxLayoutItem;
     btnStart: TcxButton;
@@ -80,28 +92,28 @@ type
     odExeFile: TOpenDialog;
     dpResult: TdxDockPanel;
     dxFloatDockSite1: TdxFloatDockSite;
-    vstResults: TVirtualStringTree;
+    vtlRunTasks: TcxVirtualTreeList;
+    liRunTasks: TdxLayoutItem;
+    colDTStart: TcxTreeListColumn;
+    colDTEnd: TcxTreeListColumn;
+    colInfo: TcxTreeListColumn;
+    colStatus: TcxTreeListColumn;
+    vtlResults: TcxVirtualTreeList;
+    colFile: TcxTreeListColumn;
+    colValue: TcxTreeListColumn;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure vstRunTasksGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
-    procedure vstRunTasksFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure cbTasksPropertiesChange(Sender: TObject);
     procedure btnStartClick(Sender: TObject);
-    procedure vstRunTasksMeasureItem(Sender: TBaseVirtualTree;
-      TargetCanvas: TCanvas; Node: PVirtualNode; var NodeHeight: TDimension);
     procedure btnStopClick(Sender: TObject);
-    procedure vstRunTasksChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure vstRunTasksDrawText(Sender: TBaseVirtualTree;
-      TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
-      const Text: string; const CellRect: TRect; var DefaultDraw: Boolean);
     procedure btnShowResultClick(Sender: TObject);
-    procedure vstResultsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
-    procedure vstResultsFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure vtlRunTasksFocusedNodeChanged(Sender: TcxCustomTreeList;
+      APrevFocusedNode, AFocusedNode: TcxTreeListNode);
   private
     FCallbackProc: TProc<WideString>;
     FIntfList: TInterfaceList;
+    FDSResults: TVTLoadAllDataSource<TResultRecord>;
+    FDSRunTasks: TVTLoadAllDataSource<TRunTaskRecord>;
     procedure DoCallbackProc(AMsg: WideString);
     procedure btnSelectDir(Sender: TObject; AButtonIndex: Integer);
     procedure btnSelectExeFile(Sender: TObject; AButtonIndex: Integer);
@@ -161,29 +173,29 @@ var
   use1Column: boolean;
   curValue: WideString;
 begin
-  obj := vstRunTasks.CurrentObj<TRunTaskRecord>;
+  obj := FDSRunTasks.CurrentObj;
   if Assigned(obj) and obj.CanShowResult then
   begin
     dpResult.Show;
-    vstResults.BeginUpdate;
+    vtlResults.BeginUpdate;
     try
-      vstResults.Clear;
+      FDSResults.Clear;
       use1Column := Supports(obj.TaskIntf, IRunTaskFindInDir);
       if use1Column then
       begin
-        vstResults.Header.Columns[0].Text := 'Файл';
-        vstResults.Header.Columns[1].Options := vstResults.Header.Columns[1].Options - [coVisible];
+        vtlResults.Columns[0].Caption.Text := 'Файл';
+        vtlResults.Columns[1].Visible := false;
       end
         else
       begin
-        vstResults.Header.Columns[0].Text := 'Текст для поиска';
-        vstResults.Header.Columns[1].Options := vstResults.Header.Columns[1].Options + [coVisible];
+        vtlResults.Columns[0].Caption.Text := 'Текст для поиска';
+        vtlResults.Columns[1].Visible := true;
       end;
 
       for i := 0 to obj.ResultList.Count - 1 do
       begin
         curValue := obj.ResultList[i];
-        robj := vstResults.Add<TResultRecord>;
+        robj := FDSResults.InsertRecordHandle(FDSResults.RootHandle, true);
         if Assigned(robj) then
         begin
           if use1Column then
@@ -195,7 +207,8 @@ begin
         end;
       end;
     finally
-      vstResults.EndUpdate;
+      FDSResults.DataChanged;
+      vtlResults.EndUpdate;
     end;
   end
     else
@@ -214,19 +227,12 @@ begin
       i: integer;
     begin
       AObj.Status := AStatus;
-      if Assigned(liStop) and (vstRunTasks.FocusedNode = AObj.Node) then
+      if Assigned(liStop) and (FDSRunTasks.CurrentObj <> nil) and (FDSRunTasks.CurrentObj.FID = AObj.FID) then
         liStop.Visible := false;
       if AStatus in [rtsBreak, rtsFinish] then
       begin
         AObj.dtEnd := Now;
-        if supports(AObj.TaskIntf, IRunTaskFindInDir) then
-        begin
-          AObj.ResultList.Clear;
-          curArray := IRunTaskFindInDir(AObj.TaskIntf).ResultList;
-          for i := Low(curArray) to High(curArray) do
-            AObj.ResultList.Add(curArray[i]);
-        end
-          else if supports(AObj.TaskIntf, IRunTaskFindInExeFile) then
+        if supports(AObj.TaskIntf, IRunTaskFindInExeFile) then
         begin
           AObj.ResultList.Clear;
           curArray := IRunTaskFindInExeFile(AObj.TaskIntf).ResultList;
@@ -234,7 +240,7 @@ begin
             AObj.ResultList.Add(curArray[i]);
         end
       end;
-      vstRunTasks.InvalidateNode(AObj.Node);
+      FDSRunTasks.DataChanged;
     end);
   end;
 end;
@@ -276,10 +282,10 @@ begin
   curIntf := FIntfList[cbTasks.ItemIndex];
   if CheckParams then
   begin
-    vstRunTasks.BeginUpdate;
+    vtlRunTasks.BeginUpdate;
     try
-      obj := vstRunTasks.Add<TRunTaskRecord>;
-      vstRunTasks.MultiLine[obj.Node] := true;
+      obj := FDSRunTasks.InsertRecordHandle(FDSRunTasks.RootHandle, true);
+      obj.FID := FDSRunTasks.RootHandle.ChildCount;
       infocommand := command;
       infoparams := params;
       obj.info := cbTasks.Text + '. ' + liCommand.CaptionOptions.Text + ': ' + command + '. ' +
@@ -297,7 +303,7 @@ begin
         begin
           ChangeStatus(obj, rtsExecute, AMsg);
         end,
-        nil,                         //RunCallback
+        nil,
         procedure(AMsg: WideString)  //BreakCallback
         begin
           ChangeStatus(obj, rtsBreak, AMsg);
@@ -306,7 +312,11 @@ begin
         begin
           ChangeStatus(obj, rtsFinish, AMsg);
         end,
-        nil                          //SyncCallback
+        procedure(APath: WideString)
+        begin
+          if Assigned(obj) then //записываем результат.
+            obj.ResultList.Add(APath);
+        end //SyncCallback
         );
         obj.TaskIntf := IRunTaskFindInDir(curIntf);
         obj.Command := command;
@@ -366,7 +376,8 @@ begin
         obj.TaskCtrl := IRunTaskShellExecute(curIntf).Start(command, params);
       end;
     finally
-      vstRunTasks.EndUpdate;
+      FDSRunTasks.DataChanged;
+      vtlRunTasks.EndUpdate;
     end;
   end;
 end;
@@ -375,7 +386,7 @@ procedure TfrmRunTasks.btnStopClick(Sender: TObject);
 var
   obj: TRunTaskRecord;
 begin
-  obj := vstRunTasks.CurrentObj<TRunTaskRecord>;
+  obj := FDSRunTasks.CurrentObj;
   if Assigned(obj) then
   begin
     if obj.Status = rtsExecute then
@@ -428,24 +439,22 @@ end;
 
 procedure TfrmRunTasks.FormCreate(Sender: TObject);
 begin
-  vstRunTasks.NodeDataSize := SizeOf(TRunTaskRecord);
   FIntfList := TInterfaceList.Create;
+  FDSResults := TVTLoadAllDataSource<TResultRecord>.Create(vtlResults);
+  FDSRunTasks := TVTLoadAllDataSource<TRunTaskRecord>.Create(vtlRunTasks);
 end;
 
 procedure TfrmRunTasks.FormDestroy(Sender: TObject);
 var
   obj: TRunTaskRecord;
-  node: PVirtualNode;
 begin
-  node := vstRunTasks.GetFirst;
-  while Assigned(node) do
+  for var i := 0 to FDSRunTasks.RootHandle.ChildCount - 1 do
   begin
-    obj := vstRunTasks.Obj<TRunTaskRecord>(node);
+    obj := TRunTaskRecord(FDSRunTasks.RootHandle[i]);
     if Assigned(obj) and (obj.Status = rtsExecute) and Assigned(obj.TaskIntf) then
     begin
       obj.TaskIntf.Stop(obj.TaskCtrl);
     end;
-    node := vstRunTasks.GetNext(node);
   end;
   FreeAndNil(FIntfList);
 end;
@@ -476,39 +485,12 @@ begin
   end;
 end;
 
-procedure TfrmRunTasks.vstResultsFreeNode(Sender: TBaseVirtualTree;
-  Node: PVirtualNode);
-var
-  obj: TResultRecord;
-begin
-  obj := Sender.Obj<TResultRecord>(Node);
-  if Assigned(obj) then
-    FreeAndNil(obj);
-end;
-
-procedure TfrmRunTasks.vstResultsGetText(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-  var CellText: string);
-var
-  obj: TResultRecord;
-begin
-  CellText := '';
-  obj := Sender.Obj<TResultRecord>(Node);
-  if Assigned(obj) then
-  begin
-    case Column of
-      0: CellText := obj.FirstValue;
-      1: CellText := obj.SecondValue;
-    end;
-  end;
-end;
-
-procedure TfrmRunTasks.vstRunTasksChange(Sender: TBaseVirtualTree;
-  Node: PVirtualNode);
+procedure TfrmRunTasks.vtlRunTasksFocusedNodeChanged(Sender: TcxCustomTreeList;
+  APrevFocusedNode, AFocusedNode: TcxTreeListNode);
 var
   obj: TRunTaskRecord;
 begin
-  obj := Sender.Obj<TRunTaskRecord>(Node);
+  obj := FDSRunTasks.Obj(AFocusedNode);
   if Assigned(obj) then
   begin
     liShowResult.Visible := obj.CanShowResult;
@@ -520,66 +502,12 @@ begin
     dpResult.Hide;
 end;
 
-procedure TfrmRunTasks.vstRunTasksDrawText(Sender: TBaseVirtualTree;
-  TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
-  const Text: string; const CellRect: TRect; var DefaultDraw: Boolean);
-var
-  DrawRect: TRect;
-begin
-  DefaultDraw := False;
-  DrawRect := CellRect;
-  DrawTextW(TargetCanvas.Handle, PWideChar(Text), Length(Text), DrawRect,
-    DT_WORDBREAK or DT_NOPREFIX or DT_EDITCONTROL or DT_END_ELLIPSIS);
-end;
-
-procedure TfrmRunTasks.vstRunTasksFreeNode(Sender: TBaseVirtualTree;
-  Node: PVirtualNode);
-var
-  obj: TRunTaskRecord;
-begin
-  obj := Sender.Obj<TRunTaskRecord>(Node);
-  if Assigned(obj) then
-    FreeAndNil(obj);
-end;
-
-procedure TfrmRunTasks.vstRunTasksGetText(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-  var CellText: string);
-var
-  obj: TRunTaskRecord;
-begin
-  CellText := '';
-  obj := Sender.Obj<TRunTaskRecord>(Node);
-  if Assigned(obj) then
-  begin
-    case Column of
-      0: CellText := DateTimeToStr(obj.dtStart);
-      1: if obj.Status in [rtsBreak, rtsFinish] then
-           CellText := DateTimeToStr(obj.dtEnd);
-      2: CellText := obj.info;
-      3: CellText := RunTaskStatusStr[obj.Status];
-    end;
-  end;
-end;
-
-procedure TfrmRunTasks.vstRunTasksMeasureItem(Sender: TBaseVirtualTree;
-  TargetCanvas: TCanvas; Node: PVirtualNode; var NodeHeight: TDimension);
-var
-  maxNodeHeight: TDimension;
-  i: integer;
-begin
-  maxNodeHeight := vstRunTasks.DefaultNodeHeight;
-  for i := 0 to Sender.Header.Columns.Count - 1 do
-    maxNodeHeight := Max(maxNodeHeight, vstRunTasks.ComputeNodeHeight(TargetCanvas, Node, i, vstRunTasks.Text[Node, i]));
-  if maxNodeHeight > vstRunTasks.DefaultNodeHeight then
-    NodeHeight := vstRunTasks.DefaultNodeHeight * (1 + maxNodeHeight div vstRunTasks.DefaultNodeHeight);
-end;
-
 { TRunTaskRecord }
 
-constructor TRunTaskRecord.Create;
+constructor TRunTaskRecord.Create(AParent: TVTBase);
 begin
-  inherited;
+  inherited Create(AParent);
+  FID := 0;
   FDTStart := Now;
   FDTEnd := Now;
   FStatus := rtsNone;
@@ -602,13 +530,51 @@ begin
   inherited;
 end;
 
-{ TResultRecord }
+function TRunTaskRecord.GetValue(ColIdx: Integer): Variant;
+begin
+  Result := null;
+  case ColIdx of
+    0: Result := dtStart;
+    1: if Status in [rtsBreak, rtsFinish] then
+         Result := dtEnd;
+    2: Result := info;
+    3: Result := RunTaskStatusStr[Status];
+  end;
+end;
 
-constructor TResultRecord.Create;
+procedure TRunTaskRecord.SetValue(ColIdx: Integer; const AValue: Variant);
 begin
   inherited;
+  case ColIdx of
+    0: dtStart := AValue;
+    1: dtEnd := AValue;
+    2: info := AValue;
+    3: Status := TRunTaskStatus(integer(AValue));
+  end;
+end;
+
+{ TResultRecord }
+
+constructor TResultRecord.Create(AParent: TVTBase);
+begin
+  inherited Create(AParent);
   FFirstValue := '';
   FSecondValue := '';
+end;
+
+function TResultRecord.GetValue(ColIdx: Integer): Variant;
+begin
+  Result := null;
+  case ColIdx of
+    0: Result := FFirstValue;
+    1: Result := FSecondValue;
+  end;
+end;
+
+procedure TResultRecord.SetValue(ColIdx: Integer; const AValue: Variant);
+begin
+  inherited;
+
 end;
 
 end.

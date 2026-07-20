@@ -89,46 +89,81 @@ object frmLogData: TfrmLogData
       Index = 0
     end
   end
-  object vstLogData: TVirtualStringTree
+  object vtlLog: TcxVirtualTreeList
     Left = 0
     Top = 101
     Width = 624
     Height = 340
     Align = alClient
-    DefaultNodeHeight = 19
-    Header.AutoSizeIndex = 0
-    Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
-    LineMode = lmBands
-    LineStyle = lsSolid
-    TabOrder = 1
-    TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toGridExtensions, toInitOnSave, toToggleOnDblClick, toWheelPanning]
-    TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
-    TreeOptions.SelectionOptions = [toFullRowSelect, toSelectNextNodeOnRemoval]
-    OnGetText = vstLogDataGetText
-    Touch.InteractiveGestures = [igPan, igPressAndTap]
-    Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    Columns = <
+    Bands = <
       item
-        CheckType = ctTriStateCheckBox
-        Position = 0
-        Text = #1058#1072#1073#1083#1080#1094#1072
-        Width = 150
-      end
-      item
-        Position = 1
-        Text = #1050#1086#1083#1086#1085#1082#1072
-        Width = 150
-      end
-      item
-        Position = 2
-        Text = #1058#1088#1080#1075#1075#1077#1088
-        Width = 100
-      end
-      item
-        Position = 3
-        Text = #1051#1086#1075' '#1090#1072#1073#1083#1080#1094#1072
-        Width = 100
       end>
+    Navigator.Buttons.CustomButtons = <>
+    OptionsBehavior.MultiSort = False
+    OptionsBehavior.Sorting = False
+    OptionsData.Deleting = False
+    OptionsView.CellAutoHeight = True
+    OptionsView.CellEndEllipsis = True
+    OptionsView.CheckGroups = True
+    OptionsView.GridLines = tlglBoth
+    ScrollbarAnnotations.CustomAnnotations = <>
+    TabOrder = 5
+    ExplicitLeft = 132
+    ExplicitTop = 192
+    ExplicitWidth = 250
+    ExplicitHeight = 150
+    object colCheck: TcxTreeListColumn
+      PropertiesClassName = 'TcxCheckBoxProperties'
+      Properties.ImmediatePost = True
+      Properties.NullStyle = nssUnchecked
+      Properties.ValueGrayed = 'False'
+      Width = 46
+      Position.ColIndex = 0
+      Position.RowIndex = 0
+      Position.BandIndex = 0
+      Summary.FooterSummaryItems = <>
+      Summary.GroupFooterSummaryItems = <>
+    end
+    object colTable: TcxTreeListColumn
+      Caption.Text = #1058#1072#1073#1083#1080#1094#1072
+      Options.Editing = False
+      Width = 161
+      Position.ColIndex = 1
+      Position.RowIndex = 0
+      Position.BandIndex = 0
+      Summary.FooterSummaryItems = <>
+      Summary.GroupFooterSummaryItems = <>
+    end
+    object colColumn: TcxTreeListColumn
+      Caption.Text = #1050#1086#1083#1086#1085#1082#1072
+      Options.Editing = False
+      Width = 99
+      Position.ColIndex = 2
+      Position.RowIndex = 0
+      Position.BandIndex = 0
+      Summary.FooterSummaryItems = <>
+      Summary.GroupFooterSummaryItems = <>
+    end
+    object colTrigger: TcxTreeListColumn
+      Caption.Text = #1058#1088#1080#1075#1075#1077#1088
+      Options.Editing = False
+      Width = 99
+      Position.ColIndex = 3
+      Position.RowIndex = 0
+      Position.BandIndex = 0
+      Summary.FooterSummaryItems = <>
+      Summary.GroupFooterSummaryItems = <>
+    end
+    object colHaveLog: TcxTreeListColumn
+      Caption.Text = #1051#1086#1075' '#1090#1072#1073#1083#1080#1094#1072
+      Options.Editing = False
+      Width = 168
+      Position.ColIndex = 4
+      Position.RowIndex = 0
+      Position.BandIndex = 0
+      Summary.FooterSummaryItems = <>
+      Summary.GroupFooterSummaryItems = <>
+    end
   end
   object bmActions: TdxBarManager
     Font.Charset = DEFAULT_CHARSET
@@ -146,8 +181,8 @@ object frmLogData: TfrmLogData
     ImageOptions.LargeImages = ilBig
     PopupMenuLinks = <>
     UseSystemFont = True
-    Left = 200
-    Top = 92
+    Left = 236
+    Top = 60
     PixelsPerInch = 96
     object bParams: TdxBar
       Caption = #1055#1072#1088#1072#1084#1077#1090#1088#1099

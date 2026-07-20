@@ -1,5 +1,5 @@
 library LogData;
-{$R 'MSSQL.res' '..\SQL\mssql.rc'}
+{$R 'mssql.res' '..\SQL\mssql.rc'}
 {$R 'Oracle.res' '..\SQL\Oracle.rc'}
 {$R 'Postgre.res' '..\SQL\Postgre.rc'}
 
@@ -15,7 +15,8 @@ uses
   intf_dll_manager in '..\..\Common\intf_dll_manager.pas',
   uConnectionParams in 'uConnectionParams.pas' {frmConnections},
   uDMConn in 'uDMConn.pas' {dmConn: TDataModule},
-  uLogData in 'uLogData.pas' {frmLogData};
+  uLogData in 'uLogData.pas' {frmLogData},
+  cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas';
 
 {$R *.res}
 

@@ -516,10 +516,9 @@ object frmMain: TfrmMain
     TabOrder = 1
     object vtlLog: TcxVirtualTreeList
       Left = 12
-      Top = 12
+      Top = 42
       Width = 855
-      Height = 506
-      Align = alClient
+      Height = 476
       Bands = <
         item
         end>
@@ -534,7 +533,7 @@ object frmMain: TfrmMain
       OptionsView.ShowRoot = False
       OptionsView.TreeLineStyle = tllsSolid
       ScrollbarAnnotations.CustomAnnotations = <>
-      TabOrder = 0
+      TabOrder = 1
       object colDate: TcxTreeListColumn
         Caption.Text = #1044#1072#1090#1072
         Width = 134
@@ -554,6 +553,19 @@ object frmMain: TfrmMain
         Summary.GroupFooterSummaryItems = <>
       end
     end
+    object cmbSkins: TcxComboBox
+      Left = 55
+      Top = 12
+      Properties.DropDownListStyle = lsFixedList
+      Style.BorderColor = clWindowFrame
+      Style.BorderStyle = ebs3D
+      Style.HotTrack = False
+      Style.TransparentBorder = False
+      Style.ButtonStyle = bts3D
+      Style.PopupBorderStyle = epbsFrame3D
+      TabOrder = 0
+      Width = 812
+    end
     object lcMainGroup_Root: TdxLayoutGroup
       AlignHorz = ahClient
       AlignVert = avClient
@@ -568,6 +580,17 @@ object frmMain: TfrmMain
       Control = vtlLog
       ControlOptions.OriginalHeight = 150
       ControlOptions.OriginalWidth = 250
+      ControlOptions.ShowBorder = False
+      Index = 1
+    end
+    object liSkins: TdxLayoutItem
+      Parent = lcMainGroup_Root
+      AlignHorz = ahClient
+      AlignVert = avTop
+      CaptionOptions.Text = #1057#1082#1080#1085#1099
+      Control = cmbSkins
+      ControlOptions.OriginalHeight = 23
+      ControlOptions.OriginalWidth = 121
       ControlOptions.ShowBorder = False
       Index = 0
     end

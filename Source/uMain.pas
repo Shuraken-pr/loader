@@ -11,7 +11,8 @@ uses
   DllManager, intf_dll, intf_common, System.Generics.Collections,
   intf_dll_manager, cxVirtualTreeListHelper, cxFilter,
   cxCustomData, cxStyles, dxScrollbarAnnotations, cxTL, cxTLdxBarBuiltInMenu,
-  cxInplaceContainer, cxTLData, cxTextEdit;
+  cxInplaceContainer, cxTLData, cxTextEdit, dxLayoutcxEditAdapters, cxContainer,
+  cxEdit, cxMaskEdit, cxDropDownEdit;
 
 type
   /// <summary>
@@ -62,6 +63,8 @@ type
     liLog: TdxLayoutItem;
     colDate: TcxTreeListColumn;
     colMsg: TcxTreeListColumn;
+    cmbSkins: TcxComboBox;
+    liSkins: TdxLayoutItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
   private

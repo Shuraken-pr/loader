@@ -514,11 +514,12 @@ object frmMain: TfrmMain
     Height = 530
     Align = alClient
     TabOrder = 1
+    LayoutLookAndFeel = dmSkin.dxLayoutSkinLookAndFeel
     object vtlLog: TcxVirtualTreeList
       Left = 12
-      Top = 42
+      Top = 40
       Width = 855
-      Height = 476
+      Height = 478
       Bands = <
         item
         end>
@@ -557,12 +558,8 @@ object frmMain: TfrmMain
       Left = 55
       Top = 12
       Properties.DropDownListStyle = lsFixedList
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
       Style.HotTrack = False
       Style.TransparentBorder = False
-      Style.ButtonStyle = bts3D
-      Style.PopupBorderStyle = epbsFrame3D
       TabOrder = 0
       Width = 812
     end
@@ -589,7 +586,7 @@ object frmMain: TfrmMain
       AlignVert = avTop
       CaptionOptions.Text = #1057#1082#1080#1085#1099
       Control = cmbSkins
-      ControlOptions.OriginalHeight = 23
+      ControlOptions.OriginalHeight = 21
       ControlOptions.OriginalWidth = 121
       ControlOptions.ShowBorder = False
       Index = 0

@@ -12,7 +12,17 @@ uses
   intf_dll_manager, cxVirtualTreeListHelper, cxFilter,
   cxCustomData, cxStyles, dxScrollbarAnnotations, cxTL, cxTLdxBarBuiltInMenu,
   cxInplaceContainer, cxTLData, cxTextEdit, dxLayoutcxEditAdapters, cxContainer,
-  cxEdit, cxMaskEdit, cxDropDownEdit;
+  cxEdit, cxMaskEdit, cxDropDownEdit, dxSkinsCore, dxSkinDevExpressDarkStyle,
+  dxSkinDevExpressStyle, dxSkinOffice2007Blue, dxSkinOffice2010Silver,
+  dxSkinOffice2013LightGray, dxSkinVS2010,
+  intf_skin,          // ISkinAware
+  uSkinManager,       // TSkinManager
+  uSkinHelper,        // ApplySkinToForm / ApplySkinToDataModule
+  dmSkins,             // TdmSkin DataModule
+  dxSkinsForm,        // TdxSkinController
+  dxLayoutLookAndFeels, // TdxLayoutLookAndFeelList
+  dxSkinsdxRibbonPainter; // для корректного скининга TdxRibbon
+
 
 type
   /// <summary>
@@ -71,6 +81,10 @@ type
     FDllManager: IDllManager;
     FSLog: TVTLoadAllDataSource<TVTVLog>;
     FButtons: TButtonEntryList;
+    FSkinManager: TSkinManager;          // НОВОЕ
+    procedure InitializeSkinSelector;     // НОВОЕ
+    procedure DoSkinChanged(ASkinName: string; ANativeStyle: Boolean);  // НОВОЕ
+    procedure cmbSkinsPropertiesChange(Sender: TObject);  // НОВОЕ
     procedure AddMsg(const AMsg: WideString);
     procedure OnButtonClick(Sender: TObject);
     procedure LoadAllDlls;
@@ -136,6 +150,7 @@ var
   btn: TdxBarLargeButton;
   entry: TButtonEntry;
   intfRun: IDllIntfRun;
+  skinAware: ISkinAware;     // НОВОЕ
   i: Integer;
 begin
   btn := Sender as TdxBarLargeButton;
@@ -162,6 +177,12 @@ begin
   begin
     AddMsg('Интерфейс IDllIntfRun не поддерживается: ' + btn.Caption);
     Exit;
+  end;
+
+  if Supports(intfRun, ISkinAware, skinAware) then
+  begin
+    skinAware.ApplySkin(FSkinManager.CurrentSkin, FSkinManager.NativeStyle);
+    FSkinManager.RegisterSubscriber(skinAware);  // для live-обновления
   end;
 
   // Опциональная инициализация (для обратной совместимости)
@@ -211,10 +232,55 @@ begin
   end;
 end;
 
+procedure TfrmMain.InitializeSkinSelector;
+begin
+  FSkinManager.PopulateSkinList(cmbSkins);
+  cmbSkins.EditValue := FSkinManager.CurrentSkin;
+  cmbSkins.Properties.OnChange := cmbSkinsPropertiesChange;
+end;
+
+procedure TfrmMain.cmbSkinsPropertiesChange(Sender: TObject);
+begin
+  FSkinManager.CurrentSkin := VarToStr(cmbSkins.EditValue);
+  FSkinManager.NativeStyle := False;
+  // SetCurrentSkin внутри TSkinManager сам вызовет DoSkinChanged
+end;
+
+procedure TfrmMain.DoSkinChanged(ASkinName: string;
+  ANativeStyle: Boolean);
+begin
+  // 1. RootLookAndFeel главной формы
+  RootLookAndFeel.BeginUpdate;
+  try
+    RootLookAndFeel.SkinName := ASkinName;
+    RootLookAndFeel.NativeStyle := ANativeStyle;
+    rbMain.ColorSchemeName := ASkinName;
+  finally
+    RootLookAndFeel.EndUpdate;
+  end;
+
+  // 2. Центральный SkinController и LayoutSkinLookAndFeel в dmSkin
+  ApplySkinToDataModule(dmSkin,
+    dmSkin.dxSkinController,
+    dmSkin.dxLayoutSkinLookAndFeel,
+    ASkinName, ANativeStyle);
+
+  // 3. Сохранить настройку
+  FSkinManager.SaveSettings;
+end;
+
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   FDllManager := TDllManager.Create;
   FButtons := TButtonEntryList.Create;
+
+  dmSkin := TdmSkin.Create(Self);   // Self владеет, освободится автоматически
+  FSkinManager := TSkinManager.Create;
+  FSkinManager.LoadSettings;
+  FSkinManager.OnSkinChanged := DoSkinChanged;
+  InitializeSkinSelector;
+  // Применяем загруженный скин к главной форме и DataModule
+  DoSkinChanged(FSkinManager.CurrentSkin, FSkinManager.NativeStyle);
 
   // Реестр кнопок: кнопка + TDLLInfo + опциональная инициализация
 
@@ -232,6 +298,7 @@ end;
 procedure TfrmMain.FormDestroy(Sender: TObject);
 begin
   // Освобождаем через интерфейс — корректный RefCount
+  FreeAndNil(FSkinManager);  // dmSkin освободится через владение Self
   if Assigned(FDllManager) then
   begin
     FDllManager.UnloadAll;

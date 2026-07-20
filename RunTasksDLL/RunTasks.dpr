@@ -13,13 +13,17 @@ uses
   intf_tasks in '..\..\common\intf_tasks.pas',
   uAutonomiusThreadPool in '..\..\common\uAutonomiusThreadPool.pas',
   uRunTasks in 'uRunTasks.pas' {frmRunTasks},
-  cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas';
+  cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas',
+  dmSkins in '..\CommonModules\dmSkins.pas' {dmSkin: TDataModule},
+  intf_skin in '..\..\Common\intf_skin.pas',
+  uSkinHelper in '..\..\Common\uSkinHelper.pas';
 
 type
   // TRunTasks реализует: IDLLIntf + IDllIntfRun + IUsesDllManager + IRunTasks
   // Наследование: IRunTasks -> IDllIntfRunWithDeps -> (IDllIntfRun + IUsesDllManager)
-  TRunTasks = class(TInterfacedObject, IDLLIntf, IDllIntfRun, IUsesDllManager, IRunTasks)
+  TRunTasks = class(TInterfacedObject, IDLLIntf, IDllIntfRun, IUsesDllManager, IRunTasks, ISkinAware)
   private
+    FSkin: TdmSkin;
     FRunTasks: TfrmRunTasks;
     FDllManager: IDllManager;
     FFindInDir: IRunTaskFindInDir;
@@ -33,6 +37,7 @@ type
     function GetDescription: WideString; safecall;
     procedure Init; safecall;
     procedure Fin; safecall;
+    procedure ApplySkin(const ASkinName: WideString; ANativeStyle: Boolean = False); safecall;
     // IDllIntfRun
     procedure Run(ACallbackProc: TProc<WideString>; MainAppHandle: HWnd); safecall;
     // IUsesDllManager
@@ -56,9 +61,19 @@ exports
 
 { TRunTasks }
 
+procedure TRunTasks.ApplySkin(const ASkinName: WideString;
+  ANativeStyle: Boolean);
+begin
+   ApplySkinToDataModule(FSkin,
+     FSkin.dxSkinController,
+     FSkin.dxLayoutSkinLookAndFeel,
+     ASkinName, ANativeStyle);
+end;
+
 constructor TRunTasks.Create;
 begin
   dxCore.dxInitialize;
+  FSkin := TdmSkin.Create(nil);
   FRunTasks := TfrmRunTasks.Create(nil);
   FDllManager := nil;
   FFindInDir := nil;
@@ -72,6 +87,8 @@ begin
   FFindInExeFile := nil;
   FFindInDir := nil;
   FDllManager := nil;
+  if Assigned(FSkin) then
+    FreeAndNil(FSkin);
   FreeAndNil(FRunTasks);
   inherited;
   dxCore.dxFinalize;

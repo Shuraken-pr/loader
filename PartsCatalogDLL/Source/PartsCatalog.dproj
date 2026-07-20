@@ -194,6 +194,13 @@
         </DCCReference>
         <DCCReference Include="uXmlExporter.pas"/>
         <DCCReference Include="uXmlImporter.pas"/>
+        <DCCReference Include="..\..\CommonModules\dmSkins.pas">
+            <Form>dmSkin</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="..\..\..\Common\intf_skin.pas"/>
+        <DCCReference Include="..\..\..\Common\uSkinHelper.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -234,7 +241,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win32\Debug\PartsCatalog.dll" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\..\exe\PartsCatalog.dll" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>PartsCatalog.dll</RemoteName>
                         <Overwrite>true</Overwrite>

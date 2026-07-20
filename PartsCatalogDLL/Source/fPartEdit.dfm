@@ -19,9 +19,7 @@ object fPartEdit: TfPartEdit
     Height = 117
     Align = alClient
     TabOrder = 0
-    LayoutLookAndFeel = dmDB.dxLayoutSkinLookAndFeel1
-    ExplicitWidth = 434
-    ExplicitHeight = 55
+    LayoutLookAndFeel = dmSkin.dxLayoutSkinLookAndFeel
     object btnOK: TcxButton
       Left = 272
       Top = 80

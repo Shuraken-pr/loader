@@ -19,7 +19,7 @@ object fAttributeDelete: TfAttributeDelete
     Height = 105
     Align = alClient
     TabOrder = 0
-    LayoutLookAndFeel = dmDB.dxLayoutSkinLookAndFeel1
+    LayoutLookAndFeel = dmSkin.dxLayoutSkinLookAndFeel
     object btnOK: TButton
       Left = 187
       Top = 68

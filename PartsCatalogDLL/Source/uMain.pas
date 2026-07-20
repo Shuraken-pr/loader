@@ -15,11 +15,8 @@ uses
   fCategoryEdit, fAttributeEdit, System.UITypes, fAttributeSelect, fAttributeDelete,
   cxFilter, cxCustomData, cxStyles, dxScrollbarAnnotations, cxTL, dxSkinNames,
   cxTLdxBarBuiltInMenu, cxInplaceContainer, cxTLData, cxMaskEdit, cxDropDownEdit,
-  dxSkinsCore, dxSkinBasic, dxSkinBlack, dxSkinBlue, dxSkinDevExpressDarkStyle,
-  dxSkinDevExpressStyle, dxSkinOffice2007Blue, dxSkinOffice2007Silver, dxSkinsForm,
-  dxSkinOffice2010Blue, dxSkinOffice2010Silver, dxSkinOffice2013LightGray,
-  dxSkinOffice2016Dark, dxSkinVS2010, dxLayoutLookAndFeels, dxSkinsdxRibbonPainter,        // ← для TdxRibbon + TdxBarManager
-  dxLayoutPainters;
+  dxSkinsCore, dxLayoutLookAndFeels, dxSkinsdxRibbonPainter,        // ← для TdxRibbon + TdxBarManager
+  dxLayoutPainters, uSkinHelper, dmSkins;
 
 type
   TfrmMain = class(TForm)
@@ -70,8 +67,6 @@ type
     vtlParts: TcxVirtualTreeList;
     vtlCategoriesName: TcxTreeListColumn;
     lgSkins: TdxLayoutGroup;
-    cmbSkins: TcxComboBox;
-    liSkins: TdxLayoutItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnSearchClick(Sender: TObject);
@@ -97,7 +92,6 @@ type
       APrevFocusedNode, AFocusedNode: TcxTreeListNode);
     procedure vtlCategoriesExpanding(Sender: TcxCustomTreeList;
       ANode: TcxTreeListNode; var Allow: Boolean);
-    procedure cmbSkinsPropertiesChange(Sender: TObject);
   private
     { Private declarations }
     FCallback: TProc<WideString>;
@@ -107,7 +101,6 @@ type
     FCategoryDS: TVTSmartDataSource<TCategoryNodeData>;
     FPartDS: TVTLoadAllDataSource<TPartNodeData>;
 
-    procedure InitializeSkinList;
     function GetSelectedCategoryID: Integer;
     function GetSelectedCategoryName: string;
     function GetSelectedCategoryParentID: Integer;
@@ -119,7 +112,7 @@ type
     procedure BuildPartsColumns;
   public
     { Public declarations }
-    class function RunForm(ACallback: TProc<WideString>; var AMsg: WideString): boolean;
+    class function RunForm(ACallback: TProc<WideString>; var AMsg: WideString; ASkinName: WideString; ANativeStyle: boolean): boolean;
   end;
 
 var
@@ -151,7 +144,6 @@ begin
   FPartDS := TVTLoadAllDataSource<TPartNodeData>.Create(vtlParts);
 
   BuildCategoryTree;
-  InitializeSkinList;
 end;
 
 procedure TfrmMain.acAddAttributeExecute(Sender: TObject);
@@ -465,24 +457,6 @@ begin
   end;
 end;
 
-procedure TfrmMain.cmbSkinsPropertiesChange(Sender: TObject);
-var
-  SelectedSkin: string;
-begin
-  SelectedSkin := VarToStr(cmbSkins.EditValue);
-  if SelectedSkin <> '' then
-  begin
-    RootLookAndFeel.BeginUpdate;
-    try
-      RootLookAndFeel.SkinName := SelectedSkin;
-      RootLookAndFeel.NativeStyle := False;
-      rbMain.ColorSchemeName := SelectedSkin;
-    finally
-      RootLookAndFeel.EndUpdate;
-    end;
-  end;
-end;
-
 function TfrmMain.GetSelectedCategoryID: Integer;
 var
   Data: TCategoryNodeData;
@@ -533,32 +507,6 @@ begin
     Result := Data.PartID;
 end;
 
-procedure TfrmMain.InitializeSkinList;
-var
-  SkinNames: TStringList;
-  i: Integer;
-  CurrentSkin: string;
-begin
-  SkinNames := TStringList.Create;
-  try
-    cxLookAndFeelPaintersManager.PopulateSkinNames(SkinNames);
-
-    cmbSkins.Properties.Items.Clear;
-    for i := 0 to SkinNames.Count - 1 do
-      cmbSkins.Properties.Items.Add(SkinNames[i]);
-
-    // Устанавливаем текущий скин в комбобоксе
-
-    CurrentSkin := RootLookAndFeel.SkinName;
-    if CurrentSkin = '' then
-      CurrentSkin := 'DevExpressStyle';
-
-    cmbSkins.EditValue := CurrentSkin;
-  finally
-    SkinNames.Free;
-  end;
-end;
-
 procedure TfrmMain.LoadCategoryData(ACategoryID: Integer);
 var
   i: Integer;
@@ -601,13 +549,14 @@ begin
 end;
 
 class function TfrmMain.RunForm(ACallback: TProc<WideString>;
-  var AMsg: WideString): boolean;
+  var AMsg: WideString; ASkinName: WideString; ANativeStyle: boolean): boolean;
 begin
   try
     dmDB := TdmDB.Create(nil);
     try
       frmMain := TfrmMain.Create(nil);
       try
+        ApplySkinToForm(frmMain, ASkinName, ANativeStyle, frmMain.rbMain);
         frmMain.FCallback := ACallback;
         Result := true;
         frmMain.ShowModal;

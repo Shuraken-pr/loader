@@ -22,22 +22,19 @@ uses
   uMain in 'uMain.pas' {frmMain},
   uXmlExporter in 'uXmlExporter.pas',
   uXmlImporter in 'uXmlImporter.pas',
-  dxSkinsCore,
-  dxSkinBasic,
-  dxSkinDevExpressDarkStyle,
-  dxSkinDevExpressStyle,
-  dxSkinOffice2007Blue,
-  dxSkinOffice2010Silver,
-  dxSkinOffice2013LightGray,
-  dxSkinOffice2016Dark,
-  dxSkinVS2010;
+  dmSkins in '..\..\CommonModules\dmSkins.pas' {dmSkin: TDataModule},
+  intf_skin in '..\..\..\Common\intf_skin.pas',
+  uSkinHelper in '..\..\..\Common\uSkinHelper.pas';
 
 {$R *.res}
 
 type
-  TDLLPartsCatalog = class(TInterfacedObject, IDLLIntf, IDllIntfRun, IUsesDllManager, IPartsCatalog)
+  TDLLPartsCatalog = class(TInterfacedObject, IDLLIntf, IDllIntfRun, IUsesDllManager, IPartsCatalog, ISkinAware)
   private
     FDllManager: IDllManager;
+    FSkin: TdmSkin;
+    FSkinName: WideString;
+    FNativeStyle: boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -46,6 +43,7 @@ type
     function GetDescription: WideString; safecall;
     procedure Init; safecall;
     procedure Fin; safecall;
+    procedure ApplySkin(const ASkinName: WideString; ANativeStyle: Boolean = False); safecall;
 
     // IDllIntfRun
     procedure Run(ACallbackProc: TProc<WideString>; MainAppHandle: HWnd); safecall;
@@ -57,16 +55,30 @@ type
 
 { TDLLPartsCatalog }
 
+procedure TDLLPartsCatalog.ApplySkin(const ASkinName: WideString;
+  ANativeStyle: Boolean);
+begin
+  FSkinName := ASkinName;
+  FNativeStyle := ANativeStyle;
+   ApplySkinToDataModule(FSkin,
+     FSkin.dxSkinController,
+     FSkin.dxLayoutSkinLookAndFeel,
+     ASkinName, ANativeStyle);
+end;
+
 constructor TDLLPartsCatalog.Create;
 begin
   inherited Create;
+  FSkin := TdmSkin.Create(nil);
   dxInitialize;
 end;
 
 destructor TDLLPartsCatalog.Destroy;
 begin
-  dxFinalize;
+  if Assigned(FSkin) then
+    FreeAndNil(FSkin);
   inherited;
+  dxFinalize;
 end;
 
 procedure TDLLPartsCatalog.Init;
@@ -93,7 +105,7 @@ begin
   AMsg := '';
   OldHandle := Application.Handle;
   try
-    TfrmMain.RunForm(ACallbackProc, AMsg);
+    TfrmMain.RunForm(ACallbackProc, AMsg, FSkinName, FNativeStyle);
   finally
     Application.Handle := OldHandle;
   end;

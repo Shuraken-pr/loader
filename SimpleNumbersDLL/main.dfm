@@ -305,25 +305,23 @@ object frmSimpleNumbers: TfrmSimpleNumbers
     Height = 634
     Align = alClient
     TabOrder = 0
+    LayoutLookAndFeel = dmSkin.dxLayoutSkinLookAndFeel
     object seMaxLimSimpleNumbers: TcxSpinEdit
-      Left = 245
-      Top = 33
+      Left = 240
+      Top = 25
       AutoSize = False
       Properties.MaxValue = 2000000.000000000000000000
       Properties.MinValue = 1.000000000000000000
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
       Style.HotTrack = False
       Style.TransparentBorder = False
-      Style.ButtonStyle = bts3D
       TabOrder = 0
       Value = 1
       Height = 25
       Width = 121
     end
     object btnRun: TcxButton
-      Left = 373
-      Top = 33
+      Left = 368
+      Top = 25
       Width = 144
       Height = 25
       Caption = #1047#1072#1087#1091#1089#1090#1080#1090#1100' '#1088#1072#1089#1095#1105#1090
@@ -358,10 +356,10 @@ object frmSimpleNumbers: TfrmSimpleNumbers
     end
     object vtlThread1: TcxVirtualTreeList
       Tag = 1
-      Left = 26
-      Top = 121
+      Left = 21
+      Top = 125
       Width = 399
-      Height = 487
+      Height = 484
       Bands = <
         item
         end>
@@ -386,10 +384,10 @@ object frmSimpleNumbers: TfrmSimpleNumbers
     end
     object vtlThread2: TcxVirtualTreeList
       Tag = 2
-      Left = 432
-      Top = 121
-      Width = 499
-      Height = 487
+      Left = 427
+      Top = 125
+      Width = 509
+      Height = 484
       Bands = <
         item
         end>

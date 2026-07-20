@@ -11,7 +11,7 @@ uses
   cxImageList, cxLocalization, System.Generics.Collections,
   System.StrUtils, cxVirtualTreeListHelper, cxFilter, cxCustomData, cxStyles,
   dxScrollbarAnnotations, cxTL, cxCheckBox, cxTextEdit, cxTLdxBarBuiltInMenu,
-  cxInplaceContainer, cxTLData;
+  cxInplaceContainer, cxTLData, dxLayoutLookAndFeels, dxSkinsdxRibbonPainter, uSkinHelper;
 
 {
 Таблица
@@ -127,7 +127,7 @@ type
       AColNames, ANewCols, AOldCols: string);
   public
     { Public declarations }
-    class function RunForm(ADM: TdmConn; ACallback: TProc<WideString>; var AMsg: WideString): boolean;
+    class function RunForm(ADM: TdmConn; ACallback: TProc<WideString>; var AMsg: WideString; ASkinName: WideString; ANativeStyle: boolean): boolean;
   end;
 
 var
@@ -435,7 +435,8 @@ begin
   end;
 end;
 
-class function TfrmLogData.RunForm(ADM: TdmConn; ACallback: TProc<WideString>; var AMsg: WideString): boolean;
+class function TfrmLogData.RunForm(ADM: TdmConn; ACallback: TProc<WideString>; var AMsg: WideString;
+  ASkinName: WideString; ANativeStyle: boolean): boolean;
 begin
   Result := Assigned(ADM);
   if not Result then
@@ -447,6 +448,7 @@ begin
     if not Assigned(frmLogData) then
       frmLogData := TfrmLogData.Create(nil);
     try
+      ApplySkinToForm(frmLogData, ASkinName, ANativeStyle, frmLogData.rbActions);
       frmLogData.FDM := ADM;
       frmLogData.FCallback := ACallback;
       frmLogData.SetDM;

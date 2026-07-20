@@ -107,11 +107,7 @@ object frmLogData: TfrmLogData
     OptionsView.CheckGroups = True
     OptionsView.GridLines = tlglBoth
     ScrollbarAnnotations.CustomAnnotations = <>
-    TabOrder = 5
-    ExplicitLeft = 132
-    ExplicitTop = 192
-    ExplicitWidth = 250
-    ExplicitHeight = 150
+    TabOrder = 1
     object colCheck: TcxTreeListColumn
       PropertiesClassName = 'TcxCheckBoxProperties'
       Properties.ImmediatePost = True

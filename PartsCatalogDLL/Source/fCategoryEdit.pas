@@ -8,9 +8,7 @@ uses
   cxLookAndFeelPainters, cxClasses, dxLayoutContainer, dxLayoutControl,
   dxLayoutControlAdapters, dxLayoutcxEditAdapters, Vcl.Menus, cxContainer, dmDatabase,
   cxEdit, cxMaskEdit, cxDropDownEdit, cxTextEdit, Vcl.StdCtrls, cxButtons, uCatalogService, uEntities,
-  dxSkinsCore, dxSkinBasic, dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle,
-  dxSkinOffice2007Blue, dxSkinOffice2010Silver, dxSkinOffice2013LightGray,
-  dxSkinOffice2016Dark, dxSkinVS2010;
+  dxSkinsCore, dmSkins;
 
 type
   TfrmCategoryEdit = class(TForm)

@@ -16,14 +16,20 @@ uses
   uConnectionParams in 'uConnectionParams.pas' {frmConnections},
   uDMConn in 'uDMConn.pas' {dmConn: TDataModule},
   uLogData in 'uLogData.pas' {frmLogData},
-  cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas';
+  cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas',
+  dmSkins in '..\CommonModules\dmSkins.pas' {dmSkin: TDataModule},
+  intf_skin in '..\..\Common\intf_skin.pas',
+  uSkinHelper in '..\..\Common\uSkinHelper.pas';
 
 {$R *.res}
 
 type
-  TLogDataImpl = class(TInterfacedObject, IDLLIntf, IDllIntfRun, IUsesDllManager, ILogData)
+  TLogDataImpl = class(TInterfacedObject, IDLLIntf, IDllIntfRun, IUsesDllManager, ILogData, ISkinAware)
   private
     FDM: TdmConn;
+    FSkin: TdmSkin;
+    FSkinName: WideString;
+    FNativeStyle: boolean;
     FDllManager: IDllManager;
   public
     constructor Create;
@@ -33,6 +39,7 @@ type
     function GetDescription: WideString; safecall;
     procedure Init; safecall;
     procedure Fin; safecall;
+    procedure ApplySkin(const ASkinName: WideString; ANativeStyle: Boolean = False); safecall;
 
     // IDllIntfRun
     procedure Run(ACallbackProc: TProc<WideString>; MainAppHandle: HWnd); safecall;
@@ -43,15 +50,29 @@ type
 
 { TLogDataImpl }
 
+procedure TLogDataImpl.ApplySkin(const ASkinName: WideString;
+  ANativeStyle: Boolean);
+begin
+  FSkinName := ASkinName;
+  FNativeStyle := ANativeStyle;
+   ApplySkinToDataModule(FSkin,
+     FSkin.dxSkinController,
+     FSkin.dxLayoutSkinLookAndFeel,
+     ASkinName, ANativeStyle);
+end;
+
 constructor TLogDataImpl.Create;
 begin
   inherited Create;
   dxInitialize;
+  FSkin := TdmSkin.Create(nil);
   FDM := TdmConn.Create(nil);
 end;
 
 destructor TLogDataImpl.Destroy;
 begin
+  if Assigned(FSkin) then
+    FreeAndNil(FSkin);
   FreeAndNil(FDM);
   dxFinalize;
   inherited;
@@ -90,7 +111,7 @@ begin
     if TfrmConnections.RunForm(FDM, AMsg) then
     begin
       ACallbackProc('Соединение успешно установлено');
-      TfrmLogData.RunForm(FDM, ACallbackProc, AMsg);
+      TfrmLogData.RunForm(FDM, ACallbackProc, AMsg, FSkinName, FNativeStyle);
     end
     else
     begin

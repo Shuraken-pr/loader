@@ -11,14 +11,18 @@ uses
   intf_common in '..\..\common\intf_common.pas',
   intf_tasks in '..\..\common\intf_tasks.pas',
   uExplorer in 'uExplorer.pas' {frmScanLocalDisks},
-  cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas';
+  cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas',
+  dmSkins in '..\CommonModules\dmSkins.pas' {dmSkin: TDataModule},
+  intf_skin in '..\..\Common\intf_skin.pas',
+  uSkinHelper in '..\..\Common\uSkinHelper.pas';
 
 type
   // TExplorerDLL реализует: IDLLIntf + IDllIntfRun + IUsesDllManager + IExplorer
   // Наследование: IExplorer -> IDllIntfRunWithDeps -> (IDllIntfRun + IUsesDllManager)
-  TExplorerDLL = class(TInterfacedObject, IDLLIntf, IDllIntfRun, IUsesDllManager, IExplorer)
+  TExplorerDLL = class(TInterfacedObject, IDLLIntf, IDllIntfRun, IUsesDllManager, IExplorer, ISkinAware)
   private
     FE: TfrmScanLocalDisks;
+    FSkin: TdmSkin;
     FFindIntf: IRunTaskFindInDir;
     FDllManager: IDllManager;
     procedure TryLoadDependencies;
@@ -29,6 +33,7 @@ type
     function GetDescription: WideString; safecall;
     procedure Init; safecall;
     procedure Fin; safecall;
+    procedure ApplySkin(const ASkinName: WideString; ANativeStyle: Boolean = False); safecall;
     // IDllIntfRun
     procedure Run(ACallbackProc: TProc<WideString>; MainAppHandle: HWnd); safecall;
     // IUsesDllManager
@@ -41,11 +46,21 @@ type
 
 { TExplorerDLL }
 
+procedure TExplorerDLL.ApplySkin(const ASkinName: WideString;
+  ANativeStyle: Boolean);
+begin
+   ApplySkinToDataModule(FSkin,
+     FSkin.dxSkinController,
+     FSkin.dxLayoutSkinLookAndFeel,
+     ASkinName, ANativeStyle);
+end;
+
 constructor TExplorerDLL.Create;
 begin
   dxCore.dxInitialize;
   FFindIntf := nil;
   FDllManager := nil;
+  FSkin := TdmSkin.Create(nil);
   FE := TfrmScanLocalDisks.Create(nil);
 end;
 
@@ -53,6 +68,8 @@ destructor TExplorerDLL.Destroy;
 begin
   if Assigned(FE) then
     FreeAndNil(FE);
+  if Assigned(FSkin) then
+    FreeAndNil(FSkin);
   FFindIntf := nil;
   FDllManager := nil;
   inherited;

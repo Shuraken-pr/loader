@@ -13,7 +13,7 @@ uses
   DateUtils, cxImage, cxMemo, Vcl.Imaging.jpeg, cxPC, dxDockControl, dxDockPanel,
   System.Generics.Collections, cxFilter, cxCustomData, cxStyles,
   dxScrollbarAnnotations, cxTL, cxTLdxBarBuiltInMenu, cxInplaceContainer,
-  cxTLData, cxVirtualTreeListHelper, dxCore, dxCoreClasses;
+  cxTLData, cxVirtualTreeListHelper, dxCore, dxCoreClasses, dmSkins;
 
 type
   TExplorerRecord = class(TVTBaseRecord)

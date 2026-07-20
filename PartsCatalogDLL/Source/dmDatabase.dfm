@@ -510,6 +510,7 @@ object dmDB: TdmDB
       end>
   end
   object dxSkinController: TdxSkinController
+    NativeStyle = False
     SkinName = 'DevExpressStyle'
     Left = 476
     Top = 124

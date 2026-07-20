@@ -129,6 +129,13 @@
             <Form>frmLogData</Form>
         </DCCReference>
         <DCCReference Include="..\..\Common\cxVirtualTreeListHelper.pas"/>
+        <DCCReference Include="..\CommonModules\dmSkins.pas">
+            <Form>dmSkin</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="..\..\Common\intf_skin.pas"/>
+        <DCCReference Include="..\..\Common\uSkinHelper.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

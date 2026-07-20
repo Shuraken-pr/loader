@@ -6,7 +6,6 @@ uses
   vstHelper in '..\..\common\vstHelper.pas',
   intf_dll in '..\..\common\intf_dll.pas',
   intf_dll_manager in '..\..\common\intf_dll_manager.pas',
-  DllManager in '..\..\common\DllManager.pas',
   cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas',
   dxSkinsCore,
   dxSkinBasic,
@@ -16,7 +15,11 @@ uses
   dxSkinOffice2010Silver,
   dxSkinOffice2013LightGray,
   dxSkinOffice2016Dark,
-  dxSkinVS2010;
+  dxSkinVS2010,
+  dmSkins in '..\CommonModules\dmSkins.pas' {dmSkin: TDataModule},
+  uSkinManager in '..\..\Common\uSkinManager.pas',
+  uSkinHelper in '..\..\Common\uSkinHelper.pas',
+  intf_skin in '..\..\Common\intf_skin.pas';
 
 {$R *.res}
 

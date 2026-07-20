@@ -8,10 +8,7 @@ uses
   cxLookAndFeelPainters, Vcl.Menus, cxContainer, cxEdit,
   dxLayoutControlAdapters, dxLayoutcxEditAdapters, dxLayoutContainer, cxClasses,
   cxMaskEdit, cxDropDownEdit, cxTextEdit, Vcl.StdCtrls, cxButtons, dmDatabase,
-  dxLayoutControl, uCatalogService, uEntities, dxSkinsCore, dxSkinBasic,
-  dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle, dxSkinOffice2007Blue,
-  dxSkinOffice2010Silver, dxSkinOffice2013LightGray, dxSkinOffice2016Dark,
-  dxSkinVS2010;
+  dxLayoutControl, uCatalogService, uEntities, dxSkinsCore, dmSkins;
 
 type
   TfrmAttributeEdit = class(TForm)

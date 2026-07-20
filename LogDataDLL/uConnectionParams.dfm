@@ -63,6 +63,7 @@ object frmConnections: TfrmConnections
     Height = 267
     Align = alClient
     TabOrder = 0
+    LayoutLookAndFeel = dmSkin.dxLayoutSkinLookAndFeel
     object cbTypeDB: TcxComboBox
       Left = 87
       Top = 12
@@ -73,21 +74,15 @@ object frmConnections: TfrmConnections
         'MS SQL'
         'Oracle')
       Properties.OnChange = cbTypeDBPropertiesChange
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
       Style.HotTrack = False
       Style.TransparentBorder = False
-      Style.ButtonStyle = bts3D
-      Style.PopupBorderStyle = epbsFrame3D
       TabOrder = 0
       Text = 'Postgre'
       Width = 243
     end
     object edNameDB: TcxTextEdit
       Left = 87
-      Top = 42
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
+      Top = 40
       Style.HotTrack = False
       Style.TransparentBorder = False
       TabOrder = 1
@@ -96,9 +91,7 @@ object frmConnections: TfrmConnections
     end
     object edServer: TcxTextEdit
       Left = 87
-      Top = 72
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
+      Top = 68
       Style.HotTrack = False
       Style.TransparentBorder = False
       TabOrder = 2
@@ -107,9 +100,7 @@ object frmConnections: TfrmConnections
     end
     object edPort: TcxTextEdit
       Left = 87
-      Top = 102
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
+      Top = 96
       Style.HotTrack = False
       Style.TransparentBorder = False
       TabOrder = 3
@@ -118,9 +109,7 @@ object frmConnections: TfrmConnections
     end
     object edLogin: TcxTextEdit
       Left = 87
-      Top = 132
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
+      Top = 124
       Style.HotTrack = False
       Style.TransparentBorder = False
       TabOrder = 4
@@ -129,10 +118,8 @@ object frmConnections: TfrmConnections
     end
     object edPassword: TcxTextEdit
       Left = 87
-      Top = 162
+      Top = 152
       Properties.EchoMode = eemPassword
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
       Style.HotTrack = False
       Style.TransparentBorder = False
       TabOrder = 5
@@ -141,7 +128,7 @@ object frmConnections: TfrmConnections
     end
     object btnOk: TcxButton
       Left = 12
-      Top = 192
+      Top = 180
       Width = 318
       Height = 25
       Caption = #1059#1089#1090#1072#1085#1086#1074#1080#1090#1100' '#1089#1086#1077#1076#1080#1085#1077#1085#1080#1077
@@ -161,7 +148,7 @@ object frmConnections: TfrmConnections
       AlignVert = avTop
       CaptionOptions.Text = #1058#1080#1087' '#1041#1044
       Control = cbTypeDB
-      ControlOptions.OriginalHeight = 23
+      ControlOptions.OriginalHeight = 21
       ControlOptions.OriginalWidth = 121
       ControlOptions.ShowBorder = False
       Index = 0
@@ -172,7 +159,7 @@ object frmConnections: TfrmConnections
       AlignVert = avTop
       CaptionOptions.Text = #1041#1072#1079#1072' '#1044#1072#1085#1085#1099#1093
       Control = edNameDB
-      ControlOptions.OriginalHeight = 23
+      ControlOptions.OriginalHeight = 21
       ControlOptions.OriginalWidth = 121
       ControlOptions.ShowBorder = False
       Index = 1
@@ -183,7 +170,7 @@ object frmConnections: TfrmConnections
       AlignVert = avTop
       CaptionOptions.Text = #1057#1077#1088#1074#1077#1088
       Control = edServer
-      ControlOptions.OriginalHeight = 23
+      ControlOptions.OriginalHeight = 21
       ControlOptions.OriginalWidth = 121
       ControlOptions.ShowBorder = False
       Index = 2
@@ -194,7 +181,7 @@ object frmConnections: TfrmConnections
       AlignVert = avTop
       CaptionOptions.Text = #1055#1086#1088#1090
       Control = edPort
-      ControlOptions.OriginalHeight = 23
+      ControlOptions.OriginalHeight = 21
       ControlOptions.OriginalWidth = 121
       ControlOptions.ShowBorder = False
       Index = 3
@@ -205,7 +192,7 @@ object frmConnections: TfrmConnections
       AlignVert = avTop
       CaptionOptions.Text = #1051#1086#1075#1080#1085
       Control = edLogin
-      ControlOptions.OriginalHeight = 23
+      ControlOptions.OriginalHeight = 21
       ControlOptions.OriginalWidth = 121
       ControlOptions.ShowBorder = False
       Index = 4
@@ -216,7 +203,7 @@ object frmConnections: TfrmConnections
       AlignVert = avTop
       CaptionOptions.Text = #1055#1072#1088#1086#1083#1100
       Control = edPassword
-      ControlOptions.OriginalHeight = 23
+      ControlOptions.OriginalHeight = 21
       ControlOptions.OriginalWidth = 121
       ControlOptions.ShowBorder = False
       Index = 5

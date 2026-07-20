@@ -19,7 +19,7 @@ object frmAttributeEdit: TfrmAttributeEdit
     Height = 159
     Align = alClient
     TabOrder = 0
-    LayoutLookAndFeel = dmDB.dxLayoutSkinLookAndFeel1
+    LayoutLookAndFeel = dmSkin.dxLayoutSkinLookAndFeel
     object btnOk: TcxButton
       Left = 208
       Top = 122

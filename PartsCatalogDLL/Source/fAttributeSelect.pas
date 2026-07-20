@@ -9,9 +9,7 @@ uses
   cxControls, cxLookAndFeels, cxLookAndFeelPainters, dxLayoutControlAdapters,
   dxLayoutContainer, cxClasses, dxLayoutControl, dxLayoutcxEditAdapters,
   cxContainer, cxEdit, cxTextEdit, cxMaskEdit, cxDropDownEdit, dmDatabase,
-  dxSkinsCore, dxSkinBasic, dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle,
-  dxSkinOffice2007Blue, dxSkinOffice2010Silver, dxSkinOffice2013LightGray,
-  dxSkinOffice2016Dark, dxSkinVS2010;
+  dxSkinsCore, dmSkins;
 
 type
   TfAttributeSelect = class(TForm)

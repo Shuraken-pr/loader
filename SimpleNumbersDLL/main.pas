@@ -11,7 +11,9 @@ uses
   cxClasses, dxLayoutControl, System.Generics.Collections,
   System.SyncObjs, System.Threading, cxFilter, cxCustomData, cxStyles,
   dxScrollbarAnnotations, cxTL, cxTLdxBarBuiltInMenu, cxInplaceContainer,
-  cxTLData;
+  cxTLData, dmSkins, dxSkinsCore, dxSkinDevExpressDarkStyle,
+  dxSkinDevExpressStyle, dxSkinOffice2007Blue, dxSkinOffice2010Silver,
+  dxSkinOffice2013LightGray, dxSkinVS2010;
 
 type
   TfrmSimpleNumbers = class(TForm)

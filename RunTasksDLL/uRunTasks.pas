@@ -24,7 +24,7 @@ uses
 {$endif}
   cxDropDownEdit, IOUtils, cxPC, dxDockControl, dxDockPanel, dxCoreGraphics,
   cxFilter, cxCustomData, cxStyles, dxScrollbarAnnotations, cxTL,
-  cxTLdxBarBuiltInMenu, cxInplaceContainer, cxTLData;
+  cxTLdxBarBuiltInMenu, cxInplaceContainer, cxTLData, dmSkins;
 
 type
   TRunTaskStatus = (rtsNone, rtsExecute, rtsBreak, rtsFinish, rtsError);

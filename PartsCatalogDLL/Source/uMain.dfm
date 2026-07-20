@@ -21,44 +21,32 @@ object frmMain: TfrmMain
     Height = 124
     Align = alTop
     TabOrder = 0
-    LayoutLookAndFeel = dmDB.dxLayoutSkinLookAndFeel1
+    LayoutLookAndFeel = dmSkin.dxLayoutSkinLookAndFeel
     object edtSearch: TcxTextEdit
       Left = 143
-      Top = 76
+      Top = 58
       Style.HotTrack = False
       Style.TransparentBorder = False
-      TabOrder = 1
+      TabOrder = 0
       Width = 181
     end
     object btnSearch: TcxButton
       Left = 331
-      Top = 76
+      Top = 58
       Width = 75
       Height = 25
       Caption = #1055#1086#1080#1089#1082
-      TabOrder = 2
+      TabOrder = 1
       OnClick = btnSearchClick
     end
     object btnClear: TcxButton
       Left = 413
-      Top = 76
+      Top = 58
       Width = 75
       Height = 25
       Caption = #1057#1073#1088#1086#1089#1080#1090#1100
-      TabOrder = 3
+      TabOrder = 2
       OnClick = btnClearClick
-    end
-    object cmbSkins: TcxComboBox
-      Left = 121
-      Top = 12
-      AutoSize = False
-      Properties.DropDownListStyle = lsFixedList
-      Properties.OnEditValueChanged = cmbSkinsPropertiesChange
-      Style.HotTrack = False
-      Style.TransparentBorder = False
-      TabOrder = 0
-      Height = 23
-      Width = 665
     end
     object lcMainGroup_Root: TdxLayoutGroup
       AlignHorz = ahClient
@@ -112,17 +100,6 @@ object frmMain: TfrmMain
       AlignVert = avTop
       CaptionOptions.Text = 'New Group'
       ShowBorder = False
-      Index = 0
-    end
-    object liSkins: TdxLayoutItem
-      Parent = lgSkins
-      AlignHorz = ahClient
-      AlignVert = avClient
-      CaptionOptions.Text = #1058#1077#1084#1072' '#1086#1092#1086#1088#1084#1083#1077#1085#1080#1103
-      Control = cmbSkins
-      ControlOptions.OriginalHeight = 23
-      ControlOptions.OriginalWidth = 121
-      ControlOptions.ShowBorder = False
       Index = 0
     end
   end

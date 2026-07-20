@@ -18,9 +18,7 @@ object frmCategoryEdit: TfrmCategoryEdit
     Height = 167
     Align = alClient
     TabOrder = 0
-    LayoutLookAndFeel = dmDB.dxLayoutSkinLookAndFeel1
-    ExplicitWidth = 323
-    ExplicitHeight = 153
+    LayoutLookAndFeel = dmSkin.dxLayoutSkinLookAndFeel
     object btnOk: TcxButton
       Left = 174
       Top = 130

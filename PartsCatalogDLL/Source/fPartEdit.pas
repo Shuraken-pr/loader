@@ -9,10 +9,8 @@ uses
   uEntities, uCatalogService, dmDatabase, cxGraphics, cxControls,
   cxLookAndFeels, cxLookAndFeelPainters, cxClasses, dxLayoutContainer,
   dxLayoutControl, cxContainer, cxEdit, cxTextEdit, cxCheckBox, dxCore,
-  cxDateUtils, cxMaskEdit, cxDropDownEdit, cxCalendar, dxSkinsCore, dxSkinBasic,
-  dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle,
-  dxSkinOffice2007Blue, dxSkinOffice2010Silver, dxSkinOffice2013LightGray,
-  dxSkinOffice2016Dark, dxSkinVS2010, dxLayoutControlAdapters, Vcl.Menus, cxButtons;
+  cxDateUtils, cxMaskEdit, cxDropDownEdit, cxCalendar, dxSkinsCore, dmSkins,
+  Vcl.Menus, dxLayoutControlAdapters, cxButtons;
 
 type
   TfPartEdit = class(TForm)

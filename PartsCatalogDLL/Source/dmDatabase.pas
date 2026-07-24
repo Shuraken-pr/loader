@@ -12,7 +12,7 @@ uses
   dxSkinBasic, dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle,
   dxSkinOffice2007Blue, dxSkinOffice2010Silver, dxSkinOffice2013LightGray,
   dxSkinOffice2016Dark, dxSkinVS2010, dxCore, cxClasses, cxLookAndFeels,
-  dxSkinsForm, dxLayoutLookAndFeels, FireDAC.Moni.Base, FireDAC.Moni.Custom;
+  dxSkinsForm, dxLayoutLookAndFeels, FireDAC.Moni.Base, FireDAC.Moni.Custom.Logger;
 
 type
   TdmDB = class(TDataModule)
@@ -48,12 +48,13 @@ type
     dxSkinController: TdxSkinController;
     dxLayoutLookAndFeelList1: TdxLayoutLookAndFeelList;
     dxLayoutSkinLookAndFeel1: TdxLayoutSkinLookAndFeel;
-    FDMonitor: TFDMoniCustomClientLink;
-    FDStoredProc1: TFDStoredProc;
     procedure FDMonitorOutput(ASender: TFDMoniClientLinkBase; const AClassName,
-      AObjName, AMessage: string);       // Вставка или обновление значения атрибута
+      AObjName, AMessage: string);
+    procedure DataModuleCreate(Sender: TObject);
+    procedure DataModuleDestroy(Sender: TObject);       // Вставка или обновление значения атрибута
   private
     { Private declarations }
+    FFDMonitor: TFDMoniCustomClientLink;
   public
     { Public declarations }
     procedure Connect;
@@ -114,14 +115,29 @@ begin
     PGConn.Connected := True;
 end;
 
+procedure TdmDB.DataModuleCreate(Sender: TObject);
+begin
+  FFDMonitor := TFDMoniCustomClientLink.Create(Self);
+  FFDMonitor.Tracing := true;
+  FFDMonitor.EventKinds := [ekCmdExecute, ekSQL];
+  FFDMonitor.OnOutput := FDMonitorOutput;
+end;
+
+procedure TdmDB.DataModuleDestroy(Sender: TObject);
+begin
+  FreeAndNil(FFDMonitor);
+end;
+
+type
+  THackFDPhysCommand = class(TFDPhysCommand);
+
 procedure TdmDB.FDMonitorOutput(ASender: TFDMoniClientLinkBase;
   const AClassName, AObjName, AMessage: string);
 var
-  i, j: integer;
+  j: integer;
+  obj: TObject;
   AppName, ObjName, Msg, ParamStr: string;
-  cmd: TFDDataSet;
-  qry: TFDQuery;
-  sp: TFDStoredProc;
+  cmd: THackFDPhysCommand;
 begin
   cmd := nil;
   AppName := ExtractFileName(Application.ExeName);
@@ -129,43 +145,21 @@ begin
   if AMessage.Contains('>> Open') or AMessage.Contains('>> Execute') then
   begin
     msg := AMessage;
-    for i := 0 to ComponentCount - 1 do
-    begin
-      if (Components[i] is TFDDataSet) and (TFDDataSet(Components[i]).Name = ObjName) then
-      begin
-        cmd := TFDDataSet(Components[i]);
-        break;
-      end;
-    end;
+    obj := TFDMoniCustomClient(FFDMonitor.CClient).CurSender;
+    if Assigned(obj) and (obj is TFDPhysCommand) then
+      cmd := THackFDPhysCommand(obj);
+
     if Assigned(cmd) then
     begin
       ParamStr := '';
-      if cmd is TFDQuery then
+      msg := cmd.GetCommandText;
+      for j := 0 to cmd.GetParams.Count - 1 do
       begin
-        qry := TFDQuery(cmd);
-        msg := qry.SQL.Text;
-        for j := 0 to qry.Params.Count - 1 do
+        if j = 0 then
+          paramStr := 'declare' + #13#10;
+        if not (cmd.GetParams[j].DataType in [ftBlob, ftUnknown]) then
         begin
-          if j = 0 then
-            paramStr := 'declare' + #13#10;
-          if not (qry.Params[j].DataType in [ftBlob, ftUnknown]) then
-          begin
-            paramStr := paramStr + qry.Params[j].Name + '=' + qry.Params[j].AsString + #13#10;
-          end;
-        end;
-      end
-        else if cmd is TFDStoredProc then
-      begin
-        sp := TFDStoredProc(cmd);
-        msg := sp.StoredProcName;
-        for j := 0 to sp.Params.Count - 1 do
-        begin
-          if j = 0 then
-            paramStr := 'declare' + #13#10;
-          if not (sp.Params[j].DataType in [ftBlob, ftUnknown]) then
-          begin
-            paramStr := paramStr + sp.Params[j].Name + '=' + sp.Params[j].AsString + #13#10;
-          end;
+          paramStr := paramStr + cmd.GetParams[j].Name + '=' + cmd.GetParams[j].AsString + #13#10;
         end;
       end;
       msg := paramStr + msg;

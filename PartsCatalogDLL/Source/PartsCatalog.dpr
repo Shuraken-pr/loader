@@ -24,7 +24,8 @@ uses
   uXmlImporter in 'uXmlImporter.pas',
   dmSkins in '..\..\CommonModules\dmSkins.pas' {dmSkin: TDataModule},
   intf_skin in '..\..\..\Common\intf_skin.pas',
-  uSkinHelper in '..\..\..\Common\uSkinHelper.pas';
+  uSkinHelper in '..\..\..\Common\uSkinHelper.pas',
+  FireDAC.Moni.Custom.Logger in '..\..\..\Common\FireDAC.Moni.Custom.Logger.pas';
 
 {$R *.res}
 

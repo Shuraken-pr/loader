@@ -1,4 +1,6 @@
 object dmDB: TdmDB
+  OnCreate = DataModuleCreate
+  OnDestroy = DataModuleDestroy
   Height = 480
   Width = 640
   object PGConn: TFDConnection
@@ -9,6 +11,12 @@ object dmDB: TdmDB
       'DriverID=PG'
       'Port=5432'
       'MonitorBy=Custom')
+    FetchOptions.AssignedValues = [evItems]
+    FetchOptions.Items = [fiBlobs, fiDetails]
+    UpdateOptions.AssignedValues = [uvEDelete, uvEInsert, uvEUpdate]
+    UpdateOptions.EnableDelete = False
+    UpdateOptions.EnableInsert = False
+    UpdateOptions.EnableUpdate = False
     TxOptions.AutoStop = False
     LoginDialog = LDPg
     Left = 48
@@ -536,17 +544,5 @@ object dmDB: TdmDB
       LookAndFeel.NativeStyle = False
       PixelsPerInch = 96
     end
-  end
-  object FDMonitor: TFDMoniCustomClientLink
-    EventKinds = [ekCmdExecute, ekSQL]
-    OnOutput = FDMonitorOutput
-    Tracing = True
-    Left = 472
-    Top = 288
-  end
-  object FDStoredProc1: TFDStoredProc
-    Connection = PGConn
-    Left = 164
-    Top = 308
   end
 end

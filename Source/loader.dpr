@@ -19,7 +19,8 @@ uses
   dmSkins in '..\CommonModules\dmSkins.pas' {dmSkin: TDataModule},
   uSkinManager in '..\..\Common\uSkinManager.pas',
   uSkinHelper in '..\..\Common\uSkinHelper.pas',
-  intf_skin in '..\..\Common\intf_skin.pas';
+  intf_skin in '..\..\Common\intf_skin.pas',
+  FireDAC.Moni.Custom.Logger in '..\..\Common\FireDAC.Moni.Custom.Logger.pas';
 
 {$R *.res}
 

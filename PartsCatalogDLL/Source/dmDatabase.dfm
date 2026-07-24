@@ -7,7 +7,8 @@ object dmDB: TdmDB
       'Database=postgres'
       'User_Name=postgres'
       'DriverID=PG'
-      'Port=5432')
+      'Port=5432'
+      'MonitorBy=Custom')
     TxOptions.AutoStop = False
     LoginDialog = LDPg
     Left = 48
@@ -535,5 +536,17 @@ object dmDB: TdmDB
       LookAndFeel.NativeStyle = False
       PixelsPerInch = 96
     end
+  end
+  object FDMonitor: TFDMoniCustomClientLink
+    EventKinds = [ekCmdExecute, ekSQL]
+    OnOutput = FDMonitorOutput
+    Tracing = True
+    Left = 472
+    Top = 288
+  end
+  object FDStoredProc1: TFDStoredProc
+    Connection = PGConn
+    Left = 164
+    Top = 308
   end
 end

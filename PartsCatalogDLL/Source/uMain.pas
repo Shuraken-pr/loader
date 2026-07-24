@@ -16,7 +16,9 @@ uses
   cxFilter, cxCustomData, cxStyles, dxScrollbarAnnotations, cxTL, dxSkinNames,
   cxTLdxBarBuiltInMenu, cxInplaceContainer, cxTLData, cxMaskEdit, cxDropDownEdit,
   dxSkinsCore, dxLayoutLookAndFeels, dxSkinsdxRibbonPainter,        // ← для TdxRibbon + TdxBarManager
-  dxLayoutPainters, uSkinHelper, dmSkins;
+  dxLayoutPainters, uSkinHelper, dmSkins, dxSkinDevExpressDarkStyle,
+  dxSkinDevExpressStyle, dxSkinOffice2007Blue, dxSkinOffice2010Silver,
+  dxSkinOffice2013LightGray, dxSkinVS2010;
 
 type
   TfrmMain = class(TForm)

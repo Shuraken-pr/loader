@@ -10,7 +10,9 @@ uses
   cxLookAndFeels, cxLookAndFeelPainters, cxClasses, dxLayoutContainer,
   dxLayoutControl, cxContainer, cxEdit, cxTextEdit, cxCheckBox, dxCore,
   cxDateUtils, cxMaskEdit, cxDropDownEdit, cxCalendar, dxSkinsCore, dmSkins,
-  Vcl.Menus, dxLayoutControlAdapters, cxButtons;
+  Vcl.Menus, dxLayoutControlAdapters, cxButtons, dxSkinDevExpressDarkStyle,
+  dxSkinDevExpressStyle, dxSkinOffice2007Blue, dxSkinOffice2010Silver,
+  dxSkinOffice2013LightGray, dxSkinVS2010;
 
 type
   TfPartEdit = class(TForm)

@@ -21,6 +21,7 @@ object fPartEdit: TfPartEdit
     TabOrder = 0
     LayoutLookAndFeel = dmSkin.dxLayoutSkinLookAndFeel
     object btnOK: TcxButton
+      Tag = -1
       Left = 272
       Top = 80
       Width = 75
@@ -31,6 +32,7 @@ object fPartEdit: TfPartEdit
       OnClick = btnOKClick
     end
     object btnCancel: TcxButton
+      Tag = -1
       Left = 354
       Top = 80
       Width = 75

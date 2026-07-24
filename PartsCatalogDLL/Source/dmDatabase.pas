@@ -12,7 +12,7 @@ uses
   dxSkinBasic, dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle,
   dxSkinOffice2007Blue, dxSkinOffice2010Silver, dxSkinOffice2013LightGray,
   dxSkinOffice2016Dark, dxSkinVS2010, dxCore, cxClasses, cxLookAndFeels,
-  dxSkinsForm, dxLayoutLookAndFeels;
+  dxSkinsForm, dxLayoutLookAndFeels, FireDAC.Moni.Base, FireDAC.Moni.Custom;
 
 type
   TdmDB = class(TDataModule)
@@ -47,7 +47,11 @@ type
     qryDeleteCategory: TFDQuery;
     dxSkinController: TdxSkinController;
     dxLayoutLookAndFeelList1: TdxLayoutLookAndFeelList;
-    dxLayoutSkinLookAndFeel1: TdxLayoutSkinLookAndFeel;       // Вставка или обновление значения атрибута
+    dxLayoutSkinLookAndFeel1: TdxLayoutSkinLookAndFeel;
+    FDMonitor: TFDMoniCustomClientLink;
+    FDStoredProc1: TFDStoredProc;
+    procedure FDMonitorOutput(ASender: TFDMoniClientLinkBase; const AClassName,
+      AObjName, AMessage: string);       // Вставка или обновление значения атрибута
   private
     { Private declarations }
   public
@@ -65,9 +69,36 @@ function IfThen(AValue: Boolean; const ATrue: string; const AFalse: string): str
 
 implementation
 
+uses Winapi.Windows, Winapi.Messages, Vcl.Forms;
+
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
+
+procedure SendMonitorMessage(const s: string);
+var
+  CopyData: TCopyDataStruct;  // ← стек, не требует New/Dispose
+  MonitorHandle: THandle;
+  Utf8Data: UTF8String;       // ← буфер живёт до конца процедуры
+begin
+  MonitorHandle := FindWindow(PChar('TfrmSQLLogger'),
+                               PChar('SQL Logger'));
+  if MonitorHandle = 0 then
+    Exit;
+
+  // Конвертируем заранее — переменная живёт до конца блока
+  Utf8Data := UTF8String(s);
+
+  // Заполняем структуру
+  CopyData.dwData := 1;
+  CopyData.cbData := Length(Utf8Data);
+  CopyData.lpData := PAnsiChar(Utf8Data);  // ← указатель валиден, пока жив Utf8Data
+
+  // WM_COPYDATA синхронен: данные копируются ДО возврата из SendMessage
+  SendMessage(MonitorHandle, WM_COPYDATA, WPARAM(0), LPARAM(@CopyData));
+
+  // Utf8Data освобождается здесь — после того как данные уже скопированы
+end;
 
 function IfThen(AValue: Boolean; const ATrue: string; const AFalse: string): string;
 begin
@@ -81,6 +112,66 @@ procedure TdmDB.Connect;
 begin
   if not PGConn.Connected then
     PGConn.Connected := True;
+end;
+
+procedure TdmDB.FDMonitorOutput(ASender: TFDMoniClientLinkBase;
+  const AClassName, AObjName, AMessage: string);
+var
+  i, j: integer;
+  AppName, ObjName, Msg, ParamStr: string;
+  cmd: TFDDataSet;
+  qry: TFDQuery;
+  sp: TFDStoredProc;
+begin
+  cmd := nil;
+  AppName := ExtractFileName(Application.ExeName);
+  ObjName := AObjName;
+  if AMessage.Contains('>> Open') or AMessage.Contains('>> Execute') then
+  begin
+    msg := AMessage;
+    for i := 0 to ComponentCount - 1 do
+    begin
+      if (Components[i] is TFDDataSet) and (TFDDataSet(Components[i]).Name = ObjName) then
+      begin
+        cmd := TFDDataSet(Components[i]);
+        break;
+      end;
+    end;
+    if Assigned(cmd) then
+    begin
+      ParamStr := '';
+      if cmd is TFDQuery then
+      begin
+        qry := TFDQuery(cmd);
+        msg := qry.SQL.Text;
+        for j := 0 to qry.Params.Count - 1 do
+        begin
+          if j = 0 then
+            paramStr := 'declare' + #13#10;
+          if not (qry.Params[j].DataType in [ftBlob, ftUnknown]) then
+          begin
+            paramStr := paramStr + qry.Params[j].Name + '=' + qry.Params[j].AsString + #13#10;
+          end;
+        end;
+      end
+        else if cmd is TFDStoredProc then
+      begin
+        sp := TFDStoredProc(cmd);
+        msg := sp.StoredProcName;
+        for j := 0 to sp.Params.Count - 1 do
+        begin
+          if j = 0 then
+            paramStr := 'declare' + #13#10;
+          if not (sp.Params[j].DataType in [ftBlob, ftUnknown]) then
+          begin
+            paramStr := paramStr + sp.Params[j].Name + '=' + sp.Params[j].AsString + #13#10;
+          end;
+        end;
+      end;
+      msg := paramStr + msg;
+      SendMonitorMessage(ObjName + '~' + AppName + '~' + msg);
+    end;
+  end;
 end;
 
 procedure TdmDB.BeginTransaction;

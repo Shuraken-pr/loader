@@ -201,7 +201,7 @@ begin
       if FCatalogService.DeleteCategory(CatID, ErrMsg) then
       begin
         BuildCategoryTree;
-        vtlParts.Clear; // Очищаем таблицу деталей
+        FPartDS.Clear; // Очищаем таблицу деталей
       end
       else
         ShowMessage(ErrMsg);

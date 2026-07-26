@@ -20,7 +20,8 @@ uses
   uSkinManager in '..\..\Common\uSkinManager.pas',
   uSkinHelper in '..\..\Common\uSkinHelper.pas',
   intf_skin in '..\..\Common\intf_skin.pas',
-  FireDAC.Moni.Custom.Logger in '..\..\Common\FireDAC.Moni.Custom.Logger.pas';
+  FireDAC.Moni.Custom.Logger in '..\..\Common\FireDAC.Moni.Custom.Logger.pas',
+  FDMoniCustomLoggerHelper in '..\..\Common\FDMoniCustomLoggerHelper.pas';
 
 {$R *.res}
 

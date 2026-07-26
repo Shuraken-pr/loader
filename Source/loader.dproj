@@ -139,6 +139,7 @@
         <DCCReference Include="..\..\Common\uSkinHelper.pas"/>
         <DCCReference Include="..\..\Common\intf_skin.pas"/>
         <DCCReference Include="..\..\Common\FireDAC.Moni.Custom.Logger.pas"/>
+        <DCCReference Include="..\..\Common\FDMoniCustomLoggerHelper.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

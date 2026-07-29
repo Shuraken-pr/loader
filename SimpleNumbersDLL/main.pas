@@ -34,10 +34,12 @@ type
     procedure btnRunClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
   private
     FCallbackProc: TProc<WideString>;
     FList1: TList<integer>;
     FList2: TList<integer>;
+    FRunThreads: boolean;
     procedure vtlGetChildCount(Sender: TcxCustomTreeList;
       AParentNode: TcxTreeListNode; var ACount: Integer);
     procedure vtlGetNodeValue(Sender: TcxCustomTreeList;
@@ -105,6 +107,7 @@ begin
   FList2.Clear;
   ListsCS := TCriticalSection.Create;
   try
+    FRunThreads := true;
     lthreads := TStringList.Create;
     try
       thread1 := TThread.CreateAnonymousThread(procedure
@@ -152,6 +155,7 @@ begin
     end;
   finally
     FreeAndNil(ListsCS);
+    FRunThreads := false;
   end;
 end;
 
@@ -212,9 +216,16 @@ begin
     FCallbackProc(AMsg);
 end;
 
+procedure TfrmSimpleNumbers.FormCloseQuery(Sender: TObject;
+  var CanClose: Boolean);
+begin
+  CanClose := not FRunThreads;
+end;
+
 procedure TfrmSimpleNumbers.FormCreate(Sender: TObject);
 begin
   FCallbackProc := nil;
+  FRunThreads := false;
   FList1 := TList<integer>.Create;
   FList2 := TList<integer>.Create;
 end;

@@ -129,6 +129,7 @@
         <DCCReference Include="..\..\common\vstHelper.pas"/>
         <DCCReference Include="..\..\common\intf_dll.pas"/>
         <DCCReference Include="..\..\common\intf_dll_manager.pas"/>
+        <DCCReference Include="..\..\Common\frxDevDSIntf.pas"/>
         <DCCReference Include="..\..\Common\cxVirtualTreeListHelper.pas"/>
         <DCCReference Include="..\CommonModules\dmSkins.pas">
             <Form>dmSkin</Form>

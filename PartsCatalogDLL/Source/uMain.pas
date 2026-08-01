@@ -102,7 +102,6 @@ type
     FCurrentCategoryID: Integer;
     FCategoryDS: TVTSmartDataSource<TCategoryNodeData>;
     FPartDS: TVTLoadAllDataSource<TPartNodeData>;
-
     function GetSelectedCategoryID: Integer;
     function GetSelectedCategoryName: string;
     function GetSelectedCategoryParentID: Integer;

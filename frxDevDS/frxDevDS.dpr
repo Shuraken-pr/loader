@@ -22,6 +22,7 @@ type
   TDLLFrxDevDS = class(TInterfacedObject, IDLLIntf, IFrxDevDS, IUsesDllManager)
   private
     FDM: TdmFR;
+    FList: TObjectList<TfrxDevCustomDataSet>;
     FDllManager: IDllManager;
     FRegistered: Boolean;
     procedure RegisterDataSet;
@@ -63,6 +64,7 @@ constructor TDLLFrxDevDS.Create;
 begin
   inherited;
   FDM := TdmFR.Create(nil);
+  FList := TObjectList<TfrxDevCustomDataSet>.Create(true);
   FRegistered := False;
 end;
 
@@ -70,6 +72,7 @@ destructor TDLLFrxDevDS.Destroy;
 begin
   if FRegistered then
     UnregisterDataSet;
+  FreeAndNil(FList);
   if Assigned(FDM) then
     FreeAndNil(FDM);
   inherited;
@@ -139,6 +142,7 @@ begin
 
   { Очистка старых DataSet'ов }
   FDM.report.DataSets.Clear;
+  FList.Clear;
 
   { Добавление новых DataSet'ов }
   for I := Low(ADataSources) to High(ADataSources) do
@@ -153,6 +157,7 @@ begin
       FrxDS.AssignDataSource(ADataSources[I], ATreeLists[I]);
       FrxDS.Name := Format('frxDS%d', [I]);
       FDM.Report.DataSets.Add(FrxDS);
+      FList.Add(FrxDS);
     except
       FrxDS.Free;
       raise;
@@ -176,6 +181,7 @@ begin
 
   { Очистка старых DataSet'ов }
   FDM.report.DataSets.Clear;
+  FList.Clear;
 
   { Добавление новых DataSet'ов }
   for I := Low(ADataSources) to High(ADataSources) do
@@ -190,6 +196,7 @@ begin
       FrxDS.AssignDataSource(ADataSources[I], ATreeLists[I]);
       FrxDS.Name := Format('frxDS%d', [I]);
       FDM.Report.DataSets.Add(FrxDS);
+      FList.Add(FrxDS);
     except
       FrxDS.Free;
       raise;

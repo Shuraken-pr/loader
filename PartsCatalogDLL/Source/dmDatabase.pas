@@ -48,6 +48,18 @@ type
     dxSkinController: TdxSkinController;
     dxLayoutLookAndFeelList1: TdxLayoutLookAndFeelList;
     dxLayoutSkinLookAndFeel1: TdxLayoutSkinLookAndFeel;
+    qryReportCategories: TFDQuery;
+    qryReportParts: TFDQuery;
+    qryReportCategoriesid: TIntegerField;
+    qryReportCategoriesparent_id: TIntegerField;
+    qryReportCategorieslevel: TIntegerField;
+    qryReportCategoriesname: TWideStringField;
+    qryReportCategoriespath: TWideMemoField;
+    qryReportCategoriesvisual_tree: TWideMemoField;
+    qryReportPartspart_id: TIntegerField;
+    qryReportPartscode: TWideStringField;
+    qryReportPartscategory_id: TIntegerField;
+    qryReportPartsattributes_str: TWideMemoField;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);       // Вставка или обновление значения атрибута
   private
@@ -68,7 +80,7 @@ function IfThen(AValue: Boolean; const ATrue: string; const AFalse: string): str
 
 implementation
 
-uses Winapi.Windows, Winapi.Messages, Vcl.Forms;
+uses Winapi.Windows, Winapi.Messages, Vcl.Forms, PGSettings;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -85,7 +97,10 @@ end;
 procedure TdmDB.Connect;
 begin
   if not PGConn.Connected then
-    PGConn.Connected := True;
+  begin
+    if TfrSettings.Execute(PGConn) then
+      PGConn.Connected := True;
+  end;
 end;
 
 procedure TdmDB.DataModuleCreate(Sender: TObject);

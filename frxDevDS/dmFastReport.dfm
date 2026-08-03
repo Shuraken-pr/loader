@@ -1,27 +1,6 @@
 object dmFR: TdmFR
   Height = 480
   Width = 640
-  object report: TfrxReport
-    Version = '2023.2'
-    DotMatrixReport = False
-    IniFile = '\Software\Fast Reports'
-    PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbEdit, pbNavigator, pbExportQuick, pbCopy, pbSelection]
-    PreviewOptions.Zoom = 1.000000000000000000
-    PrintOptions.Printer = 'Default'
-    PrintOptions.PrintOnSheet = 0
-    ReportOptions.CreateDate = 46234.901279398150000000
-    ReportOptions.LastChange = 46234.901279398150000000
-    ScriptLanguage = 'PascalScript'
-    ScriptText.Strings = (
-      'begin'
-      ''
-      'end.')
-    Left = 52
-    Top = 24
-    Datasets = <>
-    Variables = <>
-    Style = <>
-  end
   object designer: TfrxDesigner
     DefaultScriptLanguage = 'PascalScript'
     DefaultFont.Charset = DEFAULT_CHARSET
@@ -176,5 +155,38 @@ object dmFR: TdmFR
   object fsFDRTTI: TfsFDRTTI
     Left = 52
     Top = 228
+  end
+  object frxFDComponents1: TfrxFDComponents
+    DefaultDatabase = FDConn
+    Left = 224
+    Top = 168
+  end
+  object Report: TfrxReport
+    Version = '2023.2'
+    DotMatrixReport = False
+    IniFile = '\Software\Fast Reports'
+    PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbEdit, pbNavigator, pbExportQuick, pbCopy, pbSelection]
+    PreviewOptions.Zoom = 1.000000000000000000
+    PrintOptions.Printer = 'Default'
+    PrintOptions.PrintOnSheet = 0
+    ReportOptions.CreateDate = 46236.093916030090000000
+    ReportOptions.LastChange = 46236.093916030090000000
+    ScriptLanguage = 'PascalScript'
+    ScriptText.Strings = (
+      'begin'
+      ''
+      'end.')
+    Left = 44
+    Top = 24
+    Datasets = <>
+    Variables = <>
+    Style = <>
+  end
+  object FDConn: TFDConnection
+    Params.Strings = (
+      'DriverID=PG')
+    LoginPrompt = False
+    Left = 224
+    Top = 232
   end
 end

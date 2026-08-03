@@ -160,6 +160,7 @@
         <DCCReference Include="..\..\..\Common\intf_dll.pas"/>
         <DCCReference Include="..\..\..\Common\intf_dll_manager.pas"/>
         <DCCReference Include="..\..\..\Common\intf_common.pas"/>
+        <DCCReference Include="..\..\..\Common\frxDevDSIntf.pas"/>
         <DCCReference Include="..\..\..\Common\cxVirtualTreeListHelper.pas"/>
         <DCCReference Include="dmDatabase.pas">
             <Form>dmDB</Form>
@@ -203,6 +204,10 @@
         <DCCReference Include="..\..\..\Common\uSkinHelper.pas"/>
         <DCCReference Include="..\..\..\Common\FireDAC.Moni.Custom.Logger.pas"/>
         <DCCReference Include="..\..\..\Common\FDMoniCustomLoggerHelper.pas"/>
+        <DCCReference Include="..\..\..\Common\PGSettings.pas">
+            <Form>frSettings</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -8,6 +8,10 @@ uses
   cxTL,
   cxTLData,
   frxClass,
+  frxDBSet,
+  frxFDComponents,
+  Data.DB,
+  FireDAC.Stan.Intf,
   System.Generics.Collections,
   intf_dll in '..\..\Common\intf_dll.pas',
   intf_dll_manager in '..\..\Common\intf_dll_manager.pas',
@@ -22,7 +26,7 @@ type
   TDLLFrxDevDS = class(TInterfacedObject, IDLLIntf, IFrxDevDS, IUsesDllManager)
   private
     FDM: TdmFR;
-    FList: TObjectList<TfrxDevCustomDataSet>;
+    FList: TObjectList<TfrxDataset>;
     FDllManager: IDllManager;
     FRegistered: Boolean;
     procedure RegisterDataSet;
@@ -44,6 +48,16 @@ type
       ADataSources: array of TVTBaseDataSource<TVTBaseRecord>;
       ATreeLists: array of TcxVirtualTreeList); safecall;
     procedure SetCustomFunction(AFunc: TFunc<WideString, WideString, variant>); safecall;
+    procedure DesignDBReport(
+      ASQLs: array of WideString;
+      ADataSetNames: array of WideString;
+      AConnectionString: WideString;
+      AReportFile: WideString = ''); safecall;
+    procedure PreviewDBReport(
+      ASQLs: array of WideString;
+      ADataSetNames: array of WideString;
+      AConnectionString: WideString;
+      AReportFile: WideString = ''); safecall;
 
     { IUsesDllManager }
     procedure SetDllManager(AMgr: IDllManager); safecall;
@@ -64,7 +78,7 @@ constructor TDLLFrxDevDS.Create;
 begin
   inherited;
   FDM := TdmFR.Create(nil);
-  FList := TObjectList<TfrxDevCustomDataSet>.Create(true);
+  FList := TObjectList<TfrxDataset>.Create(true);
   FRegistered := False;
 end;
 
@@ -202,6 +216,97 @@ begin
       raise;
     end;
   end;
+
+  { Открытие превью }
+  FDM.Report.ShowReport(True);
+end;
+
+procedure TDLLFrxDevDS.DesignDBReport(
+  ASQLs: array of WideString;
+  ADataSetNames: array of WideString;
+  AConnectionString: WideString;
+  AReportFile: WideString);
+var
+  I: Integer;
+  FrxDB: TfrxFDQuery;
+begin
+  if Length(ASQLs) <> Length(ADataSetNames) then
+    raise Exception.Create(
+      'Length of DataSets and DataSetNames arrays must match');
+
+  { Очистка старых DataSet'ов }
+  FDM.report.DataSets.Clear;
+  FList.Clear;
+  FDM.FDConn.ConnectionString := AConnectionString;
+  FDM.FDConn.Params.MonitorBy := mbNone;
+
+  { Добавление новых TDataSet через TfrxDBDataset }
+  for I := Low(ASQLs) to High(ASQLs) do
+  begin
+    if (trim(ASQLs[I]) = '') then
+      raise Exception.Create('SQL empty');
+    FrxDB := TfrxFDQuery.Create(nil);
+    try
+      FrxDB.SQL.Add(ASQLs[I]);
+      FrxDB.UserName := ADataSetNames[I];
+      FrxDB.Name := ADataSetNames[I];
+      FDM.Report.DataSets.Add(FrxDB);
+      FList.Add(FrxDB);
+    except
+      FrxDB.Free;
+      raise;
+    end;
+  end;
+
+  { Загрузка шаблона отчёта, если указан }
+  if (AReportFile <> '') and FileExists(AReportFile) then
+    FDM.Report.LoadFromFile(AReportFile);
+
+  { Открытие дизайнера }
+  FDM.Report.DesignReport;
+end;
+
+procedure TDLLFrxDevDS.PreviewDBReport(
+  ASQLs: array of WideString;
+  ADataSetNames: array of WideString;
+  AConnectionString: WideString;
+  AReportFile: WideString);
+var
+  I: Integer;
+  FrxDB: TfrxFDQuery;
+begin
+  if Length(ASQLs) <> Length(ADataSetNames) then
+    raise Exception.Create(
+      'Length of DataSets and DataSetNames arrays must match');
+
+  { Очистка старых DataSet'ов }
+  FDM.report.DataSets.Clear;
+  FList.Clear;
+  FDM.FDConn.ConnectionString := AConnectionString;
+  FDM.FDConn.Params.MonitorBy := mbNone;
+
+  { Добавление новых TDataSet через TfrxDBDataset }
+  for I := Low(ASQLs) to High(ASQLs) do
+  begin
+    if (trim(ASQLs[I]) = '') then
+      raise Exception.Create('SQL empty');
+
+    FrxDB := TfrxFDQuery.Create(nil);
+    try
+      FrxDB.SQL.Add(ASQLs[I]);
+      FrxDB.UserName := ADataSetNames[I];
+      FrxDB.Name := ADataSetNames[I];
+      FDM.Report.DataSets.Add(FrxDB);
+      FList.Add(FrxDB);
+    except
+      FrxDB.Free;
+      raise;
+    end;
+  end;
+
+  { Загрузка шаблона отчёта, если указан }
+  if (AReportFile <> '') and FileExists(AReportFile) then
+    FDM.Report.LoadFromFile(AReportFile);
 
   { Открытие превью }
   FDM.Report.ShowReport(True);

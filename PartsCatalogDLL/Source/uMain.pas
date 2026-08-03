@@ -18,7 +18,8 @@ uses
   dxSkinsCore, dxLayoutLookAndFeels, dxSkinsdxRibbonPainter,        // ← для TdxRibbon + TdxBarManager
   dxLayoutPainters, uSkinHelper, dmSkins, dxSkinDevExpressDarkStyle,
   dxSkinDevExpressStyle, dxSkinOffice2007Blue, dxSkinOffice2010Silver,
-  dxSkinOffice2013LightGray, dxSkinVS2010;
+  dxSkinOffice2013LightGray, dxSkinVS2010,
+  intf_dll_manager, frxDevDSIntf, Data.DB, Datasnap.Provider, Datasnap.DBClient;
 
 type
   TfrmMain = class(TForm)
@@ -65,6 +66,9 @@ type
     lbtnDelAttribute: TdxBarLargeButton;
     acEditAttribute: TAction;
     lbtnEditAttribute: TdxBarLargeButton;
+    acPrint: TAction;
+    lbtnPrint: TdxBarLargeButton;
+    brReport: TdxBar;
     vtlCategories: TcxVirtualTreeList;
     vtlParts: TcxVirtualTreeList;
     vtlCategoriesName: TcxTreeListColumn;
@@ -90,6 +94,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure acDelAttributeExecute(Sender: TObject);
     procedure acEditAttributeExecute(Sender: TObject);
+    procedure acPrintExecute(Sender: TObject);
     procedure vtlCategoriesFocusedNodeChanged(Sender: TcxCustomTreeList;
       APrevFocusedNode, AFocusedNode: TcxTreeListNode);
     procedure vtlCategoriesExpanding(Sender: TcxCustomTreeList;
@@ -102,6 +107,7 @@ type
     FCurrentCategoryID: Integer;
     FCategoryDS: TVTSmartDataSource<TCategoryNodeData>;
     FPartDS: TVTLoadAllDataSource<TPartNodeData>;
+    FDllManager: IDllManager;
     function GetSelectedCategoryID: Integer;
     function GetSelectedCategoryName: string;
     function GetSelectedCategoryParentID: Integer;
@@ -113,7 +119,8 @@ type
     procedure BuildPartsColumns;
   public
     { Public declarations }
-    class function RunForm(ACallback: TProc<WideString>; var AMsg: WideString; ASkinName: WideString; ANativeStyle: boolean): boolean;
+    class function RunForm(ACallback: TProc<WideString>; var AMsg: WideString; ASkinName: WideString; ANativeStyle: boolean; ADllManager: IDllManager): boolean;
+    procedure SetDllManager(AMgr: IDllManager);
   end;
 
 var
@@ -550,7 +557,7 @@ begin
 end;
 
 class function TfrmMain.RunForm(ACallback: TProc<WideString>;
-  var AMsg: WideString; ASkinName: WideString; ANativeStyle: boolean): boolean;
+  var AMsg: WideString; ASkinName: WideString; ANativeStyle: boolean; ADllManager: IDllManager): boolean;
 begin
   try
     dmDB := TdmDB.Create(nil);
@@ -559,6 +566,7 @@ begin
       try
         ApplySkinToForm(frmMain, ASkinName, ANativeStyle, frmMain.rbMain);
         frmMain.FCallback := ACallback;
+        frmMain.SetDllManager(ADllManager);
         Result := true;
         frmMain.ShowModal;
       finally
@@ -616,6 +624,56 @@ begin
   CatData := FCategoryDS.CurrentObj;
   if Assigned(CatData) and (CatData.CategoryID > 0) then
     LoadCategoryData(CatData.CategoryID);
+end;
+
+procedure TfrmMain.SetDllManager(AMgr: IDllManager);
+begin
+  FDllManager := AMgr;
+end;
+
+procedure TfrmMain.acPrintExecute(Sender: TObject);
+var
+  IntfFR: IFrxDevDS;
+  ReportFile, connStr: string;
+begin
+  if not Assigned(FDllManager) then
+  begin
+    ShowMessage('Менеджер библиотек не инициализирован.');
+    Exit;
+  end;
+
+  IntfFR := IFrxDevDS(FDllManager.GetIntf(IFrxDevDS));
+  if not Assigned(IntfFR) then
+  begin
+    ShowMessage('Библиотека отчётов (frxDevDS) не загружена.');
+    Exit;
+  end;
+
+  ReportFile := ExtractFilePath(ParamStr(0)) + 'FastReportTemplates\PartsCatalog.fr3';
+
+  connStr := dmDB.PGConn.ConnectionString + ';Password=' + dmDB.PGConn.Params.Password;
+
+  dmDB.qryReportCategories.Open;
+  try
+    dmDB.qryReportParts.Open;
+    try
+      if FileExists(ReportFile) then
+        IntfFR.PreviewDBReport(
+        [dmDB.qryReportCategories.SQL.Text, dmDB.qryReportParts.SQL.Text],
+        ['Categories', 'Parts'],
+        connStr,
+        ReportFile)
+      else
+        IntfFR.DesignDBReport(
+        [dmDB.qryReportCategories.SQL.Text, dmDB.qryReportParts.SQL.Text],
+        ['Categories', 'Parts'],
+        connStr);
+    finally
+      dmDB.qryReportParts.Close;
+    end;
+  finally
+    dmDB.qryReportCategories.Close;
+  end;
 end;
 
 end.

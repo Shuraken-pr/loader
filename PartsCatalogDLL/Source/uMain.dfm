@@ -145,6 +145,7 @@ object frmMain: TfrmMain
     0003E0000003E0000003E0000003E0000003E0000003E0000003E0000003E000
     0003E0000003E0000003E0000003E0000003E0000003E0000003E0000003E000
     0003E0000003E0000003E0000007E000000FE000001FE000003FE000007F}
+  Position = poScreenCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
@@ -478,7 +479,7 @@ object frmMain: TfrmMain
       ItemLinks = <
         item
           Visible = True
-          ItemName = 'lbtnPrint'
+          ItemName = 'btnFastReport'
         end>
       OneOnRow = False
       Row = 0
@@ -530,9 +531,28 @@ object frmMain: TfrmMain
       Action = acEditAttribute
       Category = 0
     end
-    object lbtnPrint: TdxBarLargeButton
-      Action = acPrint
+    object btnFastReport: TdxBarLargeButton
+      Action = acFRDesigner
+      Caption = 'Fast Report'
       Category = 0
+      ButtonStyle = bsDropDown
+      DropDownMenu = rddFastReport
+    end
+    object btnFRDesigner: TdxBarLargeButton
+      Caption = #1044#1080#1079#1072#1081#1085#1077#1088' '#1086#1090#1095#1105#1090#1086#1074
+      Category = 0
+      Hint = #1044#1080#1079#1072#1081#1085#1077#1088' '#1086#1090#1095#1105#1090#1086#1074
+      Visible = ivAlways
+      OnClick = acFRDesignerExecute
+      LargeImageIndex = 5
+    end
+    object btnPreview: TdxBarLargeButton
+      Tag = 1
+      Caption = #1055#1088#1077#1076#1074#1072#1088#1080#1090#1077#1083#1100#1085#1099#1081' '#1087#1088#1086#1089#1084#1086#1090#1088
+      Category = 0
+      Hint = #1055#1088#1077#1076#1074#1072#1088#1080#1090#1077#1083#1100#1085#1099#1081' '#1087#1088#1086#1089#1084#1086#1090#1088
+      Visible = ivAlways
+      OnClick = acFRDesignerExecute
     end
   end
   object ilBig: TcxImageList
@@ -1367,10 +1387,27 @@ object frmMain: TfrmMain
       ImageIndex = 3
       OnExecute = acExportExecute
     end
-    object acPrint: TAction
-      Caption = #1055#1077#1095#1072#1090#1100' '#1082#1072#1090#1072#1083#1086#1075
+    object acFRDesigner: TAction
+      Caption = #1044#1080#1079#1072#1081#1085#1077#1088' '#1086#1090#1095#1105#1090#1086#1074
       ImageIndex = 5
-      OnExecute = acPrintExecute
+      OnExecute = acFRDesignerExecute
     end
+  end
+  object rddFastReport: TdxRibbonDropDownGallery
+    BarManager = bmMain
+    ItemLinks = <
+      item
+        Visible = True
+        ItemName = 'btnFRDesigner'
+      end
+      item
+        Visible = True
+        ItemName = 'btnPreview'
+      end>
+    Ribbon = rbMain
+    UseOwnFont = False
+    Left = 604
+    Top = 165
+    PixelsPerInch = 96
   end
 end

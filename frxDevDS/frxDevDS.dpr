@@ -31,6 +31,9 @@ type
     FRegistered: Boolean;
     procedure RegisterDataSet;
     procedure UnregisterDataSet;
+    procedure CreateReportPage;
+    function FillReportByTVT(ADataSources: array of TVTBaseDataSource<TVTBaseRecord>;
+      ATreeLists: array of TcxVirtualTreeList): boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -43,21 +46,21 @@ type
     { IFrxDevDS }
     procedure DesignReport(
       ADataSources: array of TVTBaseDataSource<TVTBaseRecord>;
-      ATreeLists: array of TcxVirtualTreeList); safecall;
+      ATreeLists: array of TcxVirtualTreeList;
+      const AReportFile: WideString = ''); safecall;
     procedure PreviewReport(
       ADataSources: array of TVTBaseDataSource<TVTBaseRecord>;
-      ATreeLists: array of TcxVirtualTreeList); safecall;
+      ATreeLists: array of TcxVirtualTreeList;
+      const AReportFile: WideString = ''); safecall;
     procedure SetCustomFunction(AFunc: TFunc<WideString, WideString, variant>); safecall;
     procedure DesignDBReport(
       ASQLs: array of WideString;
       ADataSetNames: array of WideString;
-      AConnectionString: WideString;
-      AReportFile: WideString = ''); safecall;
+      const AConnectionString: WideString;
+      const AReportFile: WideString = ''); safecall;
     procedure PreviewDBReport(
-      ASQLs: array of WideString;
-      ADataSetNames: array of WideString;
-      AConnectionString: WideString;
-      AReportFile: WideString = ''); safecall;
+      const AConnectionString: WideString;
+      const AReportFile: WideString = ''); safecall;
 
     { IUsesDllManager }
     procedure SetDllManager(AMgr: IDllManager); safecall;
@@ -144,8 +147,9 @@ begin
   end;
 end;
 
-procedure TDLLFrxDevDS.DesignReport(ADataSources: array of TVTBaseDataSource<TVTBaseRecord>;
-  ATreeLists: array of TcxVirtualTreeList);
+function TDLLFrxDevDS.FillReportByTVT(
+  ADataSources: array of TVTBaseDataSource<TVTBaseRecord>;
+  ATreeLists: array of TcxVirtualTreeList): boolean;
 var
   I: Integer;
   FrxDS: TfrxDevCustomDataSet;
@@ -154,8 +158,8 @@ begin
     raise Exception.Create(
       'Length of DataSources and TreeLists arrays must match');
 
-  { Очистка старых DataSet'ов }
-  FDM.report.DataSets.Clear;
+  { Очистка отчёта }
+  FDM.report.Clear;
   FList.Clear;
 
   { Добавление новых DataSet'ов }
@@ -166,6 +170,7 @@ begin
     if not Assigned(ATreeLists[I]) then
       raise Exception.CreateFmt('TreeList at index %d must not be nil', [I]);
 
+    //Управление данными идёт из приложения, поэтому сами управляем временем жизни набора.
     FrxDS := TfrxDevCustomDataSet.Create(nil);
     try
       FrxDS.AssignDataSource(ADataSources[I], ATreeLists[I]);
@@ -177,6 +182,20 @@ begin
       raise;
     end;
   end;
+
+  CreateReportPage;
+  result := true;
+end;
+
+procedure TDLLFrxDevDS.DesignReport(ADataSources: array of TVTBaseDataSource<TVTBaseRecord>;
+  ATreeLists: array of TcxVirtualTreeList;
+      const AReportFile: WideString = '');
+begin
+  if not FillReportByTVT(ADataSources, ATreeLists) then
+    exit;
+
+  if (AReportFile <> '') and FileExists(AReportFile) then
+    FDM.Report.LoadFromFile(AReportFile);
 
   { Открытие дизайнера }
   FDM.Report.DesignReport;
@@ -184,48 +203,49 @@ end;
 
 procedure TDLLFrxDevDS.PreviewReport(
   ADataSources: array of TVTBaseDataSource<TVTBaseRecord>;
-  ATreeLists: array of TcxVirtualTreeList);
-var
-  I: Integer;
-  FrxDS: TfrxDevCustomDataSet;
+  ATreeLists: array of TcxVirtualTreeList;
+  const AReportFile: WideString = '');
 begin
-  if Length(ADataSources) <> Length(ATreeLists) then
-    raise Exception.Create(
-      'Length of DataSources and TreeLists arrays must match');
-
-  { Очистка старых DataSet'ов }
-  FDM.report.DataSets.Clear;
-  FList.Clear;
-
-  { Добавление новых DataSet'ов }
-  for I := Low(ADataSources) to High(ADataSources) do
+  { Загрузка шаблона отчёта, если указан }
+  if (AReportFile <> '') and FileExists(AReportFile) then
   begin
-    if not Assigned(ADataSources[I]) then
-      raise Exception.CreateFmt('DataSource at index %d must not be nil', [I]);
-    if not Assigned(ATreeLists[I]) then
-      raise Exception.CreateFmt('TreeList at index %d must not be nil', [I]);
+    if not FillReportByTVT(ADataSources, ATreeLists) then
+      exit;
 
-    FrxDS := TfrxDevCustomDataSet.Create(nil);
-    try
-      FrxDS.AssignDataSource(ADataSources[I], ATreeLists[I]);
-      FrxDS.Name := Format('frxDS%d', [I]);
-      FDM.Report.DataSets.Add(FrxDS);
-      FList.Add(FrxDS);
-    except
-      FrxDS.Free;
-      raise;
+    FDM.Report.LoadFromFile(AReportFile);
+
+    { Открытие превью }
+    FDM.Report.ShowReport(True);
+  end;
+end;
+
+procedure TDLLFrxDevDS.CreateReportPage;
+begin
+  //Обходной путь создания полноценного отчёта. Если среди созданных страниц нет страницы отчёта (page),
+  //создадим её. Владельцем будет отчёт, он и будет отвечать за жизнь страницы.
+  if FDM.Report.PagesCount > 0 then
+  begin
+    var ExistReportPage: boolean := false;
+    for var i := 0 to FDM.Report.PagesCount - 1 do
+    begin
+      ExistReportPage := FDM.Report.Pages[i] is TfrxReportPage;
+      if ExistReportPage then
+        break;
+    end;
+    if not ExistReportPage then
+    begin
+      var page: TfrxReportPage := TfrxReportPage.Create(FDM.Report);
+      page.Name := 'Page1';
+      page.SetDefaults;
     end;
   end;
-
-  { Открытие превью }
-  FDM.Report.ShowReport(True);
 end;
 
 procedure TDLLFrxDevDS.DesignDBReport(
   ASQLs: array of WideString;
   ADataSetNames: array of WideString;
-  AConnectionString: WideString;
-  AReportFile: WideString);
+  const AConnectionString: WideString;
+  const AReportFile: WideString);
 var
   I: Integer;
   FrxDB: TfrxFDQuery;
@@ -235,81 +255,56 @@ begin
       'Length of DataSets and DataSetNames arrays must match');
 
   { Очистка старых DataSet'ов }
-  FDM.report.DataSets.Clear;
-  FList.Clear;
+//  FDM.report.DataSets.Clear;
+  FDM.Report.Clear;
   FDM.FDConn.ConnectionString := AConnectionString;
   FDM.FDConn.Params.MonitorBy := mbNone;
 
-  { Добавление новых TDataSet через TfrxDBDataset }
-  for I := Low(ASQLs) to High(ASQLs) do
-  begin
-    if (trim(ASQLs[I]) = '') then
-      raise Exception.Create('SQL empty');
-    FrxDB := TfrxFDQuery.Create(nil);
-    try
-      FrxDB.SQL.Add(ASQLs[I]);
-      FrxDB.UserName := ADataSetNames[I];
-      FrxDB.Name := ADataSetNames[I];
-      FDM.Report.DataSets.Add(FrxDB);
-      FList.Add(FrxDB);
-    except
-      FrxDB.Free;
-      raise;
-    end;
-  end;
-
   { Загрузка шаблона отчёта, если указан }
   if (AReportFile <> '') and FileExists(AReportFile) then
-    FDM.Report.LoadFromFile(AReportFile);
+    FDM.Report.LoadFromFile(AReportFile)
+  else begin
+    { Если шаблон не указан, добавляем наборы и создаём страницу отчёта }
+    for I := Low(ASQLs) to High(ASQLs) do
+    begin
+      if (trim(ASQLs[I]) = '') then
+        raise Exception.Create('SQL empty');
+      //Fast Report создаёт такие объекты, как страницы. По этой причине при вызове дизайнера
+      //создаются только закладки Code, Data.
+      FrxDB := TfrxFDQuery.Create(FDM.Report);
+      try
+        FrxDB.SQL.Add(ASQLs[I]);
+        FrxDB.UserName := ADataSetNames[I];
+        FrxDB.Name := ADataSetNames[I];
+        FDM.Report.DataSets.Add(FrxDB);
+      except
+        FrxDB.Free;
+        raise;
+      end;
+    end;
+
+    CreateReportPage;
+  end;
 
   { Открытие дизайнера }
   FDM.Report.DesignReport;
 end;
 
 procedure TDLLFrxDevDS.PreviewDBReport(
-  ASQLs: array of WideString;
-  ADataSetNames: array of WideString;
-  AConnectionString: WideString;
-  AReportFile: WideString);
-var
-  I: Integer;
-  FrxDB: TfrxFDQuery;
+  const AConnectionString: WideString;
+  const AReportFile: WideString);
 begin
-  if Length(ASQLs) <> Length(ADataSetNames) then
-    raise Exception.Create(
-      'Length of DataSets and DataSetNames arrays must match');
-
-  { Очистка старых DataSet'ов }
-  FDM.report.DataSets.Clear;
-  FList.Clear;
-  FDM.FDConn.ConnectionString := AConnectionString;
-  FDM.FDConn.Params.MonitorBy := mbNone;
-
-  { Добавление новых TDataSet через TfrxDBDataset }
-  for I := Low(ASQLs) to High(ASQLs) do
-  begin
-    if (trim(ASQLs[I]) = '') then
-      raise Exception.Create('SQL empty');
-
-    FrxDB := TfrxFDQuery.Create(nil);
-    try
-      FrxDB.SQL.Add(ASQLs[I]);
-      FrxDB.UserName := ADataSetNames[I];
-      FrxDB.Name := ADataSetNames[I];
-      FDM.Report.DataSets.Add(FrxDB);
-      FList.Add(FrxDB);
-    except
-      FrxDB.Free;
-      raise;
-    end;
-  end;
-
   { Загрузка шаблона отчёта, если указан }
   if (AReportFile <> '') and FileExists(AReportFile) then
+  begin
+    FDM.FDConn.ConnectionString := AConnectionString;
+    FDM.FDConn.Params.MonitorBy := mbNone;
+
     FDM.Report.LoadFromFile(AReportFile);
 
-  { Открытие превью }
-  FDM.Report.ShowReport(True);
+    { Открытие превью }
+    FDM.Report.ShowReport(True);
+  end;
 end;
 
 begin

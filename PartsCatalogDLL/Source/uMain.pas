@@ -19,7 +19,8 @@ uses
   dxLayoutPainters, uSkinHelper, dmSkins, dxSkinDevExpressDarkStyle,
   dxSkinDevExpressStyle, dxSkinOffice2007Blue, dxSkinOffice2010Silver,
   dxSkinOffice2013LightGray, dxSkinVS2010,
-  intf_dll_manager, frxDevDSIntf, Data.DB, Datasnap.Provider, Datasnap.DBClient;
+  intf_dll_manager, frxDevDSIntf, Data.DB, Datasnap.Provider, Datasnap.DBClient,
+  dxRibbonGallery;
 
 type
   TfrmMain = class(TForm)
@@ -66,13 +67,16 @@ type
     lbtnDelAttribute: TdxBarLargeButton;
     acEditAttribute: TAction;
     lbtnEditAttribute: TdxBarLargeButton;
-    acPrint: TAction;
-    lbtnPrint: TdxBarLargeButton;
+    acFRDesigner: TAction;
+    btnFastReport: TdxBarLargeButton;
     brReport: TdxBar;
     vtlCategories: TcxVirtualTreeList;
     vtlParts: TcxVirtualTreeList;
     vtlCategoriesName: TcxTreeListColumn;
     lgSkins: TdxLayoutGroup;
+    rddFastReport: TdxRibbonDropDownGallery;
+    btnFRDesigner: TdxBarLargeButton;
+    btnPreview: TdxBarLargeButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnSearchClick(Sender: TObject);
@@ -94,7 +98,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure acDelAttributeExecute(Sender: TObject);
     procedure acEditAttributeExecute(Sender: TObject);
-    procedure acPrintExecute(Sender: TObject);
+    procedure acFRDesignerExecute(Sender: TObject);
     procedure vtlCategoriesFocusedNodeChanged(Sender: TcxCustomTreeList;
       APrevFocusedNode, AFocusedNode: TcxTreeListNode);
     procedure vtlCategoriesExpanding(Sender: TcxCustomTreeList;
@@ -108,6 +112,8 @@ type
     FCategoryDS: TVTSmartDataSource<TCategoryNodeData>;
     FPartDS: TVTLoadAllDataSource<TPartNodeData>;
     FDllManager: IDllManager;
+    FIntfFR: IFrxDevDS;
+
     function GetSelectedCategoryID: Integer;
     function GetSelectedCategoryName: string;
     function GetSelectedCategoryParentID: Integer;
@@ -150,6 +156,12 @@ begin
   // Инициализация нативных источников данных DevExpress
   FCategoryDS := TVTSmartDataSource<TCategoryNodeData>.Create(vtlCategories);
   FPartDS := TVTLoadAllDataSource<TPartNodeData>.Create(vtlParts);
+
+  if Assigned(FDllManager) then
+  begin
+    FIntfFR := IFrxDevDS(FDllManager.GetIntf(IFrxDevDS));
+    brReport.Visible := Assigned(FIntfFR);
+  end;
 
   BuildCategoryTree;
 end;
@@ -631,19 +643,11 @@ begin
   FDllManager := AMgr;
 end;
 
-procedure TfrmMain.acPrintExecute(Sender: TObject);
+procedure TfrmMain.acFRDesignerExecute(Sender: TObject);
 var
-  IntfFR: IFrxDevDS;
   ReportFile, connStr: string;
 begin
-  if not Assigned(FDllManager) then
-  begin
-    ShowMessage('Менеджер библиотек не инициализирован.');
-    Exit;
-  end;
-
-  IntfFR := IFrxDevDS(FDllManager.GetIntf(IFrxDevDS));
-  if not Assigned(IntfFR) then
+  if not Assigned(FIntfFR) then
   begin
     ShowMessage('Библиотека отчётов (frxDevDS) не загружена.');
     Exit;
@@ -651,23 +655,23 @@ begin
 
   ReportFile := ExtractFilePath(ParamStr(0)) + 'FastReportTemplates\PartsCatalog.fr3';
 
-  connStr := dmDB.PGConn.ConnectionString + ';Password=' + dmDB.PGConn.Params.Password;
+  if not connStr.Contains('Password=') then
+    connStr := dmDB.PGConn.ConnectionString + ';Password=' + dmDB.PGConn.Params.Password;
 
   dmDB.qryReportCategories.Open;
   try
     dmDB.qryReportParts.Open;
     try
-      if FileExists(ReportFile) then
-        IntfFR.PreviewDBReport(
-        [dmDB.qryReportCategories.SQL.Text, dmDB.qryReportParts.SQL.Text],
-        ['Categories', 'Parts'],
+      if TdxBarLargeButton(Sender).Tag = 1 then
+        FIntfFR.PreviewDBReport(
         connStr,
         ReportFile)
       else
-        IntfFR.DesignDBReport(
+        FIntfFR.DesignDBReport(
         [dmDB.qryReportCategories.SQL.Text, dmDB.qryReportParts.SQL.Text],
         ['Categories', 'Parts'],
-        connStr);
+        connStr,
+        ReportFile);
     finally
       dmDB.qryReportParts.Close;
     end;

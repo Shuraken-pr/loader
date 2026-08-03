@@ -483,6 +483,7 @@ object frmMain: TfrmMain
     31FFF1B531FFF1B531C9F1B5313F0000AC410000AC410000AC410000AC410000
     AC410000AC410000AC410000AC410000AC410000AC410000AC410000AC410000
     AC410000AC410000AC410000AC41}
+  Position = poScreenCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
@@ -650,7 +651,7 @@ object frmMain: TfrmMain
           ItemName = 'btnCatalogParts'
         end>
       OneOnRow = True
-      Row = 1
+      Row = 0
       UseOwnFont = False
       Visible = True
       WholeRow = False
@@ -669,7 +670,7 @@ object frmMain: TfrmMain
           Visible = True
           ItemName = 'btnFastReport'
         end>
-      OneOnRow = True
+      OneOnRow = False
       Row = 0
       UseOwnFont = False
       Visible = False
@@ -712,18 +713,29 @@ object frmMain: TfrmMain
       ImageIndex = 5
     end
     object btnFastReport: TdxBarLargeButton
+      Tag = 1
       Caption = 'Fast Report'
       Category = 0
       Hint = 'Fast Report'
       Visible = ivAlways
       ButtonStyle = bsDropDown
       DropDownMenu = rddGallery
+      OnClick = btnFRDesignerClick
       LargeImageIndex = 6
     end
     object btnFRDesigner: TdxBarLargeButton
-      Caption = #1044#1080#1079#1072#1081#1085#1077#1088' '#1086#1090#1095#1105#1090#1086#1074
+      Caption = #1044#1080#1079#1072#1081#1085#1077#1088
       Category = 0
-      Hint = #1044#1080#1079#1072#1081#1085#1077#1088' '#1086#1090#1095#1105#1090#1086#1074
+      Hint = #1044#1080#1079#1072#1081#1085#1077#1088
+      Visible = ivAlways
+      OnClick = btnFRDesignerClick
+      LargeImageIndex = 6
+    end
+    object btnFRPreview: TdxBarLargeButton
+      Tag = 1
+      Caption = #1055#1088#1077#1076#1074#1072#1088#1080#1090#1077#1083#1100#1085#1099#1081' '#1087#1088#1086#1089#1084#1086#1090#1088
+      Category = 0
+      Hint = #1055#1088#1077#1076#1074#1072#1088#1080#1090#1077#1083#1100#1085#1099#1081' '#1087#1088#1086#1089#1084#1086#1090#1088
       Visible = ivAlways
       OnClick = btnFRDesignerClick
     end
@@ -1875,6 +1887,10 @@ object frmMain: TfrmMain
       item
         Visible = True
         ItemName = 'btnFRDesigner'
+      end
+      item
+        Visible = True
+        ItemName = 'btnFRPreview'
       end>
     Ribbon = rbMain
     UseOwnFont = False

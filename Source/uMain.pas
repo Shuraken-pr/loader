@@ -80,6 +80,7 @@ type
     btnFastReport: TdxBarLargeButton;
     rddGallery: TdxRibbonDropDownGallery;
     btnFRDesigner: TdxBarLargeButton;
+    btnFRPreview: TdxBarLargeButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnFRDesignerClick(Sender: TObject);
@@ -270,7 +271,13 @@ end;
 procedure TfrmMain.btnFRDesignerClick(Sender: TObject);
 begin
   if Assigned(FIntfFR) then
-    FIntfFR.DesignReport([TVTBaseDataSource<TVTBaseRecord>(FSLog)], [vtlLog])
+  begin
+    var ReportFile: string := ExtractFilePath(ParamStr(0)) + 'FastReportTemplates\loader.fr3';
+    if TdxBarLargeButton(Sender).Tag = 1 then
+      FIntfFR.PreviewReport([TVTBaseDataSource<TVTBaseRecord>(FSLog)], [vtlLog], ReportFile)
+    else
+      FIntfFR.DesignReport([TVTBaseDataSource<TVTBaseRecord>(FSLog)], [vtlLog], ReportFile);
+  end;
 end;
 
 procedure TfrmMain.cmbSkinsPropertiesChange(Sender: TObject);

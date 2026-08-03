@@ -580,7 +580,7 @@ object dmDB: TdmDB
       '    level,'
       '    name,'
       '    path,'
-      '    REPEAT('#39'  '#39', level - 1) || '#39#9492#9472' '#39' || name AS visual_tree'
+      '    REPEAT('#39'  '#39', level - 1) || name AS visual_tree'
       'FROM category_tree'
       'ORDER BY path;')
     Left = 172

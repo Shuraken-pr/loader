@@ -13,7 +13,10 @@ uses
   DateUtils, cxImage, cxMemo, Vcl.Imaging.jpeg, cxPC, dxDockControl, dxDockPanel,
   System.Generics.Collections, cxFilter, cxCustomData, cxStyles,
   dxScrollbarAnnotations, cxTL, cxTLdxBarBuiltInMenu, cxInplaceContainer,
-  cxTLData, cxVirtualTreeListHelper, dxCore, dxCoreClasses, dmSkins;
+  cxTLData, cxVirtualTreeListHelper, dxCore, dxCoreClasses, dmSkins, frxDevDSIntf,
+  dxSkinsCore, dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle,
+  dxSkinOffice2007Blue, dxSkinOffice2010Silver, dxSkinOffice2013LightGray,
+  dxSkinVS2010;
 
 type
   TExplorerRecord = class(TVTBaseRecord)
@@ -67,6 +70,7 @@ type
     FExtList: TStringList;
     FCrit: TCriticalSection;
     FRunTaskFind: IRunTaskFindInDir;
+    FFRIntf: IFrxDevDS;
     FPathToNode: TDictionary<string, TExplorerRecord>;
     FPathBuffer: TList<string>;
     FDSExplorer: TVTSmartDataSource<TExplorerRecord>;
@@ -78,6 +82,7 @@ type
   public
     property CallbackProc: TProc<WideString> read FCallbackProc write FCallbackProc;
     property FindIntf: IRunTaskFindInDir read FRunTaskFind write FRunTaskFind;
+    property FRIntf: IFrxDevDS read FFRIntf write FFRIntf;
   end;
 
 var

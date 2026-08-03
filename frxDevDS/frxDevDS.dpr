@@ -61,6 +61,7 @@ type
     procedure PreviewDBReport(
       const AConnectionString: WideString;
       const AReportFile: WideString = ''); safecall;
+    function GetDSByName(ADSName: WideString): TfrxDataSet; safecall;
 
     { IUsesDllManager }
     procedure SetDllManager(AMgr: IDllManager); safecall;
@@ -110,6 +111,16 @@ end;
 function TDLLFrxDevDS.GetDescription: WideString;
 begin
   Result := 'FastReport DataSource (DevExpress Integration)';
+end;
+
+function TDLLFrxDevDS.GetDSByName(ADSName: WideString): TfrxDataSet;
+begin
+  Result := nil;
+  for var i := 0 to FList.Count - 1 do
+  begin
+    if FList[i].Name = ADSName then
+      Exit(FList[i]);
+  end;
 end;
 
 procedure TDLLFrxDevDS.Init;

@@ -1848,10 +1848,10 @@ object frmScanLocalDisks: TfrmScanLocalDisks
     Height = 519
   end
   object dxFloatDockSite1: TdxFloatDockSite
-    Left = 0
+    Left = 5
     Top = 0
-    Width = 476
-    Height = 375
+    Width = 773
+    Height = 519
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -12
@@ -1860,20 +1860,25 @@ object frmScanLocalDisks: TfrmScanLocalDisks
     Visible = False
     FloatLeft = 910
     FloatTop = 287
+    ExplicitLeft = 0
+    ExplicitWidth = 476
+    ExplicitHeight = 375
     DockingType = 0
     OriginalWidth = 476
     OriginalHeight = 375
     object dpShowFile: TdxDockPanel
       Left = 0
       Top = 0
-      Width = 476
-      Height = 375
+      Width = 773
+      Height = 519
       Visible = False
       AllowFloating = True
       AutoHide = False
       Caption = #1048#1085#1092#1086#1088#1084#1072#1094#1080#1103' '#1086' '#1092#1072#1081#1083#1077
       CustomCaptionButtons.Buttons = <>
       TabsProperties.CustomButtons.Buttons = <>
+      ExplicitWidth = 476
+      ExplicitHeight = 375
       DockingType = 0
       OriginalWidth = 476
       OriginalHeight = 375

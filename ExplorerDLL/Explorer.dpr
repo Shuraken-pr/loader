@@ -6,6 +6,7 @@ uses
   dxCore,
   VCL.Forms,
   Winapi.Windows,
+  frxDevDSIntf in '..\..\Common\frxDevDSIntf.pas',
   intf_dll in '..\..\Common\intf_dll.pas',
   intf_dll_manager in '..\..\common\intf_dll_manager.pas',
   intf_common in '..\..\common\intf_common.pas',
@@ -24,6 +25,7 @@ type
     FE: TfrmScanLocalDisks;
     FSkin: TdmSkin;
     FFindIntf: IRunTaskFindInDir;
+    FFRIntf: IFrxDevDS;
     FDllManager: IDllManager;
     procedure TryLoadDependencies;
   public
@@ -60,6 +62,7 @@ begin
   dxCore.dxInitialize;
   FFindIntf := nil;
   FDllManager := nil;
+  FFRIntf := nil;
   FSkin := TdmSkin.Create(nil);
   FE := TfrmScanLocalDisks.Create(nil);
 end;
@@ -71,6 +74,7 @@ begin
   if Assigned(FSkin) then
     FreeAndNil(FSkin);
   FFindIntf := nil;
+  FFRIntf := nil;
   FDllManager := nil;
   inherited;
   dxCore.dxFinalize;
@@ -105,6 +109,8 @@ begin
   if Assigned(FFindIntf) then
   begin
     FE.FindIntf := FFindIntf;
+    if Assigned(FFRIntf) then
+      FE.FRIntf := FFRIntf;
     FE.CallbackProc := ACallbackProc;
     FE.Show;
   end
@@ -133,6 +139,16 @@ begin
     intf := FDllManager.GetIntf(IRunTaskFindInDir);
     if Assigned(intf) and Supports(intf, IRunTaskFindInDir, FFindIntf) then
       FFindIntf.Init;
+  end;
+
+  if not FDllManager.IsLoaded('IFrxDevDS') then
+    FDllManager.Load(DIFrxDevDS, False);
+
+  if FDllManager.IsLoaded('IFrxDevDS') then
+  begin
+    intf := FDllManager.GetIntf(IFrxDevDS);
+    if Assigned(intf) and Supports(intf, IRunTaskFindInDir, FFRIntf) then
+      FFRIntf.Init;
   end;
 end;
 

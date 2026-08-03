@@ -659,6 +659,7 @@ object frmMain: TfrmMain
     object bFastReport: TdxBar
       Caption = 'Fast Report'
       CaptionButtons = <>
+      DockedDockingStyle = dsTop
       DockedLeft = 261
       DockedTop = 0
       FloatLeft = 907

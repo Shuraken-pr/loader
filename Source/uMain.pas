@@ -97,6 +97,7 @@ type
     procedure AddMsg(const AMsg: WideString);
     procedure OnButtonClick(Sender: TObject);
     procedure LoadAllDlls;
+    function FRCustomFunction(AFuncName: WideString; ASourceName: WideString): variant;
   public
   end;
 
@@ -106,7 +107,7 @@ var
 implementation
 
 uses
-  intf_tasks, System.Math;
+  intf_tasks, System.Math, frxClass;
 
 {$R *.dfm}
 
@@ -272,6 +273,7 @@ procedure TfrmMain.btnFRDesignerClick(Sender: TObject);
 begin
   if Assigned(FIntfFR) then
   begin
+    FIntfFR.SetCustomFunction(FRCustomFunction);
     var ReportFile: string := ExtractFilePath(ParamStr(0)) + 'FastReportTemplates\loader.fr3';
     if TdxBarLargeButton(Sender).Tag = 1 then
       FIntfFR.PreviewReport([TVTBaseDataSource<TVTBaseRecord>(FSLog)], [vtlLog], ReportFile)
@@ -351,6 +353,22 @@ begin
   end;
   FreeAndNil(FButtons);
   FreeAndNil(FSLog);
+end;
+
+function TfrmMain.FRCustomFunction(AFuncName, ASourceName: WideString): variant;
+var
+  DS: TfrxDataSet;
+begin
+  Result := null;
+  if (AFuncName = 'GetCurrentLevel') and (ASourceName = 'DSLog') then
+  begin
+    if Assigned(FIntfFR) then
+    begin
+      DS := FIntfFR.GetDSByName('frxDS0');
+      if Assigned(DS) and Assigned(FSLog.CalcNode) then
+        Result := FSLog.CalcNode.Level;
+    end;
+  end;
 end;
 
 { TButtonEntryList }

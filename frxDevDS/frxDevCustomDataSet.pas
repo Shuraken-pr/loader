@@ -58,6 +58,7 @@ type
     FFieldIndexes: TList<Integer>;
     FFieldTypes: TList<TfrxFieldType>;
     FCurrentIndex: Integer;           { Index в RootHandle.Children[] }
+    FCurrentNode: TcxTreeListNode;
 
     procedure BuildFieldListFromTreeList;
     function FieldIndex(const FieldName: string): Integer;
@@ -91,6 +92,7 @@ type
     function RecordCount: Integer; override;
     property DataSource: TVTBaseDataSource<TVTBaseRecord> read FDataSource;
     property TreeList: TcxVirtualTreeList read FTreeList;
+    property CurrentNode: TcxTreeListNode read FCurrentNode;
   end;
 
   { Регистрация типов в FastReport }
@@ -225,6 +227,7 @@ begin
   FFieldIndexes := TList<Integer>.Create;
   FFieldTypes := TList<TfrxFieldType>.Create;
   FCurrentIndex := -1;
+  FCurrentNode := nil;
 end;
 
 destructor TfrxDevCustomDataSet.Destroy;
@@ -357,9 +360,12 @@ procedure TfrxDevCustomDataSet.InternalFirst;
 begin
   FCurrentIndex := 0;
   if Assigned(FDataSource) and Assigned(FDataSource.RootHandle) and
-    (FDataSource.RootHandle.ChildCount > 0) then
+     Assigned(FTreeList) and Assigned(FTreeList.Root) and
+    (FDataSource.RootHandle.TotalCount > 0) then
   begin
-    FActiveAdapter := GetAdapterForRecord(TVTBaseRecord(FDataSource.RootHandle[0]));
+    FCurrentNode := FTreeList.Root.getFirstChild;
+    FDataSource.CalcNode := FCurrentNode;
+    FActiveAdapter := GetAdapterForRecord(TVTBaseRecord(FDataSource.Obj(FCurrentNode)));
   end
   else
     FActiveAdapter := nil;
@@ -374,10 +380,12 @@ end;
 procedure TfrxDevCustomDataSet.InternalNext;
 begin
   Inc(FCurrentIndex);
-  if Assigned(FDataSource) and Assigned(FDataSource.RootHandle) and
-    (FCurrentIndex < FDataSource.RootHandle.ChildCount) then
+  if Assigned(FCurrentNode) then
+    FCurrentNode := FCurrentNode.GetNext;
+  FDataSource.CalcNode := FCurrentNode;
+  if Assigned(FDataSource) and Assigned(FCurrentNode) then
   begin
-    FActiveAdapter := GetAdapterForRecord(TVTBaseRecord(FDataSource.RootHandle[FCurrentIndex]));
+      FActiveAdapter := GetAdapterForRecord(TVTBaseRecord(FDataSource.Obj(FCurrentNode)))
   end
   else
     FActiveAdapter := nil;
@@ -394,7 +402,7 @@ begin
   if not Assigned(FDataSource) or not Assigned(FDataSource.RootHandle) then
     Result := True
   else
-    Result := FCurrentIndex >= FDataSource.RootHandle.ChildCount;
+    Result := not Assigned(FCurrentNode);
 end;
 
 function TfrxDevCustomDataSet.Eof: Boolean;
@@ -405,7 +413,7 @@ end;
 function TfrxDevCustomDataSet.RecordCount: Integer;
 begin
   if Assigned(FDataSource) and Assigned(FDataSource.RootHandle) then
-    Result := FDataSource.RootHandle.ChildCount
+    Result := FDataSource.RootHandle.TotalCount
   else
     Result := 0;
 end;

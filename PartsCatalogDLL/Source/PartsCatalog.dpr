@@ -10,6 +10,7 @@ uses
   intf_dll in '..\..\..\Common\intf_dll.pas',
   intf_dll_manager in '..\..\..\Common\intf_dll_manager.pas',
   intf_common in '..\..\..\Common\intf_common.pas',
+  frxDevDSIntf in '..\..\..\Common\frxDevDSIntf.pas',
   cxVirtualTreeListHelper in '..\..\..\Common\cxVirtualTreeListHelper.pas',
   dmDatabase in 'dmDatabase.pas' {dmDB: TDataModule},
   fAttributeDelete in 'fAttributeDelete.pas' {fAttributeDelete},
@@ -26,7 +27,8 @@ uses
   intf_skin in '..\..\..\Common\intf_skin.pas',
   uSkinHelper in '..\..\..\Common\uSkinHelper.pas',
   FireDAC.Moni.Custom.Logger in '..\..\..\Common\FireDAC.Moni.Custom.Logger.pas',
-  FDMoniCustomLoggerHelper in '..\..\..\Common\FDMoniCustomLoggerHelper.pas';
+  FDMoniCustomLoggerHelper in '..\..\..\Common\FDMoniCustomLoggerHelper.pas',
+  PGSettings in '..\..\..\Common\PGSettings.pas' {frSettings};
 
 {$R *.res}
 
@@ -107,7 +109,9 @@ begin
   AMsg := '';
   OldHandle := Application.Handle;
   try
-    TfrmMain.RunForm(ACallbackProc, AMsg, FSkinName, FNativeStyle);
+    if Assigned(FDllManager) then
+      FDllManager.Load(DIFrxDevDS, False);
+    TfrmMain.RunForm(ACallbackProc, AMsg, FSkinName, FNativeStyle, FDllManager);
   finally
     Application.Handle := OldHandle;
   end;

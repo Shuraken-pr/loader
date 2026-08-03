@@ -18,7 +18,7 @@ object dmDB: TdmDB
     UpdateOptions.EnableInsert = False
     UpdateOptions.EnableUpdate = False
     TxOptions.AutoStop = False
-    LoginDialog = LDPg
+    LoginPrompt = False
     Left = 48
     Top = 12
   end
@@ -543,6 +543,130 @@ object dmDB: TdmDB
       LookAndFeel.Kind = lfUltraFlat
       LookAndFeel.NativeStyle = False
       PixelsPerInch = 96
+    end
+  end
+  object qryReportCategories: TFDQuery
+    Connection = PGConn
+    SQL.Strings = (
+      'WITH RECURSIVE category_tree AS ('
+      
+        '    -- 1. '#1041#1072#1079#1086#1074#1099#1081' '#1079#1072#1087#1088#1086#1089': '#1085#1072#1093#1086#1076#1080#1084' '#1082#1086#1088#1085#1077#1074#1099#1077' '#1101#1083#1077#1084#1077#1085#1090#1099' ('#1091' '#1082#1086#1090#1086#1088#1099#1093' '#1085 +
+        #1077#1090' '#1088#1086#1076#1080#1090#1077#1083#1103')'
+      '    SELECT '
+      '        id, '
+      '        parent_id, '
+      '        name, '
+      '        1 AS level, '
+      '        name::text AS path'
+      '    FROM categories'
+      '    WHERE parent_id IS NULL'
+      ''
+      '    UNION ALL'
+      ''
+      '    -- 2. '#1056#1077#1082#1091#1088#1089#1080#1074#1085#1099#1081' '#1079#1072#1087#1088#1086#1089': '#1085#1072#1093#1086#1076#1080#1084' '#1076#1086#1095#1077#1088#1085#1080#1077' '#1101#1083#1077#1084#1077#1085#1090#1099
+      '    SELECT '
+      '        c.id, '
+      '        c.parent_id, '
+      '        c.name, '
+      '        ct.level + 1, '
+      '        ct.path || '#39' / '#39' || c.name'
+      '    FROM categories c'
+      '    INNER JOIN category_tree ct ON c.parent_id = ct.id'
+      ')'
+      '-- 3. '#1060#1080#1085#1072#1083#1100#1085#1099#1081' '#1074#1099#1074#1086#1076' '#1089' '#1092#1086#1088#1084#1072#1090#1080#1088#1086#1074#1072#1085#1080#1077#1084
+      'SELECT '
+      '    id,'
+      '    parent_id,'
+      '    level,'
+      '    name,'
+      '    path,'
+      '    REPEAT('#39'  '#39', level - 1) || name AS visual_tree'
+      'FROM category_tree'
+      'ORDER BY path;')
+    Left = 172
+    Top = 300
+    object qryReportCategoriesid: TIntegerField
+      AutoGenerateValue = arDefault
+      FieldName = 'id'
+      Origin = 'id'
+      ReadOnly = True
+    end
+    object qryReportCategoriesparent_id: TIntegerField
+      AutoGenerateValue = arDefault
+      FieldName = 'parent_id'
+      Origin = 'parent_id'
+      ReadOnly = True
+    end
+    object qryReportCategorieslevel: TIntegerField
+      AutoGenerateValue = arDefault
+      FieldName = 'level'
+      Origin = '"level"'
+      ReadOnly = True
+    end
+    object qryReportCategoriesname: TWideStringField
+      AutoGenerateValue = arDefault
+      FieldName = 'name'
+      Origin = 'name'
+      ReadOnly = True
+      Size = 255
+    end
+    object qryReportCategoriespath: TWideMemoField
+      AutoGenerateValue = arDefault
+      FieldName = 'path'
+      Origin = 'path'
+      ReadOnly = True
+      BlobType = ftWideMemo
+    end
+    object qryReportCategoriesvisual_tree: TWideMemoField
+      AutoGenerateValue = arDefault
+      FieldName = 'visual_tree'
+      Origin = 'visual_tree'
+      ReadOnly = True
+      BlobType = ftWideMemo
+    end
+  end
+  object qryReportParts: TFDQuery
+    Connection = PGConn
+    SQL.Strings = (
+      '   SELECT '
+      '       p.id AS part_id,'
+      '       p.code,'
+      '       p.category_id,'
+      '       ('
+      '           SELECT STRING_AGG(a.name || '#39': '#39' || '
+      
+        '                  COALESCE(pv.value_string, pv.value_number::tex' +
+        't, pv.value_date::text, CASE WHEN pv.value_bool THEN '#39#1044#1072#39' ELSE '#39 +
+        #1053#1077#1090#39' END), '
+      '                  '#39', '#39')'
+      '           FROM part_values pv'
+      '           JOIN attribute_defs a ON a.id = pv.attribute_id'
+      '           WHERE pv.part_id = p.id'
+      '       ) AS attributes_str'
+      '   FROM parts p'
+      '   ORDER BY p.code'
+      '')
+    Left = 472
+    Top = 340
+    object qryReportPartspart_id: TIntegerField
+      FieldName = 'part_id'
+      Origin = 'part_id'
+    end
+    object qryReportPartscode: TWideStringField
+      FieldName = 'code'
+      Origin = 'code'
+      Size = 100
+    end
+    object qryReportPartscategory_id: TIntegerField
+      FieldName = 'category_id'
+      Origin = 'category_id'
+    end
+    object qryReportPartsattributes_str: TWideMemoField
+      AutoGenerateValue = arDefault
+      FieldName = 'attributes_str'
+      Origin = 'attributes_str'
+      ReadOnly = True
+      BlobType = ftWideMemo
     end
   end
 end

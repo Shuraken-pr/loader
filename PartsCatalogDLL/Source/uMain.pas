@@ -18,7 +18,9 @@ uses
   dxSkinsCore, dxLayoutLookAndFeels, dxSkinsdxRibbonPainter,        // ← для TdxRibbon + TdxBarManager
   dxLayoutPainters, uSkinHelper, dmSkins, dxSkinDevExpressDarkStyle,
   dxSkinDevExpressStyle, dxSkinOffice2007Blue, dxSkinOffice2010Silver,
-  dxSkinOffice2013LightGray, dxSkinVS2010;
+  dxSkinOffice2013LightGray, dxSkinVS2010,
+  intf_dll_manager, frxDevDSIntf, Data.DB, Datasnap.Provider, Datasnap.DBClient,
+  dxRibbonGallery;
 
 type
   TfrmMain = class(TForm)
@@ -65,10 +67,16 @@ type
     lbtnDelAttribute: TdxBarLargeButton;
     acEditAttribute: TAction;
     lbtnEditAttribute: TdxBarLargeButton;
+    acFRDesigner: TAction;
+    btnFastReport: TdxBarLargeButton;
+    brReport: TdxBar;
     vtlCategories: TcxVirtualTreeList;
     vtlParts: TcxVirtualTreeList;
     vtlCategoriesName: TcxTreeListColumn;
     lgSkins: TdxLayoutGroup;
+    rddFastReport: TdxRibbonDropDownGallery;
+    btnFRDesigner: TdxBarLargeButton;
+    btnPreview: TdxBarLargeButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnSearchClick(Sender: TObject);
@@ -90,6 +98,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure acDelAttributeExecute(Sender: TObject);
     procedure acEditAttributeExecute(Sender: TObject);
+    procedure acFRDesignerExecute(Sender: TObject);
     procedure vtlCategoriesFocusedNodeChanged(Sender: TcxCustomTreeList;
       APrevFocusedNode, AFocusedNode: TcxTreeListNode);
     procedure vtlCategoriesExpanding(Sender: TcxCustomTreeList;
@@ -102,6 +111,8 @@ type
     FCurrentCategoryID: Integer;
     FCategoryDS: TVTSmartDataSource<TCategoryNodeData>;
     FPartDS: TVTLoadAllDataSource<TPartNodeData>;
+    FDllManager: IDllManager;
+    FIntfFR: IFrxDevDS;
 
     function GetSelectedCategoryID: Integer;
     function GetSelectedCategoryName: string;
@@ -114,7 +125,8 @@ type
     procedure BuildPartsColumns;
   public
     { Public declarations }
-    class function RunForm(ACallback: TProc<WideString>; var AMsg: WideString; ASkinName: WideString; ANativeStyle: boolean): boolean;
+    class function RunForm(ACallback: TProc<WideString>; var AMsg: WideString; ASkinName: WideString; ANativeStyle: boolean; ADllManager: IDllManager): boolean;
+    procedure SetDllManager(AMgr: IDllManager);
   end;
 
 var
@@ -144,6 +156,12 @@ begin
   // Инициализация нативных источников данных DevExpress
   FCategoryDS := TVTSmartDataSource<TCategoryNodeData>.Create(vtlCategories);
   FPartDS := TVTLoadAllDataSource<TPartNodeData>.Create(vtlParts);
+
+  if Assigned(FDllManager) then
+  begin
+    FIntfFR := IFrxDevDS(FDllManager.GetIntf(IFrxDevDS));
+    brReport.Visible := Assigned(FIntfFR);
+  end;
 
   BuildCategoryTree;
 end;
@@ -551,7 +569,7 @@ begin
 end;
 
 class function TfrmMain.RunForm(ACallback: TProc<WideString>;
-  var AMsg: WideString; ASkinName: WideString; ANativeStyle: boolean): boolean;
+  var AMsg: WideString; ASkinName: WideString; ANativeStyle: boolean; ADllManager: IDllManager): boolean;
 begin
   try
     dmDB := TdmDB.Create(nil);
@@ -560,6 +578,7 @@ begin
       try
         ApplySkinToForm(frmMain, ASkinName, ANativeStyle, frmMain.rbMain);
         frmMain.FCallback := ACallback;
+        frmMain.SetDllManager(ADllManager);
         Result := true;
         frmMain.ShowModal;
       finally
@@ -617,6 +636,48 @@ begin
   CatData := FCategoryDS.CurrentObj;
   if Assigned(CatData) and (CatData.CategoryID > 0) then
     LoadCategoryData(CatData.CategoryID);
+end;
+
+procedure TfrmMain.SetDllManager(AMgr: IDllManager);
+begin
+  FDllManager := AMgr;
+end;
+
+procedure TfrmMain.acFRDesignerExecute(Sender: TObject);
+var
+  ReportFile, connStr: string;
+begin
+  if not Assigned(FIntfFR) then
+  begin
+    ShowMessage('Библиотека отчётов (frxDevDS) не загружена.');
+    Exit;
+  end;
+
+  ReportFile := ExtractFilePath(ParamStr(0)) + 'FastReportTemplates\PartsCatalog.fr3';
+
+  if not connStr.Contains('Password=') then
+    connStr := dmDB.PGConn.ConnectionString + ';Password=' + dmDB.PGConn.Params.Password;
+
+  dmDB.qryReportCategories.Open;
+  try
+    dmDB.qryReportParts.Open;
+    try
+      if TdxBarLargeButton(Sender).Tag = 1 then
+        FIntfFR.PreviewDBReport(
+        connStr,
+        ReportFile)
+      else
+        FIntfFR.DesignDBReport(
+        [dmDB.qryReportCategories.SQL.Text, dmDB.qryReportParts.SQL.Text],
+        ['Categories', 'Parts'],
+        connStr,
+        ReportFile);
+    finally
+      dmDB.qryReportParts.Close;
+    end;
+  finally
+    dmDB.qryReportCategories.Close;
+  end;
 end;
 
 end.

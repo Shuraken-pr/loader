@@ -30,6 +30,9 @@
         <Projects Include="..\PartsCatalogDLL\Source\PartsCatalog.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="..\frxDevDS\frxDevDS.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -119,14 +122,23 @@
     <Target Name="PartsCatalog:Make">
         <MSBuild Projects="..\PartsCatalogDLL\Source\PartsCatalog.dproj" Targets="Make"/>
     </Target>
+    <Target Name="frxDevDS">
+        <MSBuild Projects="..\frxDevDS\frxDevDS.dproj"/>
+    </Target>
+    <Target Name="frxDevDS:Clean">
+        <MSBuild Projects="..\frxDevDS\frxDevDS.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="frxDevDS:Make">
+        <MSBuild Projects="..\frxDevDS\frxDevDS.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="loader;SimpleNumbers;CalcPrice;Explorer;RunTaskFind;RunTaskShellExecute;RunTasks;LogData;PartsCatalog"/>
+        <CallTarget Targets="loader;SimpleNumbers;CalcPrice;Explorer;RunTaskFind;RunTaskShellExecute;RunTasks;LogData;PartsCatalog;frxDevDS"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="loader:Clean;SimpleNumbers:Clean;CalcPrice:Clean;Explorer:Clean;RunTaskFind:Clean;RunTaskShellExecute:Clean;RunTasks:Clean;LogData:Clean;PartsCatalog:Clean"/>
+        <CallTarget Targets="loader:Clean;SimpleNumbers:Clean;CalcPrice:Clean;Explorer:Clean;RunTaskFind:Clean;RunTaskShellExecute:Clean;RunTasks:Clean;LogData:Clean;PartsCatalog:Clean;frxDevDS:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="loader:Make;SimpleNumbers:Make;CalcPrice:Make;Explorer:Make;RunTaskFind:Make;RunTaskShellExecute:Make;RunTasks:Make;LogData:Make;PartsCatalog:Make"/>
+        <CallTarget Targets="loader:Make;SimpleNumbers:Make;CalcPrice:Make;Explorer:Make;RunTaskFind:Make;RunTaskShellExecute:Make;RunTasks:Make;LogData:Make;PartsCatalog:Make;frxDevDS:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

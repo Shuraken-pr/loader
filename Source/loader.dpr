@@ -6,6 +6,7 @@ uses
   vstHelper in '..\..\common\vstHelper.pas',
   intf_dll in '..\..\common\intf_dll.pas',
   intf_dll_manager in '..\..\common\intf_dll_manager.pas',
+  frxDevDSIntf in '..\..\Common\frxDevDSIntf.pas',
   cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas',
   dxSkinsCore,
   dxSkinBasic,

@@ -246,6 +246,43 @@ loader.exe (uMain)
 
 ---
 
+## Часть 5: FastReport — фактическая интеграция
+
+### `frxDevDS.dll`
+
+Плагин загружается отдельно от списка запускаемых DLL: `Source\uMain.pas` вызывает `FDllManager.Load(DIFrxDevDS, False)`, получает `IFrxDevDS` и вызывает `Init`. Плагин не реализует `IDllIntfRun`, поэтому его кнопка не входит в `FButtons` и не обрабатывается общим `OnButtonClick`.
+
+`frxDevDS.dll` предоставляет:
+- `DesignReport` и `PreviewReport` для данных `TVTBaseDataSource` и `TcxVirtualTreeList`;
+- `DesignDBReport` и `PreviewDBReport` для отчётов с FireDAC;
+- `SetCustomFunction` для вызовов из FastScript;
+- экспортные компоненты PDF, XLS/XLSX, DOCX, RTF, BMP, JPEG и Mail в `dmFastReport`.
+
+### `loader.exe`
+
+В `Source\uMain.dfm` создана группа `bFastReport` с выпадающей кнопкой `btnFastReport` и действиями:
+- `btnFRDesigner` — открывает дизайнер;
+- `btnFRPreview` — открывает предварительный просмотр.
+
+Оба действия используют журнал `FSLog` и `vtlLog` как источник данных и шаблон `FastReportTemplates\loader.fr3` рядом с исполняемым файлом.
+
+### `PartsCatalog.dll`
+
+В `PartsCatalogDLL\Source\uMain.dfm` создана группа `brReport` с выпадающей кнопкой `btnFastReport`:
+- `btnFRDesigner` вызывает `DesignDBReport`;
+- `btnPreview` вызывает `PreviewDBReport`.
+
+Перед вызовом формируется строка соединения из `dmDB.PGConn`, включая пароль, а запросы `qryReportCategories` и `qryReportParts` передаются в `DesignDBReport`. Используется шаблон `FastReportTemplates\PartsCatalog.fr3` рядом с `loader.exe`.
+
+Шаблон `PartsCatalog.fr3` уже содержит внутренние `TfrxFDQuery` с именами `Categories` и `Parts`, master-detail-связь `Parts.Master = Categories`, а также SQL для построения дерева категорий и списка деталей. Поэтому при открытии дизайнера с существующим шаблоном SQL, переданный из `PartsCatalog`, фактически не применяется: текущая реализация `DesignDBReport` загружает шаблон вместо добавления переданных наборов.
+
+### Ограничения текущей реализации
+
+- `PreviewReport` и `PreviewDBReport` открывают отчёт только при непустом существующем шаблоне; иначе завершаются без уведомления вызывающего кода.
+- `CreateReportPage` не создаёт страницу для полностью пустого `TfrxReport`, поскольку выполняется только при `PagesCount > 0`.
+- В `uFrxRTTIAddons.pas` повторяются ветви для `StartOfADay` и `EndOfADay`, из-за чего перегрузки с тремя аргументами недостижимы.
+- `PartsCatalog` открывает `qryReportCategories` и `qryReportParts` перед вызовом FastReport, хотя `frxDevDS` работает со своей `TFDConnection` и с запросами из шаблона либо с переданным SQL.
+
 ## Итого
 
 Проект представляет собой **фреймворк плагинной архитектуры** на Delphi с демонстрационными плагинами, а также включает полноценное приложение `PartsCatalog` для управления каталогами деталей. Ядром фреймворка является `Common` с определениями интерфейсов, менеджером загрузки DLL и пулом потоков. Приложение-лоадер динамически подгружает DLL-плагины, каждый из которых предоставляет свою функциональность — от вычисления простых чисел, через файловый менеджер и оркестратор задач, до генерации SQL-триггеров для аудита баз данных. Проект `PartsCatalog` дополняет экосистему, демонстрируя работу с реляционной СУБД (PostgreSQL), динамическими интерфейсами и паттерном EAV.

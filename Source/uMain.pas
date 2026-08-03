@@ -15,13 +15,14 @@ uses
   cxEdit, cxMaskEdit, cxDropDownEdit, dxSkinsCore, dxSkinDevExpressDarkStyle,
   dxSkinDevExpressStyle, dxSkinOffice2007Blue, dxSkinOffice2010Silver,
   dxSkinOffice2013LightGray, dxSkinVS2010,
+  frxDevDSIntf,       //IFrxDevDS
   intf_skin,          // ISkinAware
   uSkinManager,       // TSkinManager
   uSkinHelper,        // ApplySkinToForm / ApplySkinToDataModule
   dmSkins,             // TdmSkin DataModule
   dxSkinsForm,        // TdxSkinController
   dxLayoutLookAndFeels, // TdxLayoutLookAndFeelList
-  dxSkinsdxRibbonPainter; // для корректного скининга TdxRibbon
+  dxSkinsdxRibbonPainter, dxRibbonGallery; // для корректного скининга TdxRibbon
 
 
 type
@@ -61,7 +62,7 @@ type
     ilBig: TcxImageList;
     ilSmall: TcxImageList;
     alMain: TActionList;
-    rbMainTab1: TdxRibbonTab;
+    rtMain: TdxRibbonTab;
     bInterfaces: TdxBar;
     btnSimpleNumbers: TdxBarLargeButton;
     btnCalcPrice: TdxBarLargeButton;
@@ -75,14 +76,22 @@ type
     colMsg: TcxTreeListColumn;
     cmbSkins: TcxComboBox;
     liSkins: TdxLayoutItem;
+    bFastReport: TdxBar;
+    btnFastReport: TdxBarLargeButton;
+    rddGallery: TdxRibbonDropDownGallery;
+    btnFRDesigner: TdxBarLargeButton;
+    btnFRPreview: TdxBarLargeButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure btnFRDesignerClick(Sender: TObject);
   private
     FDllManager: IDllManager;
+    FIntfFR: IFrxDevDS;
     FSLog: TVTLoadAllDataSource<TVTVLog>;
     FButtons: TButtonEntryList;
     FSkinManager: TSkinManager;          // НОВОЕ
     procedure InitializeSkinSelector;     // НОВОЕ
+    procedure InitializeFastReport;
     procedure DoSkinChanged(ASkinName: string; ANativeStyle: Boolean);  // НОВОЕ
     procedure cmbSkinsPropertiesChange(Sender: TObject);  // НОВОЕ
     procedure AddMsg(const AMsg: WideString);
@@ -232,11 +241,43 @@ begin
   end;
 end;
 
+procedure TfrmMain.InitializeFastReport;
+var
+  intf: IInterface;
+begin
+  if not Assigned(FDllManager) then
+    Exit;
+
+  // Пробуем загрузить RunTaskFind.dll → IRunTaskFindInDir
+  if not FDllManager.IsLoaded('IFrxDevDS') then
+    FDllManager.Load(DIFrxDevDS, False);
+
+  if FDllManager.IsLoaded('IFrxDevDS') then
+  begin
+    intf := FDllManager.GetIntf(IFrxDevDS);
+    if Assigned(intf) and Supports(intf, IFrxDevDS, FIntfFR) then
+      FIntfFR.Init;
+    bFastReport.Visible := Assigned(FIntfFR);
+  end;
+end;
+
 procedure TfrmMain.InitializeSkinSelector;
 begin
   FSkinManager.PopulateSkinList(cmbSkins);
   cmbSkins.EditValue := FSkinManager.CurrentSkin;
   cmbSkins.Properties.OnChange := cmbSkinsPropertiesChange;
+end;
+
+procedure TfrmMain.btnFRDesignerClick(Sender: TObject);
+begin
+  if Assigned(FIntfFR) then
+  begin
+    var ReportFile: string := ExtractFilePath(ParamStr(0)) + 'FastReportTemplates\loader.fr3';
+    if TdxBarLargeButton(Sender).Tag = 1 then
+      FIntfFR.PreviewReport([TVTBaseDataSource<TVTBaseRecord>(FSLog)], [vtlLog], ReportFile)
+    else
+      FIntfFR.DesignReport([TVTBaseDataSource<TVTBaseRecord>(FSLog)], [vtlLog], ReportFile);
+  end;
 end;
 
 procedure TfrmMain.cmbSkinsPropertiesChange(Sender: TObject);
@@ -282,6 +323,9 @@ begin
   // Применяем загруженный скин к главной форме и DataModule
   DoSkinChanged(FSkinManager.CurrentSkin, FSkinManager.NativeStyle);
 
+  //Инициализируем FastReport
+  InitializeFastReport;
+
   // Реестр кнопок: кнопка + TDLLInfo + опциональная инициализация
 
   FButtons.AddEntry(btnSimpleNumbers, DISimpleNumbers, nil);
@@ -299,6 +343,7 @@ procedure TfrmMain.FormDestroy(Sender: TObject);
 begin
   // Освобождаем через интерфейс — корректный RefCount
   FreeAndNil(FSkinManager);  // dmSkin освободится через владение Self
+  FIntfFR := nil;
   if Assigned(FDllManager) then
   begin
     FDllManager.UnloadAll;

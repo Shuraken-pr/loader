@@ -26,7 +26,8 @@ uses
   cxFilter, cxCustomData, cxStyles, dxScrollbarAnnotations, cxTL,
   cxTLdxBarBuiltInMenu, cxInplaceContainer, cxTLData, dmSkins, dxSkinsCore,
   dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle, dxSkinOffice2007Blue,
-  dxSkinOffice2010Silver, dxSkinOffice2013LightGray, dxSkinVS2010;
+  dxSkinOffice2010Silver, dxSkinOffice2013LightGray, dxSkinVS2010, frxDevDSIntf,
+  frxClass;
 
 type
   TRunTaskStatus = (rtsNone, rtsExecute, rtsBreak, rtsFinish, rtsError);
@@ -103,6 +104,11 @@ type
     vtlResults: TcxVirtualTreeList;
     colFile: TcxTreeListColumn;
     colValue: TcxTreeListColumn;
+    btnFastReport: TcxButton;
+    liFastReport: TdxLayoutItem;
+    pmFastReport: TPopupMenu;
+    miFRDesigner: TMenuItem;
+    miFRPreview: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure cbTasksPropertiesChange(Sender: TObject);
@@ -111,15 +117,18 @@ type
     procedure btnShowResultClick(Sender: TObject);
     procedure vtlRunTasksFocusedNodeChanged(Sender: TcxCustomTreeList;
       APrevFocusedNode, AFocusedNode: TcxTreeListNode);
+    procedure miFRDesignerClick(Sender: TObject);
   private
     FCallbackProc: TProc<WideString>;
     FIntfList: TInterfaceList;
     FDSResults: TVTLoadAllDataSource<TResultRecord>;
     FDSRunTasks: TVTLoadAllDataSource<TRunTaskRecord>;
+    FIntfFR: IFrxDevDS;
     procedure DoCallbackProc(AMsg: WideString);
     procedure btnSelectDir(Sender: TObject; AButtonIndex: Integer);
     procedure btnSelectExeFile(Sender: TObject; AButtonIndex: Integer);
     procedure ChangeStatus(AObj: TRunTaskRecord; AStatus: TRunTaskStatus; AMsg: WideString);
+    function FRCustomFunction(AFuncName: WideString; ASourceName: WideString): variant;
     { Private declarations }
   public
     { Public declarations }
@@ -128,6 +137,7 @@ type
                            AFindInExeFile: IRunTaskFindInExeFile;
                            AShellExecute: IRunTaskShellExecute);
     property IntfList: TInterfaceList read FIntfList write FIntfList;
+    property IntfFR: IFrxDevDS read FIntfFR write FIntfFR;
   end;
 
 var
@@ -233,6 +243,7 @@ begin
         liStop.Visible := false;
       if AStatus in [rtsBreak, rtsFinish] then
       begin
+        liFastReport.Visible := true;
         AObj.dtEnd := Now;
         if supports(AObj.TaskIntf, IRunTaskFindInExeFile) then
         begin
@@ -444,6 +455,7 @@ begin
   FIntfList := TInterfaceList.Create;
   FDSResults := TVTLoadAllDataSource<TResultRecord>.Create(vtlResults);
   FDSRunTasks := TVTLoadAllDataSource<TRunTaskRecord>.Create(vtlRunTasks);
+  FIntfFR := nil;
 end;
 
 procedure TfrmRunTasks.FormDestroy(Sender: TObject);
@@ -458,7 +470,51 @@ begin
       obj.TaskIntf.Stop(obj.TaskCtrl);
     end;
   end;
+  FIntfFR := nil;
   FreeAndNil(FIntfList);
+end;
+
+procedure TfrmRunTasks.miFRDesignerClick(Sender: TObject);
+begin
+  if Assigned(FIntfFR) then
+  begin
+    FIntfFR.SetCustomFunction(FRCustomFunction);
+    var ReportFile: string := ExtractFilePath(ParamStr(0)) + 'FastReportTemplates\RunTasks.fr3';
+    if TMenuItem(Sender).Tag = 1 then
+      FIntfFR.PreviewReport([TVTBaseDataSource<TVTBaseRecord>(FDSRunTasks)], [vtlRunTasks], ReportFile)
+    else
+      FIntfFR.DesignReport([TVTBaseDataSource<TVTBaseRecord>(FDSRunTasks)], [vtlRunTasks], ReportFile);
+  end;
+end;
+
+function TfrmRunTasks.FRCustomFunction(AFuncName,
+  ASourceName: WideString): variant;
+var
+  DS: TfrxDataSet;
+  obj: TRunTaskRecord;
+  Value: WideString;
+begin
+  Result := '';
+  if (ASourceName = 'DSRunTasks') then
+  begin
+    if Assigned(FIntfFR) then
+    begin
+      DS := FIntfFR.GetDSByName('frxDS0');
+      if Assigned(DS) and Assigned(FDSRunTasks.CalcNode) then
+      begin
+        obj := FDSRunTasks.Obj(FDSRunTasks.CalcNode);
+        if Assigned(obj) and Assigned(obj.TaskIntf) and (obj.Status <> rtsExecute) then
+        begin
+          if AFuncName = 'Result' then
+          begin
+            for var i := 0 to obj.ResultList.Count - 1 do
+              Value := Value + obj.ResultList[i] + #13#10;
+            Result := Value;
+          end;
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmRunTasks.initRunTasks(AFindInDir: IRunTaskFindInDir;

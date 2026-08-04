@@ -11,6 +11,7 @@ uses
   intf_dll_manager in '..\..\common\intf_dll_manager.pas',
   intf_common in '..\..\common\intf_common.pas',
   intf_tasks in '..\..\common\intf_tasks.pas',
+  frxDevDSIntf in '..\..\common\frxDevDSIntf.pas',
   uAutonomiusThreadPool in '..\..\common\uAutonomiusThreadPool.pas',
   uRunTasks in 'uRunTasks.pas' {frmRunTasks},
   cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas',
@@ -29,6 +30,7 @@ type
     FFindInDir: IRunTaskFindInDir;
     FFindInExeFile: IRunTaskFindInExeFile;
     FShellExecute: IRunTaskShellExecute;
+    FIntfFR: IFrxDevDS;
     procedure TryLoadDependencies;
   public
     constructor Create;
@@ -79,6 +81,7 @@ begin
   FFindInDir := nil;
   FFindInExeFile := nil;
   FShellExecute := nil;
+  FIntfFR := nil;
 end;
 
 destructor TRunTasks.Destroy;
@@ -87,6 +90,7 @@ begin
   FFindInExeFile := nil;
   FFindInDir := nil;
   FDllManager := nil;
+  FIntfFR := nil;
   if Assigned(FSkin) then
     FreeAndNil(FSkin);
   FreeAndNil(FRunTasks);
@@ -133,6 +137,8 @@ begin
 
   if FRunTasks.IntfList.Count > 0 then
   begin
+    if Assigned(FIntfFR) then
+      FRunTasks.IntfFR := FIntfFR;
     FRunTasks.CallbackProc := ACallbackProc;
     FRunTasks.Show;
   end
@@ -196,6 +202,21 @@ begin
       begin
         FShellExecute.Init;
         FRunTasks.IntfList.Add(FShellExecute);
+      end;
+    end;
+  end;
+
+  // Загружаем IFrxDevDS
+  if not Assigned(FIntfFR) then
+  begin
+    if not FDllManager.IsLoaded('IFrxDevDS') then
+      FDllManager.Load(DIFrxDevDS, False);
+    if FDllManager.IsLoaded('IFrxDevDS') then
+    begin
+      intf := FDllManager.GetIntf(IFrxDevDS);
+      if Assigned(intf) and Supports(intf, IFrxDevDS, FIntfFR) then
+      begin
+        FIntfFR.Init;
       end;
     end;
   end;

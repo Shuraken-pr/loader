@@ -161,15 +161,14 @@
         <DCCReference Include="..\..\common\intf_dll_manager.pas"/>
         <DCCReference Include="..\..\common\intf_common.pas"/>
         <DCCReference Include="..\..\common\intf_tasks.pas"/>
+        <DCCReference Include="..\..\common\frxDevDSIntf.pas"/>
         <DCCReference Include="..\..\common\uAutonomiusThreadPool.pas"/>
         <DCCReference Include="uRunTasks.pas">
             <Form>frmRunTasks</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\..\Common\cxVirtualTreeListHelper.pas"/>
         <DCCReference Include="..\CommonModules\dmSkins.pas">
             <Form>dmSkin</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="..\..\Common\intf_skin.pas"/>

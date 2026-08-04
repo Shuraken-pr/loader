@@ -1469,10 +1469,10 @@ object frmRunTasks: TfrmRunTasks
       Style.TransparentBorder = False
       TabOrder = 0
       Height = 25
-      Width = 586
+      Width = 504
     end
     object btnStart: TcxButton
-      Left = 684
+      Left = 602
       Top = 46
       Width = 75
       Height = 25
@@ -1481,7 +1481,7 @@ object frmRunTasks: TfrmRunTasks
       OnClick = btnStartClick
     end
     object btnStop: TcxButton
-      Left = 766
+      Left = 684
       Top = 46
       Width = 86
       Height = 25
@@ -1490,7 +1490,7 @@ object frmRunTasks: TfrmRunTasks
       OnClick = btnStopClick
     end
     object btnShowResult: TcxButton
-      Left = 859
+      Left = 777
       Top = 46
       Width = 137
       Height = 25
@@ -1533,7 +1533,7 @@ object frmRunTasks: TfrmRunTasks
         end>
       Style.HotTrack = False
       Style.TransparentBorder = False
-      TabOrder = 4
+      TabOrder = 5
       Width = 905
     end
     object beParams: TcxButtonEdit
@@ -1571,7 +1571,7 @@ object frmRunTasks: TfrmRunTasks
         end>
       Style.HotTrack = False
       Style.TransparentBorder = False
-      TabOrder = 5
+      TabOrder = 6
       Width = 905
     end
     object vtlRunTasks: TcxVirtualTreeList
@@ -1593,7 +1593,7 @@ object frmRunTasks: TfrmRunTasks
       OptionsView.ShowRoot = False
       OptionsView.TreeLineStyle = tllsSolid
       ScrollbarAnnotations.CustomAnnotations = <>
-      TabOrder = 6
+      TabOrder = 7
       OnFocusedNodeChanged = vtlRunTasksFocusedNodeChanged
       object colDTStart: TcxTreeListColumn
         Caption.Text = #1042#1088#1077#1084#1103' '#1079#1072#1087#1091#1089#1082#1072
@@ -1632,6 +1632,16 @@ object frmRunTasks: TfrmRunTasks
         Summary.GroupFooterSummaryItems = <>
       end
     end
+    object btnFastReport: TcxButton
+      Left = 921
+      Top = 46
+      Width = 75
+      Height = 25
+      Caption = 'Fast Report'
+      DropDownMenu = pmFastReport
+      Kind = cxbkDropDown
+      TabOrder = 4
+    end
     object lcRunTasksGroup_Root: TdxLayoutGroup
       AlignHorz = ahClient
       AlignVert = avClient
@@ -1644,7 +1654,7 @@ object frmRunTasks: TfrmRunTasks
       AlignHorz = ahClient
       AlignVert = avTop
       CaptionOptions.Text = #1047#1072#1087#1091#1089#1082
-      ItemIndex = 3
+      ItemIndex = 4
       LayoutDirection = ldHorizontal
       Index = 0
     end
@@ -1740,6 +1750,19 @@ object frmRunTasks: TfrmRunTasks
       ControlOptions.ShowBorder = False
       Index = 3
     end
+    object liFastReport: TdxLayoutItem
+      Parent = lgExecute
+      AlignHorz = ahRight
+      AlignVert = avClient
+      Visible = False
+      CaptionOptions.Text = 'cxButton1'
+      CaptionOptions.Visible = False
+      Control = btnFastReport
+      ControlOptions.OriginalHeight = 25
+      ControlOptions.OriginalWidth = 75
+      ControlOptions.ShowBorder = False
+      Index = 4
+    end
   end
   object odExeFile: TOpenDialog
     Filter = 'Exe file|*.exe'
@@ -1749,8 +1772,8 @@ object frmRunTasks: TfrmRunTasks
   object dxFloatDockSite1: TdxFloatDockSite
     Left = 0
     Top = 0
-    Width = 1017
-    Height = 576
+    Width = 545
+    Height = 536
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -12
@@ -1759,8 +1782,6 @@ object frmRunTasks: TfrmRunTasks
     Visible = False
     FloatLeft = 870
     FloatTop = 209
-    ExplicitWidth = 545
-    ExplicitHeight = 536
     DockingType = 0
     OriginalWidth = 545
     OriginalHeight = 536
@@ -1816,6 +1837,19 @@ object frmRunTasks: TfrmRunTasks
           Summary.GroupFooterSummaryItems = <>
         end
       end
+    end
+  end
+  object pmFastReport: TPopupMenu
+    Left = 580
+    Top = 264
+    object miFRDesigner: TMenuItem
+      Caption = #1044#1080#1079#1072#1081#1085#1077#1088' '#1086#1090#1095#1105#1090#1086#1074
+      OnClick = miFRDesignerClick
+    end
+    object miFRPreview: TMenuItem
+      Tag = 1
+      Caption = #1055#1088#1077#1076#1074#1072#1088#1080#1090#1077#1083#1100#1085#1099#1081' '#1087#1088#1086#1089#1084#1086#1090#1088
+      OnClick = miFRDesignerClick
     end
   end
 end

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<TfrxReport Version="2023.2" DotMatrixReport="False" IniFile="\Software\Fast Reports" PreviewOptions.Buttons="167935" PreviewOptions.Zoom="1" PrintOptions.Printer="Default" PrintOptions.PrintOnSheet="0" ReportOptions.CreateDate="46238,9690502894" ReportOptions.Description.Text="" ReportOptions.LastChange="46239,0165020139" ScriptLanguage="PascalScript" ScriptText.Text="begin&#13;&#10;&#13;&#10;end.">
+  <Datasets>
+    <item DataSet="frxDS0" DataSetName="frxDS0"/>
+  </Datasets>
+  <TfrxDataPage Name="Data" HGuides.Text="" VGuides.Text="" Height="1000" Left="0" Top="0" Width="1000"/>
+  <TfrxReportPage Name="Page1" HGuides.Text="" VGuides.Text="" PaperWidth="210" PaperHeight="297" PaperSize="9" LeftMargin="10" RightMargin="10" TopMargin="10" BottomMargin="10" ColumnWidth="0" ColumnPositions.Text="" Frame.Typ="0" MirrorMode="0">
+    <TfrxMasterData Name="MasterData1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Frame.Typ="0" Height="18,89765" Left="0" Top="60,47248" Width="718,1107" Child="Child1" ColumnWidth="0" ColumnGap="0" DataSet="frxDS0" DataSetName="frxDS0" KeepChild="True" RowCount="0" Stretched="True">
+      <TfrxMemoView Name="frxDS0Времязапуска" IndexTag="1" AllowVectorExport="True" Left="0" Top="0" Width="132,28355" Height="18,89765" StretchMode="smMaxHeight" DataField="Время запуска" DataSet="frxDS0" DataSetName="frxDS0" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="15" ParentFont="False" Text="[frxDS0.&#34;Время запуска&#34;]"/>
+      <TfrxMemoView Name="frxDS0Времяокончания" IndexTag="1" AllowVectorExport="True" Left="132,28355" Top="0" Width="143,62214" Height="18,89765" StretchMode="smMaxHeight" DataField="Время окончания" DataSet="frxDS0" DataSetName="frxDS0" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="15" ParentFont="False" Text="[frxDS0.&#34;Время окончания&#34;]"/>
+      <TfrxMemoView Name="frxDS0Информацияозадании" IndexTag="1" AllowVectorExport="True" Left="275,90569" Top="0" Width="442,20501" Height="18,89765" StretchMode="smMaxHeight" DataField="Информация о задании" DataSet="frxDS0" DataSetName="frxDS0" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="15" ParentFont="False" Text="[frxDS0.&#34;Информация о задании&#34;]"/>
+    </TfrxMasterData>
+    <TfrxHeader Name="Header1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Frame.Typ="0" Height="18,89765" Left="0" Top="18,89765" Width="718,1107" ReprintOnNewPage="True">
+      <TfrxMemoView Name="frxDS0Времязапуска1" IndexTag="1" AllowVectorExport="True" Left="0" Top="0" Width="132,28355" Height="18,89765" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="15" ParentFont="False" Text="Время запуска"/>
+      <TfrxMemoView Name="frxDS0Времяокончания1" IndexTag="1" AllowVectorExport="True" Left="132,28355" Top="0" Width="143,62214" Height="18,89765" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="15" ParentFont="False" Text="Время окончания"/>
+      <TfrxMemoView Name="frxDS0Информацияозадании1" IndexTag="1" AllowVectorExport="True" Left="275,90569" Top="0" Width="442,20501" Height="18,89765" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="15" ParentFont="False" Text="Информация о задании"/>
+    </TfrxHeader>
+    <TfrxChild Name="Child1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Frame.Typ="0" Height="18,89765167" Left="0" Top="102,04731" Width="718,1107" AllowSplit="True" Stretched="True" ToNRows="0" ToNRowsMode="rmCount">
+      <TfrxMemoView Name="Memo1" AllowVectorExport="True" Left="8,2E-7" Top="0" Width="718,11070073" Height="18,89765167" StretchMode="smMaxHeight" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="15" ParentFont="False" Text="[CustomFunction('Result', 'DSRunTasks')]"/>
+    </TfrxChild>
+  </TfrxReportPage>
+</TfrxReport>

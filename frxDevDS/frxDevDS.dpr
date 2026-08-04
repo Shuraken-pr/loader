@@ -82,6 +82,7 @@ constructor TDLLFrxDevDS.Create;
 begin
   inherited;
   FDM := TdmFR.Create(nil);
+  dmFR := FDM;
   FList := TObjectList<TfrxDataset>.Create(true);
   FRegistered := False;
 end;
@@ -93,6 +94,7 @@ begin
   FreeAndNil(FList);
   if Assigned(FDM) then
     FreeAndNil(FDM);
+  dmFR := nil;
   inherited;
 end;
 

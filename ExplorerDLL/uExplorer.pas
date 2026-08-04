@@ -16,7 +16,7 @@ uses
   cxTLData, cxVirtualTreeListHelper, dxCore, dxCoreClasses, dmSkins, frxDevDSIntf,
   dxSkinsCore, dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle,
   dxSkinOffice2007Blue, dxSkinOffice2010Silver, dxSkinOffice2013LightGray,
-  dxSkinVS2010;
+  dxSkinVS2010, frxClass, dxBar, dxRibbon, dxRibbonGallery;
 
 type
   TExplorerRecord = class(TVTBaseRecord)
@@ -54,6 +54,11 @@ type
     liExplorer: TdxLayoutItem;
     colValue: TcxTreeListColumn;
     colFullPath: TcxTreeListColumn;
+    btnFastReport: TcxButton;
+    liFastReport: TdxLayoutItem;
+    pmFastReport: TPopupMenu;
+    miFRDesigner: TMenuItem;
+    miFRPreview: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnScanDirClick(Sender: TObject);
@@ -63,6 +68,7 @@ type
       ANode2: TcxTreeListNode; var ACompare: Integer);
     procedure vtvExplorerColumnHeaderClick(Sender: TcxCustomTreeList;
       AColumn: TcxTreeListColumn);
+    procedure miFRDesignerClick(Sender: TObject);
   private
     FDTStartUpdateInfo: TDateTime;
     FTaskCtrl: TResultType;
@@ -70,7 +76,7 @@ type
     FExtList: TStringList;
     FCrit: TCriticalSection;
     FRunTaskFind: IRunTaskFindInDir;
-    FFRIntf: IFrxDevDS;
+    FIntfFR: IFrxDevDS;
     FPathToNode: TDictionary<string, TExplorerRecord>;
     FPathBuffer: TList<string>;
     FDSExplorer: TVTSmartDataSource<TExplorerRecord>;
@@ -79,10 +85,11 @@ type
     procedure FillVstFromBuffer;
     procedure FillLocalDrives;
     procedure UpdateScanInfo(APath: string);
+    function FRCustomFunction(AFuncName: WideString; ASourceName: WideString): variant;
   public
     property CallbackProc: TProc<WideString> read FCallbackProc write FCallbackProc;
     property FindIntf: IRunTaskFindInDir read FRunTaskFind write FRunTaskFind;
-    property FRIntf: IFrxDevDS read FFRIntf write FFRIntf;
+    property FRIntf: IFrxDevDS read FIntfFR write FIntfFR;
   end;
 
 var
@@ -107,6 +114,7 @@ begin
     begin
       FRunTaskFind.Stop(FTaskCtrl);
       FTaskCtrl := nil;
+      liFastReport.Visible := Assigned(FIntfFR) and (FDSExplorer.RootHandle.ChildCount > 0);
       btnScanDir.Caption := 'Сканировать';
       UpdateScanInfo('');
       Exit;
@@ -114,6 +122,7 @@ begin
       else
     begin
       btnScanDir.Caption := 'Прервать';
+      liFastReport.Visible := false;
       FDSExplorer.Clear;
       FPathToNode.Clear;
       FPathBuffer.Clear;
@@ -149,6 +158,7 @@ begin
       begin
         FillVstFromBuffer;
         colFullPath.SortOrder := soAscending;
+        liFastReport.Visible := Assigned(FIntfFR) and (FDSExplorer.RootHandle.ChildCount > 0);
       end);
     end,
     procedure(AMsg: WideString)  //FinishCallback, уведомляем о завершении
@@ -163,6 +173,7 @@ begin
         // Сбрасываем остаток буфера перед сортировкой
         FillVstFromBuffer;
         colFullPath.SortOrder := soAscending;
+        liFastReport.Visible := Assigned(FIntfFR) and (FDSExplorer.RootHandle.ChildCount > 0);
       end);
     end,
     procedure(APath: WideString)  //SyncCallback, добавляем путь в буфер
@@ -285,6 +296,44 @@ begin
   FreeAndNil(FPathBuffer);
   if Assigned(FRunTaskFind) then
     FRunTaskFind := nil;
+end;
+
+function TfrmScanLocalDisks.FRCustomFunction(AFuncName,
+  ASourceName: WideString): variant;
+var
+  DS: TfrxDataSet;
+begin
+  Result := null;
+  if (ASourceName = 'DSExplorer') then
+  begin
+    if Assigned(FIntfFR) then
+    begin
+      DS := FIntfFR.GetDSByName('frxDS0');
+      if AFuncName = 'GetCurrentLevel' then
+      begin
+        if Assigned(DS) and Assigned(FDSExplorer.CalcNode) then
+          Result := FDSExplorer.CalcNode.Level;
+      end
+        else if AFuncName = 'IsFile' then
+      begin
+        if Assigned(DS) and Assigned(FDSExplorer.CalcNode) then
+          Result := FDSExplorer.Obj(FDSExplorer.CalcNode).FIsFile;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmScanLocalDisks.miFRDesignerClick(Sender: TObject);
+begin
+  if Assigned(FIntfFR) then
+  begin
+    FIntfFR.SetCustomFunction(FRCustomFunction);
+    var ReportFile: string := ExtractFilePath(ParamStr(0)) + 'FastReportTemplates\Explorer.fr3';
+    if TMenuItem(Sender).Tag = 1 then
+      FIntfFR.PreviewReport([TVTBaseDataSource<TVTBaseRecord>(FDSExplorer)], [vtvExplorer], ReportFile)
+    else
+      FIntfFR.DesignReport([TVTBaseDataSource<TVTBaseRecord>(FDSExplorer)], [vtvExplorer], ReportFile);
+  end;
 end;
 
 procedure TfrmScanLocalDisks.UpdateScanInfo(APath: string);

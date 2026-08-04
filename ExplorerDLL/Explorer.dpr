@@ -147,7 +147,7 @@ begin
   if FDllManager.IsLoaded('IFrxDevDS') then
   begin
     intf := FDllManager.GetIntf(IFrxDevDS);
-    if Assigned(intf) and Supports(intf, IRunTaskFindInDir, FFRIntf) then
+    if Assigned(intf) and Supports(intf, IFrxDevDS, FFRIntf) then
       FFRIntf.Init;
   end;
 end;

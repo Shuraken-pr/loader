@@ -1,4 +1,4 @@
-SELECT
+﻿SELECT
   t.table_schema,
   t.table_name,
   cols.column_name,

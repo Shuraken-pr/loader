@@ -13,12 +13,15 @@ uses
   intf_dll in '..\..\Common\intf_dll.pas',
   intf_common in '..\..\Common\intf_common.pas',
   intf_dll_manager in '..\..\Common\intf_dll_manager.pas',
+  frxDevDSIntf in '..\..\Common\frxDevDSIntf.pas',
   uConnectionParams in 'uConnectionParams.pas' {frmConnections},
   uDMConn in 'uDMConn.pas' {dmConn: TDataModule},
   uLogData in 'uLogData.pas' {frmLogData},
   cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas',
   dmSkins in '..\CommonModules\dmSkins.pas' {dmSkin: TDataModule},
   intf_skin in '..\..\Common\intf_skin.pas',
+  FireDAC.Moni.Custom.Logger in '..\..\..\Common\FireDAC.Moni.Custom.Logger.pas',
+  FDMoniCustomLoggerHelper in '..\..\..\Common\FDMoniCustomLoggerHelper.pas',
   uSkinHelper in '..\..\Common\uSkinHelper.pas';
 
 {$R *.res}
@@ -30,6 +33,7 @@ type
     FSkin: TdmSkin;
     FSkinName: WideString;
     FNativeStyle: boolean;
+    FIntfFR: IFrxDevDS;
     FDllManager: IDllManager;
   public
     constructor Create;
@@ -67,12 +71,14 @@ begin
   dxInitialize;
   FSkin := TdmSkin.Create(nil);
   FDM := TdmConn.Create(nil);
+  FIntfFR := nil;
 end;
 
 destructor TLogDataImpl.Destroy;
 begin
   if Assigned(FSkin) then
     FreeAndNil(FSkin);
+  FIntfFR := nil;
   FreeAndNil(FDM);
   dxFinalize;
   inherited;
@@ -102,7 +108,23 @@ procedure TLogDataImpl.Run(ACallbackProc: TProc<WideString>; MainAppHandle: HWnd
 var
   AMsg: WideString;
   OldHandle: HWnd;
+  intf: IInterface;
 begin
+  // Загружаем IFrxDevDS
+  if Assigned(FDllManager) and not Assigned(FIntfFR) then
+  begin
+    if not FDllManager.IsLoaded('IFrxDevDS') then
+      FDllManager.Load(DIFrxDevDS, False);
+    if FDllManager.IsLoaded('IFrxDevDS') then
+    begin
+      intf := FDllManager.GetIntf(IFrxDevDS);
+      if Assigned(intf) and Supports(intf, IFrxDevDS, FIntfFR) then
+      begin
+        FIntfFR.Init;
+      end;
+    end;
+  end;
+
   AMsg := '';
   OldHandle := Application.Handle;
   try
@@ -111,7 +133,7 @@ begin
     if TfrmConnections.RunForm(FDM, AMsg) then
     begin
       ACallbackProc('Соединение успешно установлено');
-      TfrmLogData.RunForm(FDM, ACallbackProc, AMsg, FSkinName, FNativeStyle);
+      TfrmLogData.RunForm(FDM, ACallbackProc, AMsg, FSkinName, FNativeStyle, FIntfFR);
     end
     else
     begin

@@ -1,4 +1,4 @@
-CREATE OR REPLACE TRIGGER trg_tablename_fill_log
+﻿CREATE OR REPLACE TRIGGER trg_tablename_fill_log
 AFTER INSERT OR UPDATE OR DELETE ON tablename
 FOR EACH ROW
 BEGIN

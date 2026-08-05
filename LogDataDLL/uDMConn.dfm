@@ -1,4 +1,6 @@
 object dmConn: TdmConn
+  OnCreate = DataModuleCreate
+  OnDestroy = DataModuleDestroy
   Height = 480
   Width = 640
   object ConnLogData: TFDConnection

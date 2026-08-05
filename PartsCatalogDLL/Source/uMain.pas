@@ -150,6 +150,8 @@ begin
 end;
 
 procedure TfrmMain.FormShow(Sender: TObject);
+var
+  intf: IInterface;
 begin
   if not dmDB.PGConn.Connected then
     Application.Terminate;
@@ -159,8 +161,9 @@ begin
 
   if Assigned(FDllManager) then
   begin
-    FIntfFR := IFrxDevDS(FDllManager.GetIntf(IFrxDevDS));
-    brReport.Visible := Assigned(FIntfFR);
+    intf := FDllManager.GetIntf(IFrxDevDS);
+    if Supports(intf, IFrxDevDS, FIntfFR) then
+      brReport.Visible := Assigned(FIntfFR);
   end;
 
   BuildCategoryTree;

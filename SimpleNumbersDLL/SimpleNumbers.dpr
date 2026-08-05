@@ -9,6 +9,7 @@ uses
   intf_dll in '..\..\Common\intf_dll.pas',
   intf_common in '..\..\common\intf_common.pas',
   intf_dll_manager in '..\..\common\intf_dll_manager.pas',
+  frxDevDSIntf in '..\..\Common\frxDevDSIntf.pas',
   main in 'main.pas' {frmSimpleNumbers},
   intf_tasks in '..\..\common\intf_tasks.pas',
   cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas',
@@ -17,8 +18,9 @@ uses
   uSkinHelper in '..\..\Common\uSkinHelper.pas';
 
 type
-  TDllSimpleNumbers = class(TInterfacedObject, IDLLIntf, IDllIntfRun, ISimpleNumbers, ISkinAware)
+  TDllSimpleNumbers = class(TInterfacedObject, IDLLIntf, IDllIntfRun, IUsesDllManager, ISimpleNumbers, ISkinAware)
   private
+    FDllManager: IDllManager;
     FFrmSM: TfrmSimpleNumbers;
     FSkin: TdmSkin;
   public
@@ -28,6 +30,8 @@ type
     procedure Run(ACallbackProc: TProc<WideString>; MainAppHandle: HWnd); safecall;
     procedure SilentRun(AMaxNum: integer; ACallbackProc: TProc<WideString>); safecall;
     procedure ApplySkin(const ASkinName: WideString; ANativeStyle: Boolean = False); safecall;
+    // IUsesDllManager
+    procedure SetDllManager(AMgr: IDllManager); safecall;
     constructor Create;
     destructor Destroy; override;
   end;
@@ -39,15 +43,18 @@ type
 procedure TDllSimpleNumbers.Run(ACallbackProc: TProc<WideString>; MainAppHandle: HWnd);
 begin
   Application.Handle := MainAppHandle;
-  FFrmSM.CallbackProc := ACallbackProc;
-  FFrmSM.show;
+  TfrmSimpleNumbers.RunForm(0, ACallbackProc, FDllManager, false);
+end;
+
+procedure TDllSimpleNumbers.SetDllManager(AMgr: IDllManager);
+begin
+  FDllManager := AMgr;
 end;
 
 procedure TDllSimpleNumbers.SilentRun(AMaxNum: integer;
   ACallbackProc: TProc<WideString>);
 begin
-  FFrmSM.CallbackProc := ACallbackProc;
-  FFrmSM.Run(AMaxNum, true);
+  TfrmSimpleNumbers.RunForm(AMaxNum, ACallbackProc, FDllManager, true);
 end;
 
 procedure TDllSimpleNumbers.ApplySkin(const ASkinName: WideString;

@@ -298,6 +298,7 @@ object frmSimpleNumbers: TfrmSimpleNumbers
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnShow = FormShow
   TextHeight = 15
   object lcMain: TdxLayoutControl
     Left = 0
@@ -373,7 +374,7 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       OptionsView.GridLines = tlglBoth
       OptionsView.ShowRoot = False
       ScrollbarAnnotations.CustomAnnotations = <>
-      TabOrder = 2
+      TabOrder = 3
       object colNumberT1: TcxTreeListColumn
         Width = 389
         Position.ColIndex = 0
@@ -401,7 +402,7 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       OptionsView.GridLines = tlglBoth
       OptionsView.ShowRoot = False
       ScrollbarAnnotations.CustomAnnotations = <>
-      TabOrder = 3
+      TabOrder = 4
       object colNumberT2: TcxTreeListColumn
         Width = 456
         Position.ColIndex = 0
@@ -410,6 +411,17 @@ object frmSimpleNumbers: TfrmSimpleNumbers
         Summary.FooterSummaryItems = <>
         Summary.GroupFooterSummaryItems = <>
       end
+    end
+    object btnFastReport: TcxButton
+      Left = 519
+      Top = 25
+      Width = 75
+      Height = 25
+      Caption = 'Fast Report'
+      DropDownMenu = pmFastReport
+      Enabled = False
+      Kind = cxbkDropDown
+      TabOrder = 2
     end
     object lcMainGroup_Root: TdxLayoutGroup
       AlignHorz = ahClient
@@ -422,7 +434,7 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       Parent = lcMainGroup_Root
       AlignHorz = ahClient
       AlignVert = avTop
-      ItemIndex = 1
+      ItemIndex = 2
       LayoutDirection = ldHorizontal
       Index = 0
     end
@@ -439,6 +451,8 @@ object frmSimpleNumbers: TfrmSimpleNumbers
     end
     object liRun: TdxLayoutItem
       Parent = lgMain
+      AlignHorz = ahLeft
+      AlignVert = avClient
       CaptionOptions.Text = 'cxButton1'
       CaptionOptions.Visible = False
       Control = btnRun
@@ -452,6 +466,7 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       AlignHorz = ahClient
       AlignVert = avClient
       CaptionOptions.Text = #1056#1077#1079#1091#1083#1100#1090#1072#1090' '#1088#1072#1073#1086#1090#1099
+      ItemIndex = 1
       LayoutDirection = ldHorizontal
       Index = 1
     end
@@ -467,7 +482,7 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       ControlOptions.ShowBorder = False
       Index = 0
     end
-    object dxLayoutItem1: TdxLayoutItem
+    object liThread2: TdxLayoutItem
       Parent = lgLog
       AlignHorz = ahClient
       AlignVert = avClient
@@ -478,6 +493,33 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       ControlOptions.OriginalWidth = 250
       ControlOptions.ShowBorder = False
       Index = 1
+    end
+    object liFastReport: TdxLayoutItem
+      Parent = lgMain
+      AlignHorz = ahLeft
+      AlignVert = avClient
+      Visible = False
+      CaptionOptions.Text = 'cxButton1'
+      CaptionOptions.Visible = False
+      Control = btnFastReport
+      ControlOptions.OriginalHeight = 25
+      ControlOptions.OriginalWidth = 75
+      ControlOptions.ShowBorder = False
+      Enabled = False
+      Index = 2
+    end
+  end
+  object pmFastReport: TPopupMenu
+    Left = 500
+    Top = 184
+    object miFRDesigner: TMenuItem
+      Caption = #1044#1080#1079#1072#1081#1085#1077#1088' '#1086#1090#1095#1105#1090#1086#1074
+      OnClick = miFRDesignerClick
+    end
+    object miFRPreview: TMenuItem
+      Tag = 1
+      Caption = #1055#1088#1077#1076#1074#1072#1088#1080#1090#1077#1083#1100#1085#1099#1081' '#1087#1088#1086#1089#1084#1086#1090#1088
+      OnClick = miFRDesignerClick
     end
   end
 end

@@ -8,7 +8,10 @@ uses
   cxLookAndFeels, cxLookAndFeelPainters, dxLayoutcxEditAdapters, cxContainer,
   cxEdit, dxLayoutContainer, cxTextEdit, cxMaskEdit, cxDropDownEdit, cxClasses,
   dxLayoutControl, FireDAC.Phys.PGDef, FireDAC.Phys.MSSQLDef, FireDAC.Phys.OracleDef,
-  dxLayoutControlAdapters, Vcl.Menus, Vcl.StdCtrls, cxButtons, dmSkins;
+  dxLayoutControlAdapters, Vcl.Menus, Vcl.StdCtrls, cxButtons, dmSkins,
+  dxSkinsCore, dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle,
+  dxSkinOffice2007Blue, dxSkinOffice2010Silver, dxSkinOffice2013LightGray,
+  dxSkinVS2010;
 
 type
  TfrmConnections = class(TForm)

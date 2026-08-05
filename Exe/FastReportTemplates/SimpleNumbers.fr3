@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<TfrxReport Version="2023.2" DotMatrixReport="False" IniFile="\Software\Fast Reports" PreviewOptions.Buttons="167935" PreviewOptions.Zoom="1" PrintOptions.Printer="Default" PrintOptions.PrintOnSheet="0" ReportOptions.CreateDate="46239,5979941088" ReportOptions.Description.Text="" ReportOptions.LastChange="46239,7447198958" ScriptLanguage="PascalScript" ScriptText.Text="procedure Page1OnBeforePrint(Sender: TfrxComponent);&#13;&#10;begin&#13;&#10;  MasterData1.RowCount := CustomFunction('CountOfSplitAllValues', '2000');&#13;&#10;end;&#13;&#10;&#13;&#10;begin&#13;&#10;&#13;&#10;end.">
+  <TfrxDataPage Name="Data" HGuides.Text="" VGuides.Text="" Height="1000" Left="0" Top="0" Width="1000"/>
+  <TfrxReportPage Name="Page1" HGuides.Text="" VGuides.Text="" PaperWidth="210" PaperHeight="297" PaperSize="9" LeftMargin="10" RightMargin="10" TopMargin="10" BottomMargin="10" ColumnWidth="0" ColumnPositions.Text="" Frame.Typ="0" MirrorMode="0" OnBeforePrint="Page1OnBeforePrint">
+    <TfrxMasterData Name="MasterData1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Frame.Typ="0" Height="18,89764977" Left="0" Top="60,47248" Width="718,1107" OnBeforePrint="MasterData1OnBeforePrint" AllowSplit="True" ColumnWidth="0" ColumnGap="0" RowCount="1" Stretched="True">
+      <TfrxMemoView Name="Memo1" AllowVectorExport="False" Left="0" Top="0" Width="359,05534883" Height="18,89764977" StretchMode="smMaxHeight" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="15" ParentFont="False" Wysiwyg="False" Text="[IIF(&#60;line&#62; = 1, 'Всего: ' + IntToStr(CustomFunction('TotalCount','List1')) + #13#10, '')]Значения: [CustomFunction('GetPartValues','List1')] ">
+        <Formats>
+          <item/>
+          <item/>
+        </Formats>
+      </TfrxMemoView>
+      <TfrxMemoView Name="Memo2" AllowVectorExport="False" Left="359,05535" Top="0" Width="359,05534883" Height="18,89764977" StretchMode="smMaxHeight" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="15" ParentFont="False" Wysiwyg="False" Text="[IIF(&#60;line&#62; = 1, 'Всего: ' + IntToStr(CustomFunction('TotalCount','List2')) + #13#10, '')]Значения: [CustomFunction('GetPartValues','List2')] ">
+        <Formats>
+          <item/>
+          <item/>
+        </Formats>
+      </TfrxMemoView>
+    </TfrxMasterData>
+    <TfrxHeader Name="Header1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Frame.Typ="0" Height="18,89764977" Left="0" Top="18,89765" Width="718,1107" ReprintOnNewPage="True">
+      <TfrxMemoView Name="Memo3" Align="baLeft" AllowVectorExport="True" Left="0" Top="0" Width="359,05535264" Height="18,89764977" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="15" ParentFont="False" Text="Простые числа первого потока"/>
+      <TfrxMemoView Name="Memo4" Align="baLeft" AllowVectorExport="True" Left="359,05535264" Top="0" Width="359,05535264" Height="18,89764977" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="15" ParentFont="False" Text="Простые числа второго потока"/>
+    </TfrxHeader>
+  </TfrxReportPage>
+</TfrxReport>

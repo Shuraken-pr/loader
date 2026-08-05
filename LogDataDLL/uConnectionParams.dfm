@@ -55,6 +55,7 @@ object frmConnections: TfrmConnections
     DB6D393837000000000000000000006D39381C121C000000000000000000FE07
     0000F8030000C000000000000000000000000003000080030000800300008003
     00008003000080030000810300008103000081FF000081FF000081FF0000}
+  Position = poScreenCenter
   TextHeight = 15
   object lcConnectionParams: TdxLayoutControl
     Left = 0
@@ -123,7 +124,6 @@ object frmConnections: TfrmConnections
       Style.HotTrack = False
       Style.TransparentBorder = False
       TabOrder = 5
-      Text = 'PGAdmin'
       Width = 243
     end
     object btnOk: TcxButton

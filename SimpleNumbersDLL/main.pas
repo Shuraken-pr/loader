@@ -117,7 +117,7 @@ begin
   begin
     vtl1 := vtlThread1;
     vtl2 := vtlThread2;
-    vtl2.Clear;
+    vtl1.Clear;
     vtl2.Clear;
   end;
 

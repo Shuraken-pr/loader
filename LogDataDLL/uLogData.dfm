@@ -55,6 +55,7 @@ object frmLogData: TfrmLogData
     F1F0F5FEFEFDF8F1E4DAD9F000000000E3E3EFE3EFEFE3E3DBE3E3DB0000C003
     0000C0030000C0030000C0030000C0030000C0030000C0030000C0030000C003
     0000C0030000C0030000C0030000C0030000C0030000C0030000C0030000}
+  Position = poScreenCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
@@ -71,7 +72,6 @@ object frmLogData: TfrmLogData
     Contexts = <>
     TabOrder = 0
     TabStop = False
-    ExplicitWidth = 624
     object rtAll: TdxRibbonTab
       Active = True
       Caption = #1055#1072#1088#1072#1084#1077#1090#1088#1099' '#1080' '#1076#1077#1081#1089#1090#1074#1080#1103
@@ -102,17 +102,23 @@ object frmLogData: TfrmLogData
     Bands = <
       item
       end>
+    Filter.Active = True
+    FilterBox.Visible = fvNonEmpty
+    Filtering.ExpressionEditing = True
+    Filtering.ColumnPopupMode = fpmClassic
     Navigator.Buttons.CustomButtons = <>
     OptionsBehavior.MultiSort = False
     OptionsBehavior.Sorting = False
+    OptionsCustomizing.ColumnFiltering = bTrue
     OptionsData.Deleting = False
     OptionsView.CellAutoHeight = True
     OptionsView.CellEndEllipsis = True
     OptionsView.CheckGroups = True
     OptionsView.GridLines = tlglBoth
+    OptionsView.HeaderFilterButtonShowMode = fbmButton
+    OptionsView.ShowColumnFilterButtons = sfbWhenSelected
     ScrollbarAnnotations.CustomAnnotations = <>
     TabOrder = 1
-    ExplicitWidth = 624
     object colCheck: TcxTreeListColumn
       PropertiesClassName = 'TcxCheckBoxProperties'
       Properties.ImmediatePost = True
@@ -204,7 +210,7 @@ object frmLogData: TfrmLogData
           ItemName = 'dxBarLargeButton1'
         end>
       OneOnRow = False
-      Row = 1
+      Row = 0
       UseOwnFont = False
       Visible = True
       WholeRow = False
@@ -228,7 +234,7 @@ object frmLogData: TfrmLogData
           ItemName = 'btnDel'
         end>
       OneOnRow = False
-      Row = 1
+      Row = 0
       UseOwnFont = False
       Visible = True
       WholeRow = False
@@ -252,7 +258,7 @@ object frmLogData: TfrmLogData
           ItemName = 'btnCollapseAll'
         end>
       OneOnRow = False
-      Row = 1
+      Row = 0
       UseOwnFont = False
       Visible = True
       WholeRow = False
@@ -271,7 +277,7 @@ object frmLogData: TfrmLogData
           Visible = True
           ItemName = 'btnFastReport'
         end>
-      OneOnRow = True
+      OneOnRow = False
       Row = 0
       UseOwnFont = False
       Visible = True
@@ -1262,6 +1268,7 @@ object frmLogData: TfrmLogData
         Visible = True
         ItemName = 'btnFRPreview'
       end>
+    Ribbon = rbActions
     UseOwnFont = False
     Left = 220
     Top = 285

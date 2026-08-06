@@ -80,7 +80,7 @@ function IfThen(AValue: Boolean; const ATrue: string; const AFalse: string): str
 
 implementation
 
-uses Winapi.Windows, Winapi.Messages, Vcl.Forms, PGSettings;
+uses Winapi.Windows, Winapi.Messages, Vcl.Forms, uDBConnectionSettings, uMultiDBSettingsForm;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -95,11 +95,34 @@ begin
 end;
 
 procedure TdmDB.Connect;
+var
+  Settings: TDBConnectionSettings;
+  NeedShowForm: boolean;
+  ErrMsg: string;
+  SettingsFile: string;
 begin
   if not PGConn.Connected then
   begin
-    if TfrSettings.Execute(PGConn) then
+    Settings := TDBConnectionSettings.Create;
+    try
+      SettingsFile := ExtractFilePath(Application.ExeName) + 'PartsCatalog.xml';
+      if FileExists(SettingsFile) then
+        Settings.LoadFromFile(SettingsFile);
+      NeedShowForm := not (Settings.IsValid(ErrMsg) and Settings.TestConnection(ErrMsg));
+      if NeedShowForm then
+      begin
+        Settings.DBType := dbPostgreSQL;
+        Settings.ShowDBTypeSelector := false;
+        if TfrmMultiDBSettings.Execute(Settings) then
+          Settings.SaveToFile('PartsCatalog.xml')
+        else
+          exit;
+      end;
+      Settings.ApplyToConnection(PGConn);
       PGConn.Connected := True;
+    finally
+      FreeAndNil(Settings);
+    end;
   end;
 end;
 

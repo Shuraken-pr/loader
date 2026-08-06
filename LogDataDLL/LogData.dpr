@@ -14,7 +14,6 @@ uses
   intf_common in '..\..\Common\intf_common.pas',
   intf_dll_manager in '..\..\Common\intf_dll_manager.pas',
   frxDevDSIntf in '..\..\Common\frxDevDSIntf.pas',
-  uConnectionParams in 'uConnectionParams.pas' {frmConnections},
   uDMConn in 'uDMConn.pas' {dmConn: TDataModule},
   uLogData in 'uLogData.pas' {frmLogData},
   cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas',
@@ -22,7 +21,9 @@ uses
   intf_skin in '..\..\Common\intf_skin.pas',
   FireDAC.Moni.Custom.Logger in '..\..\..\Common\FireDAC.Moni.Custom.Logger.pas',
   FDMoniCustomLoggerHelper in '..\..\..\Common\FDMoniCustomLoggerHelper.pas',
-  uSkinHelper in '..\..\Common\uSkinHelper.pas';
+  uSkinHelper in '..\..\Common\uSkinHelper.pas',
+  uDBConnectionSettings in '..\..\..\Common\uDBConnectionSettings.pas',
+  uMultiDBSettingsForm in '..\..\..\Common\uMultiDBSettingsForm.pas' {frmMultiDBSettings};
 
 {$R *.res}
 
@@ -130,7 +131,7 @@ begin
   try
     Application.Handle := MainAppHandle;
 
-    if TfrmConnections.RunForm(FDM, AMsg) then
+    if FDM.Connect(AMsg) then
     begin
       ACallbackProc('Соединение успешно установлено');
       TfrmLogData.RunForm(FDM, ACallbackProc, AMsg, FSkinName, FNativeStyle, FIntfFR);

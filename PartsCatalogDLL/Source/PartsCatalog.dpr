@@ -28,7 +28,8 @@ uses
   uSkinHelper in '..\..\..\Common\uSkinHelper.pas',
   FireDAC.Moni.Custom.Logger in '..\..\..\Common\FireDAC.Moni.Custom.Logger.pas',
   FDMoniCustomLoggerHelper in '..\..\..\Common\FDMoniCustomLoggerHelper.pas',
-  PGSettings in '..\..\..\Common\PGSettings.pas' {frSettings};
+  uDBConnectionSettings in '..\..\..\Common\uDBConnectionSettings.pas',
+  uMultiDBSettingsForm in '..\..\..\Common\uMultiDBSettingsForm.pas' {frmMultiDBSettings};
 
 {$R *.res}
 

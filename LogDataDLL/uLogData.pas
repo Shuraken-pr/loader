@@ -12,7 +12,9 @@ uses
   System.StrUtils, cxVirtualTreeListHelper, cxFilter, cxCustomData, cxStyles,
   dxScrollbarAnnotations, cxTL, cxCheckBox, cxTextEdit, cxTLdxBarBuiltInMenu,
   cxInplaceContainer, cxTLData, dxLayoutLookAndFeels, dxSkinsdxRibbonPainter,
-  uSkinHelper, frxDevDSIntf, frxClass, dxRibbonGallery;
+  uSkinHelper, frxDevDSIntf, frxClass, dxRibbonGallery, dxSkinsCore,
+  dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle, dxSkinOffice2007Blue,
+  dxSkinOffice2010Silver, dxSkinOffice2013LightGray, dxSkinVS2010;
 
 {
 Таблица
@@ -146,7 +148,7 @@ var
 implementation
 
 uses
-  uConnectionParams;
+  uConnectionParams, uDBConnectionSettings, uMultiDBSettingsForm;
 
 {$R *.dfm}
 
@@ -239,7 +241,7 @@ procedure TfrmLogData.acReconnectExecute(Sender: TObject);
 var
   AMsg: WideString;
 begin
-  if TfrmConnections.RunForm(FDM, AMsg) then
+  if FDM.Connect(AMsg, true) then
   begin
     FCallback('Переподключение к БД выполнено');
     SetDM;

@@ -204,8 +204,9 @@
         <DCCReference Include="..\..\..\Common\uSkinHelper.pas"/>
         <DCCReference Include="..\..\..\Common\FireDAC.Moni.Custom.Logger.pas"/>
         <DCCReference Include="..\..\..\Common\FDMoniCustomLoggerHelper.pas"/>
-        <DCCReference Include="..\..\..\Common\PGSettings.pas">
-            <Form>frSettings</Form>
+        <DCCReference Include="..\..\..\Common\uDBConnectionSettings.pas"/>
+        <DCCReference Include="..\..\..\Common\uMultiDBSettingsForm.pas">
+            <Form>frmMultiDBSettings</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">

@@ -73,6 +73,17 @@ type
     /// <summary>Сбросить кэш и счётчики.</summary>
     procedure Clear;
 
+    /// <summary>
+    /// Создать запись-плейсхолдер для незагруженной страницы.
+    /// Инициирует загрузку страницы.
+    /// </summary>
+    function CreatePlaceholderRecord(NodeIndex: Int64): T;
+
+    /// <summary>
+    /// Добавить запись в начало списка (для real-time обновлений).
+    /// </summary>
+    procedure PrependRecord(ARec: T);
+
     property TotalCount: Int64 read FTotalCount;
     property PageSize: Integer read FPageSize;
     property LastError: string read FLastError;
@@ -346,6 +357,35 @@ var
 begin
   for Idx in PageIndices do
     RequestPage(Idx);
+end;
+
+function TVirtualDataCache<T>.CreatePlaceholderRecord(NodeIndex: Int64): T;
+var
+  PageIdx: Integer;
+begin
+  // Создаём пустую запись-плейсхолдер для незагруженных страниц
+  Result := T.Create;
+
+  // Инициируем загрузку страницы
+  PageIdx := NodeIndex div FPageSize;
+  RequestPage(PageIdx);
+  RequestPage(PageIdx + 1);
+end;
+
+procedure TVirtualDataCache<T>.PrependRecord(ARec: T);
+begin
+  FCriticalSection.Enter;
+  try
+    // Добавляем запись в начало (специальная страница с индексом -1)
+    if not FPages.ContainsKey(-1) then
+      FPages.Add(-1, TObjectList<T>.Create(True));
+    FPages[-1].Insert(0, ARec);
+
+    // Увеличиваем общий счётчик
+    Inc(FTotalCount);
+  finally
+    FCriticalSection.Leave;
+  end;
 end;
 
 end.

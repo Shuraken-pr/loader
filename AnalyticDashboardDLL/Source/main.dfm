@@ -61,130 +61,148 @@ object frmMain: TfrmMain
     Align = alClient
     TabOrder = 2
     LayoutLookAndFeel = dmSkin.dxLayoutSkinLookAndFeel
-    object vstEvents: TVirtualStringTree
-      Left = 27
-      Top = 54
-      Width = 958
-      Height = 286
-      BevelInner = bvNone
-      BevelOuter = bvSpace
-      BevelKind = bkFlat
-      BorderStyle = bsNone
-      DefaultNodeHeight = 19
-      Header.AutoSizeIndex = 0
-      Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
-      LineMode = lmBands
-      LineStyle = lsSolid
-      TabOrder = 0
-      TreeOptions.MiscOptions = [toAcceptOLEDrop, toFullRepaintOnResize, toGridExtensions, toInitOnSave, toToggleOnDblClick, toWheelPanning, toVariableNodeHeight, toNodeHeightResize]
-      TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
-      TreeOptions.SelectionOptions = [toFullRowSelect, toSelectNextNodeOnRemoval]
-      OnFreeNode = vstEventsFreeNode
-      OnGetText = vstEventsGetText
-      Touch.InteractiveGestures = [igPan, igPressAndTap]
-      Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-      Columns = <
-        item
-          Position = 0
-          Text = 'Id'
-          Width = 100
-        end
-        item
-          Position = 1
-          Text = #1055#1086#1083#1100#1079#1086#1074#1072#1090#1077#1083#1100
-          Width = 100
-        end
-        item
-          Position = 2
-          Text = #1044#1072#1090#1072' '#1080#1079#1084#1077#1085#1077#1085#1080#1103
-          Width = 100
-        end
-        item
-          Position = 3
-          Text = #1058#1080#1087' '#1089#1086#1073#1099#1090#1080#1103
-          Width = 100
-        end
-        item
-          Position = 4
-          Text = 'Ip'
-          Width = 150
-        end
-        item
-          Position = 5
-          Text = #1048#1089#1090#1086#1095#1085#1080#1082
-          Width = 150
-        end
-        item
-          Position = 6
-          Text = #1057#1090#1072#1090#1091#1089
-          Width = 100
-        end
-        item
-          Position = 7
-          Text = #1047#1072#1076#1077#1088#1078#1082#1072' ('#1084#1089')'
-          Width = 100
-        end>
-    end
-    object vstEventsStats: TVirtualStringTree
+    object vtlEventsStats: TcxVirtualTreeList
       Left = 10000
       Top = 10000
-      Width = 744
-      Height = 268
-      BevelInner = bvNone
-      BevelOuter = bvSpace
-      BevelKind = bkFlat
-      BorderStyle = bsNone
-      DefaultNodeHeight = 19
-      Header.AutoSizeIndex = -1
-      Header.MainColumn = 1
-      Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
-      LineMode = lmBands
-      LineStyle = lsSolid
-      TabOrder = 1
-      TreeOptions.MiscOptions = [toAcceptOLEDrop, toFullRepaintOnResize, toGridExtensions, toInitOnSave, toToggleOnDblClick, toWheelPanning, toVariableNodeHeight, toNodeHeightResize]
-      TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
-      TreeOptions.SelectionOptions = [toFullRowSelect, toSelectNextNodeOnRemoval]
-      Visible = False
-      OnFreeNode = vstEventsStatsFreeNode
-      OnGetText = vstEventsStatsGetText
-      Touch.InteractiveGestures = [igPan, igPressAndTap]
-      Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-      Columns = <
+      Width = 960
+      Height = 288
+      Bands = <
         item
-          Position = 0
-          Text = 'Hour'
-          Width = 120
-        end
-        item
-          Position = 1
-          Text = 'Source'
-          Width = 70
-        end
-        item
-          Position = 2
-          Text = 'Event count'
-          Width = 100
-        end
-        item
-          Position = 3
-          Text = 'avg_latency'
-          Width = 100
-        end
-        item
-          Position = 4
-          Text = 'latency trend'
-          Width = 100
-        end
-        item
-          Position = 5
-          Text = 'grouwth pct'
-          Width = 100
-        end
-        item
-          Position = 6
-          Text = 'all events'
-          Width = 100
         end>
+      Navigator.Buttons.CustomButtons = <>
+      OptionsBehavior.ImmediateEditor = False
+      OptionsBehavior.MultiSort = False
+      OptionsBehavior.Sorting = False
+      OptionsData.Editing = False
+      OptionsData.Deleting = False
+      OptionsView.GridLines = tlglBoth
+      OptionsView.ShowRoot = False
+      OptionsView.TreeLineStyle = tllsSolid
+      ScrollbarAnnotations.CustomAnnotations = <>
+      TabOrder = 1
+      Visible = False
+      object vtlEventsStatsHour: TcxTreeListColumn
+        Caption.Text = 'Hour'
+        Width = 100
+        Position.ColIndex = 0
+        Position.RowIndex = 0
+        Position.BandIndex = 0
+        Summary.FooterSummaryItems = <>
+        Summary.GroupFooterSummaryItems = <>
+      end
+      object vtlEventsStatsSource: TcxTreeListColumn
+        Caption.Text = 'Source'
+        Width = 100
+        Position.ColIndex = 1
+        Position.RowIndex = 0
+        Position.BandIndex = 0
+        Summary.FooterSummaryItems = <>
+        Summary.GroupFooterSummaryItems = <>
+      end
+      object vtlEventsStatsEventCount: TcxTreeListColumn
+        Caption.Text = 'Event count'
+        Width = 100
+        Position.ColIndex = 2
+        Position.RowIndex = 0
+        Position.BandIndex = 0
+        Summary.FooterSummaryItems = <>
+        Summary.GroupFooterSummaryItems = <>
+      end
+      object vtlEventsStatsAvg_latency: TcxTreeListColumn
+        Caption.Text = 'Avg_latency'
+        Width = 100
+        Position.ColIndex = 3
+        Position.RowIndex = 0
+        Position.BandIndex = 0
+        Summary.FooterSummaryItems = <>
+        Summary.GroupFooterSummaryItems = <>
+      end
+      object vtlEventsStatslatencyTrend: TcxTreeListColumn
+        Caption.Text = 'latency trend'
+        Width = 100
+        Position.ColIndex = 4
+        Position.RowIndex = 0
+        Position.BandIndex = 0
+        Summary.FooterSummaryItems = <>
+        Summary.GroupFooterSummaryItems = <>
+      end
+      object vtlEventsStatsGrouwthPct: TcxTreeListColumn
+        Caption.Text = 'grouwth pct'
+        Width = 100
+        Position.ColIndex = 5
+        Position.RowIndex = 0
+        Position.BandIndex = 0
+        Summary.FooterSummaryItems = <>
+        Summary.GroupFooterSummaryItems = <>
+      end
+      object vtlEventsStatsAllEvents: TcxTreeListColumn
+        Caption.Text = 'all events'
+        Width = 100
+        Position.ColIndex = 6
+        Position.RowIndex = 0
+        Position.BandIndex = 0
+        Summary.FooterSummaryItems = <>
+        Summary.GroupFooterSummaryItems = <>
+      end
+    end
+    object grEvents: TcxGrid
+      Left = 26
+      Top = 53
+      Width = 960
+      Height = 288
+      TabOrder = 0
+      object tvEvents: TcxGridTableView
+        Navigator.Buttons.CustomButtons = <>
+        ScrollbarAnnotations.CustomAnnotations = <>
+        DataController.Summary.DefaultGroupSummaryItems = <>
+        DataController.Summary.FooterSummaryItems = <>
+        DataController.Summary.SummaryGroups = <>
+        OptionsBehavior.ImmediateEditor = False
+        OptionsCustomize.ColumnFiltering = False
+        OptionsCustomize.ColumnGrouping = False
+        OptionsCustomize.ColumnMoving = False
+        OptionsCustomize.ColumnSorting = False
+        OptionsCustomize.ColumnsQuickCustomizationShowCommands = False
+        OptionsData.Deleting = False
+        OptionsData.DeletingConfirmation = False
+        OptionsData.Editing = False
+        OptionsData.Inserting = False
+        OptionsView.CellAutoHeight = True
+        OptionsView.GroupByBox = False
+        object tvcId: TcxGridColumn
+          Caption = 'Id'
+        end
+        object tvcUserName: TcxGridColumn
+          Caption = #1055#1086#1083#1100#1079#1086#1074#1072#1090#1077#1083#1100
+          Width = 109
+        end
+        object tvcDTChange: TcxGridColumn
+          Caption = #1044#1072#1090#1072' '#1080#1079#1084#1077#1085#1077#1085#1080#1103
+          Width = 119
+        end
+        object tvcEventType: TcxGridColumn
+          Caption = #1058#1080#1087' '#1089#1086#1073#1099#1090#1080#1103
+          Width = 94
+        end
+        object tvcIp: TcxGridColumn
+          Caption = 'Ip'
+          Width = 99
+        end
+        object tvcSource: TcxGridColumn
+          Caption = #1048#1089#1090#1086#1095#1085#1080#1082
+          Width = 84
+        end
+        object tvcStatus: TcxGridColumn
+          Caption = #1057#1090#1072#1090#1091#1089
+        end
+        object tvcLatency: TcxGridColumn
+          Caption = #1047#1072#1076#1077#1088#1078#1082#1072' ('#1084#1089')'
+          Width = 143
+        end
+      end
+      object glEvents: TcxGridLevel
+        GridView = tvEvents
+      end
     end
     object lcMainGroup_Root: TdxLayoutGroup
       AlignHorz = ahClient
@@ -206,20 +224,24 @@ object frmMain: TfrmMain
       CaptionOptions.Text = #1057#1090#1072#1090#1080#1089#1090#1080#1082#1072' '#1087#1086' '#1089#1086#1073#1099#1090#1080#1103#1084
       Index = 1
     end
-    object liVSTEvents: TdxLayoutItem
+    object liEventsStats: TdxLayoutItem
+      Parent = lgEventsStats
+      AlignHorz = ahClient
+      AlignVert = avClient
+      Control = vtlEventsStats
+      ControlOptions.OriginalHeight = 150
+      ControlOptions.OriginalWidth = 250
+      ControlOptions.ShowBorder = False
+      Index = 0
+    end
+    object liEvents: TdxLayoutItem
       Parent = lgEventsInfo
       AlignHorz = ahClient
       AlignVert = avClient
-      Control = vstEvents
-      ControlOptions.OriginalHeight = 283
-      ControlOptions.OriginalWidth = 205
-      Index = 0
-    end
-    object livstEventsStats: TdxLayoutItem
-      Parent = lgEventsStats
-      Control = vstEventsStats
-      ControlOptions.OriginalHeight = 268
-      ControlOptions.OriginalWidth = 744
+      Control = grEvents
+      ControlOptions.OriginalHeight = 200
+      ControlOptions.OriginalWidth = 250
+      ControlOptions.ShowBorder = False
       Index = 0
     end
   end
@@ -321,6 +343,7 @@ object frmMain: TfrmMain
     object bFastReport: TdxBar
       Caption = 'Fast Report'
       CaptionButtons = <>
+      DockedDockingStyle = dsTop
       DockedLeft = 398
       DockedTop = 0
       FloatLeft = 1044

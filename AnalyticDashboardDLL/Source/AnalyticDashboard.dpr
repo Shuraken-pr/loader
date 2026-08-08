@@ -22,7 +22,8 @@ uses
   main in 'main.pas' {frmMain},
   RealTimePoller in 'RealTimePoller.pas',
   uConnectionSemaphore in 'uConnectionSemaphore.pas',
-  VirtualDataCache in 'VirtualDataCache.pas';
+  VirtualDataCache in 'VirtualDataCache.pas',
+  VirtualEventsDataSource in 'VirtualEventsDataSource.pas';
 
 {$R *.res}
 

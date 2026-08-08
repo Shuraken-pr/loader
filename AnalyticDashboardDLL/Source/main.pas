@@ -10,9 +10,9 @@ uses
   FireDAC.DApt.Intf, FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys.PG,
   FireDAC.Phys.PGDef, FireDAC.VCLUI.Wait, Data.DB, FireDAC.Comp.DataSet,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters, dxCore,
-  dxRibbonSkins, dxRibbonCustomizationForm, VirtualTrees.BaseAncestorVCL,
-  VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees, VirtualTrees.Types, cxClasses,
-  dxBar, dxRibbon, vstHelper, Threading, SyncObjs, cxContainer, cxEdit,
+  dxRibbonSkins, dxRibbonCustomizationForm,
+  cxClasses,
+  dxBar, dxRibbon, Threading, SyncObjs, cxContainer, cxEdit,
   cxProgressBar, FireDAC.DApt, System.Generics.Collections, Vcl.ComCtrls, RealTimePoller,
   dxLayoutContainer, dxLayoutControl, cxPC, dxDockControl, dxDockPanel,
   dxLayoutcxEditAdapters, cxTextEdit, cxMaskEdit, cxSpinEdit, Vcl.StdCtrls,
@@ -22,61 +22,17 @@ uses
   uDBConnectionSettings, uMultiDBSettingsForm, dxRibbonGallery,
   System.ImageList, Vcl.ImgList, cxImageList, dmSkins, dxSkinsCore,
   dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle, dxSkinOffice2007Blue,
-  dxSkinOffice2010Silver, dxSkinOffice2013LightGray, dxSkinVS2010, uSkinHelper;
+  dxSkinOffice2010Silver, dxSkinOffice2013LightGray, dxSkinVS2010, uSkinHelper,
+  cxFilter, cxCustomData, cxStyles, dxScrollbarAnnotations, cxTL,
+  cxTLdxBarBuiltInMenu, cxInplaceContainer, cxTLData, cxVirtualTreeListHelper,
+  VirtualEventsDataSource;
 
 type
-  TEventRec = class(TBaseRecord)
-  private
-    FOccured: TDateTime;
-    FSource: string;
-    FId: integer;
-    FStatus: string;
-    FLatencyMS: string;
-    FIp: string;
-    FUserName: string;
-    FEventType: string;
-  public
-    property Id: integer read FId write FId;
-    property UserName: string read FUserName write FUserName;
-    property EventType: string read FEventType write FEventType;
-    property Occured: TDateTime read FOccured write FOccured;
-    property Ip: string read FIp write FIp;
-    property Source: string read FSource write FSource;
-    property Status: string read FStatus write FStatus;
-    property LatencyMS: string read FLatencyMS write FLatencyMS;
-    procedure CopyFromSource(ASource: TEventRec);
-    constructor Create; override;
-    destructor Destroy; override;
-  end;
-
-  TEventStatsRec = class(TBaseRecord)
-  private
-    FEventCount: Integer;
-    FAllEvents: Integer;
-    FSource: string;
-    FAvgLatency: Extended;
-    FLatencyTrend: Extended;
-    FHour: TDateTime;
-    FGrowthPct: Extended;
-  public
-    property Hour: TDateTime read FHour write FHour;
-    property Source: string read FSource write FSource;
-    property EventCount: Integer read FEventCount write FEventCount;
-    property AvgLatency: Extended read FAvgLatency write FAvgLatency;
-    property LatencyTrend: Extended read FLatencyTrend write FLatencyTrend;
-    property GrowthPct: Extended read FGrowthPct write FGrowthPct;
-    property AllEvents: Integer read FAllEvents write FAllEvents;
-    procedure CopyFromSource(ASource: TEventStatsRec);
-    constructor Create; override;
-    destructor Destroy; override;
-  end;
-
   TfrmMain = class(TForm)
     FDManager: TFDManager;
     rtMain: TdxRibbonTab;
     rbMain: TdxRibbon;
     bmMain: TdxBarManager;
-    vstEvents: TVirtualStringTree;
     brEvents: TdxBar;
     btnRefreshEvents: TdxBarLargeButton;
     pbLoad: TProgressBar;
@@ -84,9 +40,6 @@ type
     lcMain: TdxLayoutControl;
     lgEventsInfo: TdxLayoutGroup;
     lgEventsStats: TdxLayoutGroup;
-    liVSTEvents: TdxLayoutItem;
-    vstEventsStats: TVirtualStringTree;
-    livstEventsStats: TdxLayoutItem;
     brEventsStats: TdxBar;
     btnRefreshStatsEvents: TdxBarLargeButton;
     brFilterSettings: TdxBar;
@@ -100,17 +53,28 @@ type
     ilSmall: TcxImageList;
     btnFRDesigner: TdxBarLargeButton;
     btnFRPreview: TdxBarLargeButton;
+    vtlEvents: TcxVirtualTreeList;
+    liEvents: TdxLayoutItem;
+    vtlEventsStats: TcxVirtualTreeList;
+    liEventsStats: TdxLayoutItem;
+    vtlEventsID: TcxTreeListColumn;
+    vtlEventsUserName: TcxTreeListColumn;
+    vtlEventsDTChange: TcxTreeListColumn;
+    vtlEventsEventType: TcxTreeListColumn;
+    vtlEventsIp: TcxTreeListColumn;
+    vtlEventsSource: TcxTreeListColumn;
+    vtlEventsStatus: TcxTreeListColumn;
+    vtlEventsLatency: TcxTreeListColumn;
+    vtlEventsStatsHour: TcxTreeListColumn;
+    vtlEventsStatsSource: TcxTreeListColumn;
+    vtlEventsStatsEventCount: TcxTreeListColumn;
+    vtlEventsStatsAvg_latency: TcxTreeListColumn;
+    vtlEventsStatslatencyTrend: TcxTreeListColumn;
+    vtlEventsStatsGrouwthPct: TcxTreeListColumn;
+    vtlEventsStatsAllEvents: TcxTreeListColumn;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure vstEventsFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure vstEventsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure btnRefreshEventsClick(Sender: TObject);
-    procedure vstEventsStatsFreeNode(Sender: TBaseVirtualTree;
-      Node: PVirtualNode);
-    procedure vstEventsStatsGetText(Sender: TBaseVirtualTree;
-      Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-      var CellText: string);
     procedure btnRefreshStatsEventsClick(Sender: TObject);
     procedure edStartTsKeyPress(Sender: TObject; var Key: Char);
     procedure edStartTsKeyDown(Sender: TObject; var Key: Word;
@@ -128,8 +92,10 @@ type
     FRunningUpdateEvents: boolean;
     FRunningUpdateEventsStats: boolean;
     FCriticalSection: TCriticalSection;
-    FLoadEventsStatsList: TObjectList<TEventStatsRec>;
-    FEventCache: TVirtualDataCache<TEventRec>;
+    FEventCache: TVirtualDataCache<TEventRecord>;
+    FEventsDS: TEventsCacheDataSource;
+    FEventsStatsDS: TVTLoadAllDataSource<TEventStatsRecord>;
+    FLoadEventsStatsList: TObjectList<TEventStatsRecord>;
     FPoller: TRealTimePoller;
     procedure HandleNewPollerEvents(const AEvents: TArray<TEventPayload>);
     procedure HandlePageLoaded(Sender: TObject; PageIndex: Integer);
@@ -208,10 +174,11 @@ begin
   FRunningUpdateEvents := false;
   FRunningUpdateEventsStats := false;
   FCriticalSection := TCriticalSection.Create;
-  FLoadEventsStatsList := TObjectList<TEventStatsRec>.Create;
-  // ИЗМЕНЕНО: было SizeOf(TEventRec) — данные теперь в FEventCache, а не в узлах VST
-  vstEvents.NodeDataSize := 0;
-  vstEventsStats.NodeDataSize := SizeOf(TEventStatsRec);
+  FLoadEventsStatsList := TObjectList<TEventStatsRecord>.Create(true);
+
+  // Создаём DataSource для статистики
+  FEventsStatsDS := TVTLoadAllDataSource<TEventStatsRecord>.Create(vtlEventsStats);
+
   edFilterSource.Properties.ImmediatePost := true;
   if InitConnectionPool then
   begin
@@ -236,10 +203,13 @@ begin
     FPoller.Free;
     FPoller := nil;
   end;
-  vstEvents.Clear;
-  FreeAndNil(FEventCache);
+
   FreeAndNil(FLoadEventsStatsList);
+  FreeAndNil(FEventsDS);
+  FreeAndNil(FEventsStatsDS);
+  FreeAndNil(FEventCache);
   FreeAndNil(FCriticalSection);
+
   Settings := TDBConnectionSettings.Create;
   try
     if FileExists(SettingsFile) then
@@ -284,35 +254,26 @@ end;
 procedure TfrmMain.HandleNewPollerEvents(const AEvents: TArray<TEventPayload>);
 var
   i: Integer;
-  NewRec: TEventRec;
 begin
   if Length(AEvents) = 0 then
     Exit;
 
-  vstEvents.BeginUpdate;
+  if not Assigned(FEventsDS) then
+    Exit;
+
+  vtlEvents.BeginUpdate;
   try
     for i := Low(AEvents) to High(AEvents) do
-    begin
-      NewRec := vstEvents.Add<TEventRec>(vstEvents.InsertNode(vstEvents.RootNode, amAddChildFirst));
-      NewRec.Id := AEvents[i].Id;
-      NewRec.UserName := AEvents[i].UserName;
-      NewRec.Occured := AEvents[i].Occured;
-      NewRec.EventType := AEvents[i].EventType;
-      NewRec.Ip := AEvents[i].Ip;
-      NewRec.Source := AEvents[i].Source;
-      NewRec.Status := AEvents[i].Status;
-      NewRec.LatencyMS := AEvents[i].LatencyMS;
-    end;
+      FEventsDS.PrependRecord(AEvents[i]);
   finally
-    vstEvents.EndUpdate;
+    vtlEvents.EndUpdate;
   end;
 end;
 
 procedure TfrmMain.HandlePageLoaded(Sender: TObject; PageIndex: Integer);
 begin
-  // Вызывается при загрузке страницы — перерисовываем видимые узлы
-  if Assigned(vstEvents) then
-    vstEvents.Invalidate;
+  if Assigned(FEventsDS) then
+    FEventsDS.NotifyDataChanged;
 end;
 
 procedure TfrmMain.HandleCacheError(Sender: TObject; const ErrorMsg: string);
@@ -483,17 +444,18 @@ begin
           FreeAndNil(conn);
         end;
 
-        // Шаг 2: Переход в UI-поток — создание кэша и настройка VST
+        // Шаг 2: Переход в UI-поток — создание кэша и настройка DataSource
         TThread.Synchronize(nil, procedure
         begin
-          // Освобождаем предыдущий кэш
+          // Освобождаем предыдущий DataSource и кэш
+          FreeAndNil(FEventsDS);
           FreeAndNil(FEventCache);
 
           // Создаём новый кэш с маппер-функцией
-          FEventCache := TVirtualDataCache<TEventRec>.Create('PgPool', 1000,
-            function(qr: TFDQuery): TEventRec
+          FEventCache := TVirtualDataCache<TEventRecord>.Create('PgPool', 1000,
+            function(qr: TFDQuery): TEventRecord
             begin
-              Result := TEventRec.Create;
+              Result := TEventRecord.Create(nil);
               Result.Id := qr.FieldByName('id').AsInteger;
               Result.UserName := qr.FieldByName('username').AsString;
               Result.EventType := qr.FieldByName('event_type').AsString;
@@ -514,10 +476,11 @@ begin
           FEventCache.OnPageLoaded := HandlePageLoaded;
           FEventCache.OnError := HandleCacheError;
 
-          // Устанавливаем количество узлов в VST (без данных!)
-          vstEvents.RootNodeCount := Total;
+          // Создаём DataSource для vtlEvents
+          FEventsDS := TEventsCacheDataSource.Create(vtlEvents, FEventCache);
+          vtlEvents.OptionsData.SmartLoad := False;
 
-          // Скрываем прогресс-бар (теперь он не нужен)
+          // Скрываем прогресс-бар
           pbLoad.Visible := False;
         end);
 
@@ -565,8 +528,8 @@ begin
     qr: TFDQuery;
     conn: TFDConnection;
     mon: TFDMoniCustomLogger;
-    rec: TEventStatsRec;
     SemaGuard: TSemaphoreGuard;
+    Rec: TEventStatsRecord;
   begin
     // Захват семафора для защиты пула соединений
     SemaGuard := TSemaphoreGuard.Create(TConnectionSemaphore.Instance, 10000);
@@ -609,36 +572,37 @@ begin
               qr.ParamByName('source_filter').DataType := ftString;
               qr.ParamByName('source_filter').Value := edFilterSource.EditValue;
               qr.Open;
-
               qr.First;
               while not qr.Eof do
               begin
-                rec := TEventStatsRec.Create;
-                try
-                  rec.Hour := qr.FieldByName('hour').AsDateTime;
-                  rec.Source := qr.FieldByName('source').AsString;
-                  rec.EventCount := qr.FieldByName('event_count').AsInteger;
-                  rec.AvgLatency := qr.FieldByName('avg_latency').AsExtended;
-                  rec.LatencyTrend := qr.FieldByName('latency_trend').AsExtended;
-                  rec.GrowthPct := qr.FieldByName('growth_pct').AsExtended;
-                  rec.AllEvents := qr.FieldByName('all_events').AsInteger;
-                  FLoadEventsStatsList.Add(rec);
-                except
-                  rec.Free;
-                  raise;
-                end;
+                Rec := TEventStatsRecord.Create(nil); ;
+
+                Rec.Hour := qr.FieldByName('hour').AsDateTime;
+                Rec.Source := qr.FieldByName('source').AsString;
+                Rec.EventCount := qr.FieldByName('event_count').AsInteger;
+                Rec.AvgLatency := qr.FieldByName('avg_latency').AsExtended;
+                Rec.LatencyTrend := qr.FieldByName('latency_trend').AsExtended;
+                Rec.GrowthPct := qr.FieldByName('growth_pct').AsExtended;
+                Rec.AllEvents := qr.FieldByName('all_events').AsInteger;
+                FLoadEventsStatsList.Add(rec);
                 qr.Next;
               end;
 
               TThread.Queue(nil, procedure
+              var
+                Rec: TEventStatsRecord;
               begin
-                vstEventsStats.BeginUpdate;
+                vtlEventsStats.BeginUpdate;
                 try
-                  vstEventsStats.Clear;
+                  FEventsStatsDS.Clear;
                   for var i := 0 to FLoadEventsStatsList.Count - 1 do
-                    vstEventsStats.Add<TEventStatsRec>.CopyFromSource(FLoadEventsStatsList[i]);
+                  begin
+                    rec := FEventsStatsDS.InsertRecordHandle(FEventsStatsDS.RootHandle, True);
+                    rec.Assign(FLoadEventsStatsList[i]);
+                  end;
                 finally
-                  vstEventsStats.EndUpdate;
+                  vtlEventsStats.EndUpdate;
+                  FEventsStatsDS.DataChanged;
                 end;
               end);
             finally
@@ -695,168 +659,6 @@ end;
 procedure TfrmMain.SetDllManager(AMgr: IDllManager);
 begin
   FDllManager := AMgr;
-end;
-
-procedure TfrmMain.vstEventsFreeNode(Sender: TBaseVirtualTree;
-  Node: PVirtualNode);
-begin
-  // Пустой метод — данные освобождаются TObjectList<T> в кэше автоматически
-  // Данные больше не хранятся в узлах VST (NodeDataSize = 0)
-end;
-
-procedure TfrmMain.vstEventsGetText(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-  var CellText: string);
-var
-  Rec: TEventRec;
-  PageIdx: Integer;
-begin
-  CellText := '';
-  if not Assigned(Node) then
-    Exit;
-
-  // Пробуем получить запись из кэша
-  if Assigned(FEventCache) and FEventCache.GetRecord(Node.Index, Rec) then
-  begin
-    // Страница загружена — отображаем данные
-    case Column of
-      0: CellText := IntToStr(Rec.Id);
-      1: CellText := Rec.UserName;
-      2: CellText := DateTimeToStr(Rec.Occured);
-      3: CellText := Rec.EventType;
-      4: CellText := Rec.Ip;
-      5: CellText := Rec.Source;
-      6: CellText := Rec.Status;
-      7: CellText := Rec.LatencyMS;
-    end;
-  end
-  else
-  begin
-    // Страница ещё не загружена — показываем плейсхолдер и запускаем загрузку
-    CellText := '⌛ ...';
-    if Assigned(FEventCache) then
-    begin
-      PageIdx := integer(Node.Index) div FEventCache.PageSize;
-      // Запрашиваем текущую и следующую страницы для предзагрузки
-      FEventCache.RequestPage(PageIdx);
-      FEventCache.RequestPage(PageIdx + 1);
-    end;
-  end;
-end;
-
-procedure TfrmMain.vstEventsStatsFreeNode(Sender: TBaseVirtualTree;
-  Node: PVirtualNode);
-var
-  rec: TEventStatsRec;
-begin
-  if Assigned(Node) then
-  begin
-    rec := Sender.Obj<TEventStatsRec>(Node);
-    if Assigned(rec) then
-      FreeAndNil(rec);
-  end;
-end;
-
-procedure TfrmMain.vstEventsStatsGetText(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-  var CellText: string);
-var
-  rec: TEventStatsRec;
-begin
-  CellText := '';
-  if Assigned(Node) then
-  begin
-    rec := Sender.Obj<TEventStatsRec>(Node);
-    if Assigned(rec) then
-    begin
-      case Column of
-        0: CellText := FormatDateTime('dd.mm.yyyy hh:nn', rec.Hour);
-        1: CellText := rec.Source;
-        2: CellText := IntToStr(rec.EventCount);
-        3: if not IsZero(rec.AvgLatency) then
-             CellText := FormatFloat('0.00 ms', rec.AvgLatency);
-        4: if not IsZero(rec.LatencyTrend) then
-             CellText := FormatFloat('0.00 ms', rec.LatencyTrend);
-        5: if IsZero(rec.GrowthPct) then
-             CellText := '-'
-           else if rec.GrowthPct > 0 then
-             CellText := '+' + FormatFloat('0.0', rec.GrowthPct) + '%'
-           else
-             CellText := FormatFloat('0.0', rec.GrowthPct) + '%';
-        6: CellText := IntToStr(rec.AllEvents);
-      end;
-    end;
-  end;
-end;
-
-{ TEventRec }
-
-procedure TEventRec.CopyFromSource(ASource: TEventRec);
-begin
-  if Assigned(ASource) then
-  begin
-    Id := ASource.Id;
-    UserName := ASource.UserName;
-    EventType := ASource.EventType;
-    Occured := ASource.Occured;
-    Ip := ASource.Ip;
-    Source := ASource.Source;
-    Status := ASource.Status;
-    LatencyMS := ASource.LatencyMS;
-  end;
-end;
-
-constructor TEventRec.Create;
-begin
-  inherited;
-  FId := 0;
-  FUserName := '';
-  FEventType := '';
-  FOccured := 0;
-  FIp := '';
-  FSource := '';
-  FStatus := '';
-  FLatencyMS := '';
-end;
-
-destructor TEventRec.Destroy;
-begin
-
-  inherited;
-end;
-
-{ TEventStatsRec }
-
-procedure TEventStatsRec.CopyFromSource(ASource: TEventStatsRec);
-begin
-  if Assigned(ASource) then
-  begin
-    Hour := ASource.Hour;
-    Source := ASource.Source;
-    EventCount := ASource.EventCount;
-    AvgLatency := ASource.AvgLatency;
-    LatencyTrend := ASource.LatencyTrend;
-    GrowthPct := ASource.GrowthPct;
-    AllEvents := ASource.AllEvents;
-  end;
-end;
-
-constructor TEventStatsRec.Create;
-begin
-  inherited;
-  Hour := 0;
-  Source := '';
-  EventCount := 0;
-  AvgLatency := 0;
-  LatencyTrend := 0;
-  GrowthPct := 0;
-  AllEvents := 0;
-end;
-
-destructor TEventStatsRec.Destroy;
-begin
-
-  inherited;
 end;
 
 end.

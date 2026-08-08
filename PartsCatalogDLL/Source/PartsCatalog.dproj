@@ -160,6 +160,7 @@
         <DCCReference Include="..\..\..\Common\intf_dll.pas"/>
         <DCCReference Include="..\..\..\Common\intf_dll_manager.pas"/>
         <DCCReference Include="..\..\..\Common\intf_common.pas"/>
+        <DCCReference Include="..\..\..\Common\frxDevDSIntf.pas"/>
         <DCCReference Include="..\..\..\Common\cxVirtualTreeListHelper.pas"/>
         <DCCReference Include="dmDatabase.pas">
             <Form>dmDB</Form>
@@ -194,6 +195,20 @@
         </DCCReference>
         <DCCReference Include="uXmlExporter.pas"/>
         <DCCReference Include="uXmlImporter.pas"/>
+        <DCCReference Include="..\..\CommonModules\dmSkins.pas">
+            <Form>dmSkin</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="..\..\..\Common\intf_skin.pas"/>
+        <DCCReference Include="..\..\..\Common\uSkinHelper.pas"/>
+        <DCCReference Include="..\..\..\Common\FireDAC.Moni.Custom.Logger.pas"/>
+        <DCCReference Include="..\..\..\Common\FDMoniCustomLoggerHelper.pas"/>
+        <DCCReference Include="..\..\..\Common\uDBConnectionSettings.pas"/>
+        <DCCReference Include="..\..\..\Common\uMultiDBSettingsForm.pas">
+            <Form>frmMultiDBSettings</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -234,7 +249,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win32\Debug\PartsCatalog.dll" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\..\exe\PartsCatalog.dll" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>PartsCatalog.dll</RemoteName>
                         <Overwrite>true</Overwrite>

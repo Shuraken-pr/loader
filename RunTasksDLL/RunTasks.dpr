@@ -11,20 +11,26 @@ uses
   intf_dll_manager in '..\..\common\intf_dll_manager.pas',
   intf_common in '..\..\common\intf_common.pas',
   intf_tasks in '..\..\common\intf_tasks.pas',
+  frxDevDSIntf in '..\..\common\frxDevDSIntf.pas',
   uAutonomiusThreadPool in '..\..\common\uAutonomiusThreadPool.pas',
   uRunTasks in 'uRunTasks.pas' {frmRunTasks},
-  cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas';
+  cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas',
+  dmSkins in '..\CommonModules\dmSkins.pas' {dmSkin: TDataModule},
+  intf_skin in '..\..\Common\intf_skin.pas',
+  uSkinHelper in '..\..\Common\uSkinHelper.pas';
 
 type
   // TRunTasks реализует: IDLLIntf + IDllIntfRun + IUsesDllManager + IRunTasks
   // Наследование: IRunTasks -> IDllIntfRunWithDeps -> (IDllIntfRun + IUsesDllManager)
-  TRunTasks = class(TInterfacedObject, IDLLIntf, IDllIntfRun, IUsesDllManager, IRunTasks)
+  TRunTasks = class(TInterfacedObject, IDLLIntf, IDllIntfRun, IUsesDllManager, IRunTasks, ISkinAware)
   private
+    FSkin: TdmSkin;
     FRunTasks: TfrmRunTasks;
     FDllManager: IDllManager;
     FFindInDir: IRunTaskFindInDir;
     FFindInExeFile: IRunTaskFindInExeFile;
     FShellExecute: IRunTaskShellExecute;
+    FIntfFR: IFrxDevDS;
     procedure TryLoadDependencies;
   public
     constructor Create;
@@ -33,6 +39,7 @@ type
     function GetDescription: WideString; safecall;
     procedure Init; safecall;
     procedure Fin; safecall;
+    procedure ApplySkin(const ASkinName: WideString; ANativeStyle: Boolean = False); safecall;
     // IDllIntfRun
     procedure Run(ACallbackProc: TProc<WideString>; MainAppHandle: HWnd); safecall;
     // IUsesDllManager
@@ -56,14 +63,25 @@ exports
 
 { TRunTasks }
 
+procedure TRunTasks.ApplySkin(const ASkinName: WideString;
+  ANativeStyle: Boolean);
+begin
+   ApplySkinToDataModule(FSkin,
+     FSkin.dxSkinController,
+     FSkin.dxLayoutSkinLookAndFeel,
+     ASkinName, ANativeStyle);
+end;
+
 constructor TRunTasks.Create;
 begin
   dxCore.dxInitialize;
+  FSkin := TdmSkin.Create(nil);
   FRunTasks := TfrmRunTasks.Create(nil);
   FDllManager := nil;
   FFindInDir := nil;
   FFindInExeFile := nil;
   FShellExecute := nil;
+  FIntfFR := nil;
 end;
 
 destructor TRunTasks.Destroy;
@@ -72,6 +90,9 @@ begin
   FFindInExeFile := nil;
   FFindInDir := nil;
   FDllManager := nil;
+  FIntfFR := nil;
+  if Assigned(FSkin) then
+    FreeAndNil(FSkin);
   FreeAndNil(FRunTasks);
   inherited;
   dxCore.dxFinalize;
@@ -116,6 +137,8 @@ begin
 
   if FRunTasks.IntfList.Count > 0 then
   begin
+    if Assigned(FIntfFR) then
+      FRunTasks.IntfFR := FIntfFR;
     FRunTasks.CallbackProc := ACallbackProc;
     FRunTasks.Show;
   end
@@ -179,6 +202,21 @@ begin
       begin
         FShellExecute.Init;
         FRunTasks.IntfList.Add(FShellExecute);
+      end;
+    end;
+  end;
+
+  // Загружаем IFrxDevDS
+  if not Assigned(FIntfFR) then
+  begin
+    if not FDllManager.IsLoaded('IFrxDevDS') then
+      FDllManager.Load(DIFrxDevDS, False);
+    if FDllManager.IsLoaded('IFrxDevDS') then
+    begin
+      intf := FDllManager.GetIntf(IFrxDevDS);
+      if Assigned(intf) and Supports(intf, IFrxDevDS, FIntfFR) then
+      begin
+        FIntfFR.Init;
       end;
     end;
   end;

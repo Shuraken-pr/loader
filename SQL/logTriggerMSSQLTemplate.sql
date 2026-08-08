@@ -1,4 +1,4 @@
-CREATE TRIGGER schemaname.trg_tablename_fill_log
+﻿CREATE TRIGGER schemaname.trg_tablename_fill_log
 ON schemaname.tablename
 AFTER INSERT, UPDATE, DELETE
 AS

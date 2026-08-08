@@ -295,8 +295,10 @@ object frmSimpleNumbers: TfrmSimpleNumbers
     000000000000FC1FAC41F007AC41E003AC41C001AC41C001AC418000AC418000
     AC418000AC418000AC418000AC41C001AC41C001AC41E003AC41F007AC41FC1F
     AC41FFFFAC41}
+  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnShow = FormShow
   TextHeight = 15
   object lcMain: TdxLayoutControl
     Left = 0
@@ -305,25 +307,23 @@ object frmSimpleNumbers: TfrmSimpleNumbers
     Height = 634
     Align = alClient
     TabOrder = 0
+    LayoutLookAndFeel = dmSkin.dxLayoutSkinLookAndFeel
     object seMaxLimSimpleNumbers: TcxSpinEdit
-      Left = 245
-      Top = 33
+      Left = 240
+      Top = 25
       AutoSize = False
       Properties.MaxValue = 2000000.000000000000000000
       Properties.MinValue = 1.000000000000000000
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
       Style.HotTrack = False
       Style.TransparentBorder = False
-      Style.ButtonStyle = bts3D
       TabOrder = 0
       Value = 1
       Height = 25
       Width = 121
     end
     object btnRun: TcxButton
-      Left = 373
-      Top = 33
+      Left = 368
+      Top = 25
       Width = 144
       Height = 25
       Caption = #1047#1072#1087#1091#1089#1090#1080#1090#1100' '#1088#1072#1089#1095#1105#1090
@@ -358,38 +358,10 @@ object frmSimpleNumbers: TfrmSimpleNumbers
     end
     object vtlThread1: TcxVirtualTreeList
       Tag = 1
-      Left = 26
-      Top = 121
+      Left = 21
+      Top = 125
       Width = 399
-      Height = 487
-      Bands = <
-        item
-        end>
-      Navigator.Buttons.CustomButtons = <>
-      OptionsBehavior.MultiSort = False
-      OptionsBehavior.Sorting = False
-      OptionsData.Editing = False
-      OptionsData.Deleting = False
-      OptionsView.CellEndEllipsis = True
-      OptionsView.GridLines = tlglBoth
-      OptionsView.ShowRoot = False
-      ScrollbarAnnotations.CustomAnnotations = <>
-      TabOrder = 2
-      object colNumberT1: TcxTreeListColumn
-        Width = 389
-        Position.ColIndex = 0
-        Position.RowIndex = 0
-        Position.BandIndex = 0
-        Summary.FooterSummaryItems = <>
-        Summary.GroupFooterSummaryItems = <>
-      end
-    end
-    object vtlThread2: TcxVirtualTreeList
-      Tag = 2
-      Left = 432
-      Top = 121
-      Width = 499
-      Height = 487
+      Height = 484
       Bands = <
         item
         end>
@@ -403,6 +375,34 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       OptionsView.ShowRoot = False
       ScrollbarAnnotations.CustomAnnotations = <>
       TabOrder = 3
+      object colNumberT1: TcxTreeListColumn
+        Width = 389
+        Position.ColIndex = 0
+        Position.RowIndex = 0
+        Position.BandIndex = 0
+        Summary.FooterSummaryItems = <>
+        Summary.GroupFooterSummaryItems = <>
+      end
+    end
+    object vtlThread2: TcxVirtualTreeList
+      Tag = 2
+      Left = 427
+      Top = 125
+      Width = 509
+      Height = 484
+      Bands = <
+        item
+        end>
+      Navigator.Buttons.CustomButtons = <>
+      OptionsBehavior.MultiSort = False
+      OptionsBehavior.Sorting = False
+      OptionsData.Editing = False
+      OptionsData.Deleting = False
+      OptionsView.CellEndEllipsis = True
+      OptionsView.GridLines = tlglBoth
+      OptionsView.ShowRoot = False
+      ScrollbarAnnotations.CustomAnnotations = <>
+      TabOrder = 4
       object colNumberT2: TcxTreeListColumn
         Width = 456
         Position.ColIndex = 0
@@ -411,6 +411,17 @@ object frmSimpleNumbers: TfrmSimpleNumbers
         Summary.FooterSummaryItems = <>
         Summary.GroupFooterSummaryItems = <>
       end
+    end
+    object btnFastReport: TcxButton
+      Left = 519
+      Top = 25
+      Width = 75
+      Height = 25
+      Caption = 'Fast Report'
+      DropDownMenu = pmFastReport
+      Enabled = False
+      Kind = cxbkDropDown
+      TabOrder = 2
     end
     object lcMainGroup_Root: TdxLayoutGroup
       AlignHorz = ahClient
@@ -423,7 +434,7 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       Parent = lcMainGroup_Root
       AlignHorz = ahClient
       AlignVert = avTop
-      ItemIndex = 1
+      ItemIndex = 2
       LayoutDirection = ldHorizontal
       Index = 0
     end
@@ -440,6 +451,8 @@ object frmSimpleNumbers: TfrmSimpleNumbers
     end
     object liRun: TdxLayoutItem
       Parent = lgMain
+      AlignHorz = ahLeft
+      AlignVert = avClient
       CaptionOptions.Text = 'cxButton1'
       CaptionOptions.Visible = False
       Control = btnRun
@@ -453,6 +466,7 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       AlignHorz = ahClient
       AlignVert = avClient
       CaptionOptions.Text = #1056#1077#1079#1091#1083#1100#1090#1072#1090' '#1088#1072#1073#1086#1090#1099
+      ItemIndex = 1
       LayoutDirection = ldHorizontal
       Index = 1
     end
@@ -468,7 +482,7 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       ControlOptions.ShowBorder = False
       Index = 0
     end
-    object dxLayoutItem1: TdxLayoutItem
+    object liThread2: TdxLayoutItem
       Parent = lgLog
       AlignHorz = ahClient
       AlignVert = avClient
@@ -479,6 +493,33 @@ object frmSimpleNumbers: TfrmSimpleNumbers
       ControlOptions.OriginalWidth = 250
       ControlOptions.ShowBorder = False
       Index = 1
+    end
+    object liFastReport: TdxLayoutItem
+      Parent = lgMain
+      AlignHorz = ahLeft
+      AlignVert = avClient
+      Visible = False
+      CaptionOptions.Text = 'cxButton1'
+      CaptionOptions.Visible = False
+      Control = btnFastReport
+      ControlOptions.OriginalHeight = 25
+      ControlOptions.OriginalWidth = 75
+      ControlOptions.ShowBorder = False
+      Enabled = False
+      Index = 2
+    end
+  end
+  object pmFastReport: TPopupMenu
+    Left = 500
+    Top = 184
+    object miFRDesigner: TMenuItem
+      Caption = #1044#1080#1079#1072#1081#1085#1077#1088' '#1086#1090#1095#1105#1090#1086#1074
+      OnClick = miFRDesignerClick
+    end
+    object miFRPreview: TMenuItem
+      Tag = 1
+      Caption = #1055#1088#1077#1076#1074#1072#1088#1080#1090#1077#1083#1100#1085#1099#1081' '#1087#1088#1086#1089#1084#1086#1090#1088
+      OnClick = miFRDesignerClick
     end
   end
 end

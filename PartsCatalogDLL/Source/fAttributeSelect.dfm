@@ -19,7 +19,7 @@ object fAttributeSelect: TfAttributeSelect
     Height = 104
     Align = alClient
     TabOrder = 0
-    LayoutLookAndFeel = dmDB.dxLayoutSkinLookAndFeel1
+    LayoutLookAndFeel = dmSkin.dxLayoutSkinLookAndFeel
     DesignSize = (
       362
       104)

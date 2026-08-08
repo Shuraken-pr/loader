@@ -1458,25 +1458,22 @@ object frmRunTasks: TfrmRunTasks
     Height = 576
     Align = alClient
     TabOrder = 0
+    LayoutLookAndFeel = dmSkin.dxLayoutSkinLookAndFeel
     object cbTasks: TcxComboBox
-      Left = 96
-      Top = 33
+      Left = 91
+      Top = 46
       AutoSize = False
       Properties.DropDownListStyle = lsFixedList
       Properties.OnChange = cbTasksPropertiesChange
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
       Style.HotTrack = False
       Style.TransparentBorder = False
-      Style.ButtonStyle = bts3D
-      Style.PopupBorderStyle = epbsFrame3D
       TabOrder = 0
       Height = 25
-      Width = 576
+      Width = 504
     end
     object btnStart: TcxButton
-      Left = 679
-      Top = 33
+      Left = 602
+      Top = 46
       Width = 75
       Height = 25
       Caption = #1047#1072#1087#1091#1089#1090#1080#1090#1100
@@ -1484,8 +1481,8 @@ object frmRunTasks: TfrmRunTasks
       OnClick = btnStartClick
     end
     object btnStop: TcxButton
-      Left = 761
-      Top = 33
+      Left = 684
+      Top = 46
       Width = 86
       Height = 25
       Caption = #1054#1089#1090#1072#1085#1086#1074#1080#1090#1100
@@ -1493,8 +1490,8 @@ object frmRunTasks: TfrmRunTasks
       OnClick = btnStopClick
     end
     object btnShowResult: TcxButton
-      Left = 854
-      Top = 33
+      Left = 777
+      Top = 46
       Width = 137
       Height = 25
       Caption = #1055#1086#1082#1072#1079#1072#1090#1100' '#1088#1077#1079#1091#1083#1100#1090#1072#1090
@@ -1502,8 +1499,8 @@ object frmRunTasks: TfrmRunTasks
       OnClick = btnShowResultClick
     end
     object beCommand: TcxButtonEdit
-      Left = 96
-      Top = 100
+      Left = 91
+      Top = 125
       Properties.Buttons = <
         item
           Default = True
@@ -1534,17 +1531,14 @@ object frmRunTasks: TfrmRunTasks
             49454E44AE426082}
           Kind = bkGlyph
         end>
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
       Style.HotTrack = False
       Style.TransparentBorder = False
-      Style.ButtonStyle = bts3D
-      TabOrder = 4
-      Width = 895
+      TabOrder = 5
+      Width = 905
     end
     object beParams: TcxButtonEdit
-      Left = 96
-      Top = 131
+      Left = 91
+      Top = 153
       Properties.Buttons = <
         item
           Default = True
@@ -1575,19 +1569,16 @@ object frmRunTasks: TfrmRunTasks
             49454E44AE426082}
           Kind = bkGlyph
         end>
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
       Style.HotTrack = False
       Style.TransparentBorder = False
-      Style.ButtonStyle = bts3D
-      TabOrder = 5
-      Width = 895
+      TabOrder = 6
+      Width = 905
     end
     object vtlRunTasks: TcxVirtualTreeList
       Left = 12
-      Top = 183
+      Top = 201
       Width = 993
-      Height = 381
+      Height = 363
       Bands = <
         item
         end>
@@ -1602,7 +1593,7 @@ object frmRunTasks: TfrmRunTasks
       OptionsView.ShowRoot = False
       OptionsView.TreeLineStyle = tllsSolid
       ScrollbarAnnotations.CustomAnnotations = <>
-      TabOrder = 6
+      TabOrder = 7
       OnFocusedNodeChanged = vtlRunTasksFocusedNodeChanged
       object colDTStart: TcxTreeListColumn
         Caption.Text = #1042#1088#1077#1084#1103' '#1079#1072#1087#1091#1089#1082#1072
@@ -1641,6 +1632,16 @@ object frmRunTasks: TfrmRunTasks
         Summary.GroupFooterSummaryItems = <>
       end
     end
+    object btnFastReport: TcxButton
+      Left = 921
+      Top = 46
+      Width = 75
+      Height = 25
+      Caption = 'Fast Report'
+      DropDownMenu = pmFastReport
+      Kind = cxbkDropDown
+      TabOrder = 4
+    end
     object lcRunTasksGroup_Root: TdxLayoutGroup
       AlignHorz = ahClient
       AlignVert = avClient
@@ -1653,7 +1654,7 @@ object frmRunTasks: TfrmRunTasks
       AlignHorz = ahClient
       AlignVert = avTop
       CaptionOptions.Text = #1047#1072#1087#1091#1089#1082
-      ItemIndex = 3
+      ItemIndex = 4
       LayoutDirection = ldHorizontal
       Index = 0
     end
@@ -1723,7 +1724,7 @@ object frmRunTasks: TfrmRunTasks
       AlignVert = avTop
       CaptionOptions.Text = #1050#1086#1084#1072#1085#1076#1072
       Control = beCommand
-      ControlOptions.OriginalHeight = 24
+      ControlOptions.OriginalHeight = 21
       ControlOptions.OriginalWidth = 121
       ControlOptions.ShowBorder = False
       Index = 0
@@ -1734,7 +1735,7 @@ object frmRunTasks: TfrmRunTasks
       AlignVert = avTop
       CaptionOptions.Text = #1055#1072#1088#1072#1084#1077#1090#1088#1099
       Control = beParams
-      ControlOptions.OriginalHeight = 24
+      ControlOptions.OriginalHeight = 21
       ControlOptions.OriginalWidth = 121
       ControlOptions.ShowBorder = False
       Index = 1
@@ -1749,6 +1750,19 @@ object frmRunTasks: TfrmRunTasks
       ControlOptions.ShowBorder = False
       Index = 3
     end
+    object liFastReport: TdxLayoutItem
+      Parent = lgExecute
+      AlignHorz = ahRight
+      AlignVert = avClient
+      Visible = False
+      CaptionOptions.Text = 'cxButton1'
+      CaptionOptions.Visible = False
+      Control = btnFastReport
+      ControlOptions.OriginalHeight = 25
+      ControlOptions.OriginalWidth = 75
+      ControlOptions.ShowBorder = False
+      Index = 4
+    end
   end
   object odExeFile: TOpenDialog
     Filter = 'Exe file|*.exe'
@@ -1758,8 +1772,8 @@ object frmRunTasks: TfrmRunTasks
   object dxFloatDockSite1: TdxFloatDockSite
     Left = 0
     Top = 0
-    Width = 545
-    Height = 536
+    Width = 1017
+    Height = 576
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -12
@@ -1768,6 +1782,8 @@ object frmRunTasks: TfrmRunTasks
     Visible = False
     FloatLeft = 870
     FloatTop = 209
+    ExplicitWidth = 545
+    ExplicitHeight = 536
     DockingType = 0
     OriginalWidth = 545
     OriginalHeight = 536
@@ -1823,6 +1839,19 @@ object frmRunTasks: TfrmRunTasks
           Summary.GroupFooterSummaryItems = <>
         end
       end
+    end
+  end
+  object pmFastReport: TPopupMenu
+    Left = 580
+    Top = 264
+    object miFRDesigner: TMenuItem
+      Caption = #1044#1080#1079#1072#1081#1085#1077#1088' '#1086#1090#1095#1105#1090#1086#1074
+      OnClick = miFRDesignerClick
+    end
+    object miFRPreview: TMenuItem
+      Tag = 1
+      Caption = #1055#1088#1077#1076#1074#1072#1088#1080#1090#1077#1083#1100#1085#1099#1081' '#1087#1088#1086#1089#1084#1086#1090#1088
+      OnClick = miFRDesignerClick
     end
   end
 end

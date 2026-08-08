@@ -163,11 +163,19 @@
         <DCCReference Include="..\..\Common\intf_dll.pas"/>
         <DCCReference Include="..\..\common\intf_common.pas"/>
         <DCCReference Include="..\..\common\intf_dll_manager.pas"/>
+        <DCCReference Include="..\..\Common\frxDevDSIntf.pas"/>
         <DCCReference Include="main.pas">
             <Form>frmSimpleNumbers</Form>
         </DCCReference>
         <DCCReference Include="..\..\common\intf_tasks.pas"/>
         <DCCReference Include="..\..\Common\cxVirtualTreeListHelper.pas"/>
+        <DCCReference Include="..\..\Common\intf_skin.pas"/>
+        <DCCReference Include="..\CommonModules\dmSkins.pas">
+            <Form>dmSkin</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="..\..\Common\uSkinHelper.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

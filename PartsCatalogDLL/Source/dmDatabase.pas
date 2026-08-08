@@ -12,7 +12,7 @@ uses
   dxSkinBasic, dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle,
   dxSkinOffice2007Blue, dxSkinOffice2010Silver, dxSkinOffice2013LightGray,
   dxSkinOffice2016Dark, dxSkinVS2010, dxCore, cxClasses, cxLookAndFeels,
-  dxSkinsForm, dxLayoutLookAndFeels;
+  dxSkinsForm, dxLayoutLookAndFeels, FDMoniCustomLoggerHelper;
 
 type
   TdmDB = class(TDataModule)
@@ -47,9 +47,24 @@ type
     qryDeleteCategory: TFDQuery;
     dxSkinController: TdxSkinController;
     dxLayoutLookAndFeelList1: TdxLayoutLookAndFeelList;
-    dxLayoutSkinLookAndFeel1: TdxLayoutSkinLookAndFeel;       // Вставка или обновление значения атрибута
+    dxLayoutSkinLookAndFeel1: TdxLayoutSkinLookAndFeel;
+    qryReportCategories: TFDQuery;
+    qryReportParts: TFDQuery;
+    qryReportCategoriesid: TIntegerField;
+    qryReportCategoriesparent_id: TIntegerField;
+    qryReportCategorieslevel: TIntegerField;
+    qryReportCategoriesname: TWideStringField;
+    qryReportCategoriespath: TWideMemoField;
+    qryReportCategoriesvisual_tree: TWideMemoField;
+    qryReportPartspart_id: TIntegerField;
+    qryReportPartscode: TWideStringField;
+    qryReportPartscategory_id: TIntegerField;
+    qryReportPartsattributes_str: TWideMemoField;
+    procedure DataModuleCreate(Sender: TObject);
+    procedure DataModuleDestroy(Sender: TObject);       // Вставка или обновление значения атрибута
   private
     { Private declarations }
+    FFDMonitor: TFDMoniCustomLogger;
   public
     { Public declarations }
     procedure Connect;
@@ -65,6 +80,8 @@ function IfThen(AValue: Boolean; const ATrue: string; const AFalse: string): str
 
 implementation
 
+uses Winapi.Windows, Winapi.Messages, Vcl.Forms, uDBConnectionSettings, uMultiDBSettingsForm;
+
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
@@ -78,9 +95,46 @@ begin
 end;
 
 procedure TdmDB.Connect;
+var
+  Settings: TDBConnectionSettings;
+  NeedShowForm: boolean;
+  ErrMsg: string;
+  SettingsFile: string;
 begin
   if not PGConn.Connected then
-    PGConn.Connected := True;
+  begin
+    Settings := TDBConnectionSettings.Create;
+    try
+      SettingsFile := ExtractFilePath(Application.ExeName) + 'PartsCatalog.xml';
+      if FileExists(SettingsFile) then
+        Settings.LoadFromFile(SettingsFile, []);
+      NeedShowForm := not (Settings.IsValid(ErrMsg) and Settings.TestConnection(ErrMsg));
+      if NeedShowForm then
+      begin
+        Settings.DBType := dbPostgreSQL;
+        Settings.ShowDBTypeSelector := false;
+        if TfrmMultiDBSettings.Execute(Settings) then
+          Settings.SaveToFile('PartsCatalog.xml', [])
+        else
+          exit;
+      end;
+      Settings.ApplyToConnection(PGConn);
+      PGConn.Connected := True;
+    finally
+      FreeAndNil(Settings);
+    end;
+  end;
+end;
+
+procedure TdmDB.DataModuleCreate(Sender: TObject);
+begin
+  FFDMonitor := TFDMoniCustomLogger.Create(Self);
+  FFDMonitor.SetConnection(PGConn);
+end;
+
+procedure TdmDB.DataModuleDestroy(Sender: TObject);
+begin
+  FreeAndNil(FFDMonitor);
 end;
 
 procedure TdmDB.BeginTransaction;

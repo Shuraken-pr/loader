@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION schemaname.trg_tablename_fill_log()
+﻿CREATE OR REPLACE FUNCTION schemaname.trg_tablename_fill_log()
 RETURNS trigger
 LANGUAGE plpgsql
 AS $$

@@ -1,4 +1,4 @@
-select
+﻿select
   log_data.schema_name,
   log_data.table_name,
   log_data.column_name,

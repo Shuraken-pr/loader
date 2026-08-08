@@ -1685,42 +1685,37 @@ object frmScanLocalDisks: TfrmScanLocalDisks
   OnDestroy = FormDestroy
   TextHeight = 15
   object lcExplorer: TdxLayoutControl
-    Left = 20
+    Left = 5
     Top = 0
-    Width = 758
+    Width = 773
     Height = 519
     Align = alClient
     TabOrder = 0
+    LayoutLookAndFeel = dmSkin.dxLayoutSkinLookAndFeel
     object ccbLocalDisks: TcxCheckComboBox
-      Left = 129
-      Top = 33
+      Left = 124
+      Top = 46
       AutoSize = False
       Properties.EmptySelectionText = #1085#1077' '#1074#1099#1073#1088#1072#1085#1086
       Properties.ImmediatePost = True
       Properties.Items = <>
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
       Style.HotTrack = False
       Style.TransparentBorder = False
-      Style.ButtonStyle = bts3D
-      Style.PopupBorderStyle = epbsFrame3D
       TabOrder = 0
       Height = 31
       Width = 121
     end
     object edFilterExt: TcxTextEdit
-      Left = 381
-      Top = 33
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
+      Left = 376
+      Top = 46
       Style.HotTrack = False
       Style.TransparentBorder = False
       TabOrder = 1
       Width = 121
     end
     object btnScanDir: TcxButton
-      Left = 624
-      Top = 33
+      Left = 537
+      Top = 46
       Width = 108
       Height = 31
       Caption = #1057#1082#1072#1085#1080#1088#1086#1074#1072#1090#1100
@@ -1729,16 +1724,15 @@ object frmScanLocalDisks: TfrmScanLocalDisks
     end
     object lbInfo: TcxLabel
       Left = 12
-      Top = 85
+      Top = 97
       Style.HotTrack = False
       Style.TransparentBorder = False
     end
     object vtvExplorer: TcxVirtualTreeList
       Left = 12
-      Top = 107
-      Width = 734
-      Height = 400
-      Align = alClient
+      Top = 119
+      Width = 749
+      Height = 388
       Bands = <
         item
         end>
@@ -1751,7 +1745,7 @@ object frmScanLocalDisks: TfrmScanLocalDisks
       OptionsView.GridLines = tlglBoth
       OptionsView.TreeLineStyle = tllsSolid
       ScrollbarAnnotations.CustomAnnotations = <>
-      TabOrder = 4
+      TabOrder = 5
       OnColumnHeaderClick = vtvExplorerColumnHeaderClick
       OnCompare = vtvExplorerCompare
       OnFocusedNodeChanged = vtvExplorerFocusedNodeChanged
@@ -1774,11 +1768,20 @@ object frmScanLocalDisks: TfrmScanLocalDisks
         Summary.GroupFooterSummaryItems = <>
       end
     end
+    object btnFastReport: TcxButton
+      Left = 652
+      Top = 49
+      Width = 100
+      Height = 25
+      Caption = 'Fast Report'
+      DropDownMenu = pmFastReport
+      Kind = cxbkDropDown
+      TabOrder = 3
+    end
     object lcExplorerGroup_Root: TdxLayoutGroup
       AlignHorz = ahClient
       AlignVert = avClient
       Hidden = True
-      ItemIndex = 1
       ShowBorder = False
       Index = -1
     end
@@ -1786,8 +1789,8 @@ object frmScanLocalDisks: TfrmScanLocalDisks
       Parent = lcExplorerGroup_Root
       AlignHorz = ahClient
       AlignVert = avTop
-      CaptionOptions.Text = #1055#1072#1088#1072#1084#1077#1090#1088#1099' '#1089#1082#1072#1085#1080#1088#1086#1074#1072#1085#1080#1103
-      ItemIndex = 2
+      CaptionOptions.Text = #1055#1072#1088#1072#1084#1077#1090#1088#1099
+      ItemIndex = 3
       LayoutDirection = ldHorizontal
       Index = 0
     end
@@ -1807,7 +1810,7 @@ object frmScanLocalDisks: TfrmScanLocalDisks
       CaptionOptions.Text = #1056#1072#1089#1096#1080#1088#1077#1085#1080#1103' '#1092#1072#1081#1083#1086#1074' '#13#10#1095#1077#1088#1077#1079' '#1079#1072#1087#1103#1090#1091#1102
       CaptionOptions.WordWrap = True
       Control = edFilterExt
-      ControlOptions.OriginalHeight = 23
+      ControlOptions.OriginalHeight = 21
       ControlOptions.OriginalWidth = 121
       ControlOptions.ShowBorder = False
       Index = 1
@@ -1846,11 +1849,24 @@ object frmScanLocalDisks: TfrmScanLocalDisks
       ControlOptions.ShowBorder = False
       Index = 2
     end
+    object liFastReport: TdxLayoutItem
+      Parent = lgParams
+      AlignHorz = ahRight
+      AlignVert = avCenter
+      Visible = False
+      CaptionOptions.Text = 'cxButton1'
+      CaptionOptions.Visible = False
+      Control = btnFastReport
+      ControlOptions.OriginalHeight = 25
+      ControlOptions.OriginalWidth = 100
+      ControlOptions.ShowBorder = False
+      Index = 3
+    end
   end
   object splitInfo: TcxSplitter
     Left = 0
     Top = 0
-    Width = 20
+    Width = 5
     Height = 519
   end
   object dxFloatDockSite1: TdxFloatDockSite
@@ -1910,6 +1926,19 @@ object frmScanLocalDisks: TfrmScanLocalDisks
         Height = 375
         Width = 476
       end
+    end
+  end
+  object pmFastReport: TPopupMenu
+    Left = 573
+    Top = 180
+    object miFRDesigner: TMenuItem
+      Caption = #1044#1080#1079#1072#1081#1085#1077#1088' '#1086#1090#1095#1105#1090#1086#1074
+      OnClick = miFRDesignerClick
+    end
+    object miFRPreview: TMenuItem
+      Tag = 1
+      Caption = #1055#1088#1077#1076#1074#1072#1088#1080#1090#1077#1083#1100#1085#1099#1081' '#1087#1088#1086#1089#1084#1086#1090#1088
+      OnClick = miFRDesignerClick
     end
   end
 end

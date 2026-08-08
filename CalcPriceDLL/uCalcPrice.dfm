@@ -1063,58 +1063,47 @@ object frmCalcPrice: TfrmCalcPrice
     Height = 297
     Align = alClient
     TabOrder = 0
+    LayoutLookAndFeel = dmSkin.dxLayoutSkinLookAndFeel
     object seInputPriceWithNDS: TcxSpinEdit
       Left = 183
       Top = 12
       Properties.ImmediatePost = True
       Properties.ValueType = vtFloat
       Properties.OnEditValueChanged = seInputPriceWithNDSPropertiesEditValueChanged
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
       Style.HotTrack = False
       Style.TransparentBorder = False
-      Style.ButtonStyle = bts3D
       TabOrder = 0
       OnKeyPress = seInputPriceWithNDSKeyPress
       Width = 326
     end
     object seProcNDS: TcxSpinEdit
       Left = 183
-      Top = 42
+      Top = 40
       Properties.ImmediatePost = True
       Properties.MaxValue = 99.000000000000000000
       Properties.OnEditValueChanged = seInputPriceWithNDSPropertiesEditValueChanged
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
       Style.HotTrack = False
       Style.TransparentBorder = False
-      Style.ButtonStyle = bts3D
       TabOrder = 1
       Width = 326
     end
     object seCorrectedPriceWithNDS: TcxSpinEdit
       Left = 183
-      Top = 72
+      Top = 68
       Properties.ImmediatePost = True
       Properties.ValueType = vtFloat
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
       Style.HotTrack = False
       Style.TransparentBorder = False
-      Style.ButtonStyle = bts3D
       TabOrder = 2
       Width = 326
     end
     object seCorrectedPriceWithoutNDS: TcxSpinEdit
       Left = 183
-      Top = 102
+      Top = 96
       Properties.ImmediatePost = True
       Properties.ValueType = vtFloat
-      Style.BorderColor = clWindowFrame
-      Style.BorderStyle = ebs3D
       Style.HotTrack = False
       Style.TransparentBorder = False
-      Style.ButtonStyle = bts3D
       TabOrder = 3
       Width = 326
     end
@@ -1132,7 +1121,7 @@ object frmCalcPrice: TfrmCalcPrice
       AlignVert = avTop
       CaptionOptions.Text = #1056#1077#1082#1086#1084#1077#1085#1076#1086#1074#1072#1085#1085#1072#1103' '#1094#1077#1085#1072' '#1089' '#1053#1044#1057
       Control = seInputPriceWithNDS
-      ControlOptions.OriginalHeight = 23
+      ControlOptions.OriginalHeight = 21
       ControlOptions.OriginalWidth = 121
       ControlOptions.ShowBorder = False
       Index = 0
@@ -1143,7 +1132,7 @@ object frmCalcPrice: TfrmCalcPrice
       AlignVert = avTop
       CaptionOptions.Text = #1055#1088#1086#1094#1077#1085#1090' '#1053#1044#1057
       Control = seProcNDS
-      ControlOptions.OriginalHeight = 23
+      ControlOptions.OriginalHeight = 21
       ControlOptions.OriginalWidth = 121
       ControlOptions.ShowBorder = False
       Index = 1
@@ -1154,7 +1143,7 @@ object frmCalcPrice: TfrmCalcPrice
       AlignVert = avTop
       CaptionOptions.Text = #1050#1086#1088#1088#1077#1082#1090#1085#1072#1103' '#1094#1077#1085#1072' '#1089' '#1053#1044#1057
       Control = seCorrectedPriceWithNDS
-      ControlOptions.OriginalHeight = 23
+      ControlOptions.OriginalHeight = 21
       ControlOptions.OriginalWidth = 121
       ControlOptions.ShowBorder = False
       Index = 2
@@ -1165,7 +1154,7 @@ object frmCalcPrice: TfrmCalcPrice
       AlignVert = avTop
       CaptionOptions.Text = #1050#1086#1088#1088#1077#1082#1090#1085#1072#1103' '#1094#1077#1085#1072' '#1073#1077#1079' '#1053#1044#1057
       Control = seCorrectedPriceWithoutNDS
-      ControlOptions.OriginalHeight = 23
+      ControlOptions.OriginalHeight = 21
       ControlOptions.OriginalWidth = 121
       ControlOptions.ShowBorder = False
       Index = 3

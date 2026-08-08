@@ -1,4 +1,4 @@
-SELECT
+﻿SELECT
   t.owner                                 AS table_schema,
   t.table_name,
   c.column_name,

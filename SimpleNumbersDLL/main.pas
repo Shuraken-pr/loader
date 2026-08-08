@@ -11,7 +11,9 @@ uses
   cxClasses, dxLayoutControl, System.Generics.Collections,
   System.SyncObjs, System.Threading, cxFilter, cxCustomData, cxStyles,
   dxScrollbarAnnotations, cxTL, cxTLdxBarBuiltInMenu, cxInplaceContainer,
-  cxTLData;
+  cxTLData, dmSkins, dxSkinsCore, dxSkinDevExpressDarkStyle,
+  dxSkinDevExpressStyle, dxSkinOffice2007Blue, dxSkinOffice2010Silver,
+  dxSkinOffice2013LightGray, dxSkinVS2010, intf_dll_manager, frxDevDSIntf;
 
 type
   TfrmSimpleNumbers = class(TForm)
@@ -26,16 +28,30 @@ type
     vtlThread1: TcxVirtualTreeList;
     liThread1: TdxLayoutItem;
     vtlThread2: TcxVirtualTreeList;
-    dxLayoutItem1: TdxLayoutItem;
+    liThread2: TdxLayoutItem;
     colNumberT1: TcxTreeListColumn;
     colNumberT2: TcxTreeListColumn;
+    btnFastReport: TcxButton;
+    liFastReport: TdxLayoutItem;
+    pmFastReport: TPopupMenu;
+    miFRDesigner: TMenuItem;
+    miFRPreview: TMenuItem;
     procedure btnRunClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure miFRDesignerClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     FCallbackProc: TProc<WideString>;
     FList1: TList<integer>;
     FList2: TList<integer>;
+    FFRCntSplit1, FFRCntSplit2: integer;
+    FFRTotalCount, FFRSplitValue: integer;
+    FRunThreads: boolean;
+    FDllManager: IDllManager;
+    FIntfFR: IFrxDevDS;
+    procedure CheckFastReport(ADllManager: IDllManager);
     procedure vtlGetChildCount(Sender: TcxCustomTreeList;
       AParentNode: TcxTreeListNode; var ACount: Integer);
     procedure vtlGetNodeValue(Sender: TcxCustomTreeList;
@@ -44,9 +60,12 @@ type
     procedure CheckAndFillSimpleNumbers(var NextNum: Integer; MaxNum: Integer;
       var ASNLists: TStringList; var ResultList: TList<integer>;
       ListsCS: TCriticalSection; const AFileName: string);
+    function FRCustomFunction(AFuncName: WideString; ASourceName: WideString): variant;
+    procedure Run(MaxNum: integer; isSilent: boolean = false);
   public
     property CallbackProc: TProc<WideString> read FCallbackProc write FCallbackProc;
-    procedure Run(MaxNum: integer; isSilent: boolean = false);
+    property DLLManager: IDllManager read FDllManager write FDllManager;
+    class procedure RunForm(MaxNum: integer; ACallbackProc: TProc<WideString>; ADLLManager: IDllManager; isSilent: boolean = false);
   end;
 
 var
@@ -54,9 +73,13 @@ var
 
 implementation
 
-uses Math;
+
+uses System.Math, System.IOUtils, System.StrUtils;
 
 {$R *.dfm}
+
+//Для выгрузки в FastReport, чтобы грузить по частям.
+const DefaultSplitValue = 10000;
 
 function CheckSimpleNumber(ANum: integer): boolean;
 var
@@ -94,7 +117,7 @@ begin
   begin
     vtl1 := vtlThread1;
     vtl2 := vtlThread2;
-    vtl2.Clear;
+    vtl1.Clear;
     vtl2.Clear;
   end;
 
@@ -103,6 +126,7 @@ begin
   FList2.Clear;
   ListsCS := TCriticalSection.Create;
   try
+    FRunThreads := true;
     lthreads := TStringList.Create;
     try
       thread1 := TThread.CreateAnonymousThread(procedure
@@ -150,6 +174,28 @@ begin
     end;
   finally
     FreeAndNil(ListsCS);
+    FRunThreads := false;
+  end;
+end;
+
+class procedure TfrmSimpleNumbers.RunForm(MaxNum: integer;
+  ACallbackProc: TProc<WideString>; ADLLManager: IDllManager;
+  isSilent: boolean);
+begin
+  frmSimpleNumbers := TfrmSimpleNumbers.Create(nil);
+  try
+    if not isSilent then
+    begin
+      frmSimpleNumbers.CallbackProc := ACallbackProc;
+      frmSimpleNumbers.DLLManager := ADLLManager;
+      frmSimpleNumbers.ShowModal;
+    end
+      else
+    begin
+      frmSimpleNumbers.Run(MaxNum, true);
+    end;
+  finally
+    FreeAndNil(frmSimpleNumbers);
   end;
 end;
 
@@ -159,6 +205,7 @@ var
 begin
   maxNum := seMaxLimSimpleNumbers.Value;
   Run(maxNum);
+  liFastReport.Enabled := Assigned(FIntfFR) and Assigned(FList1) and Assigned(FList2);
 end;
 
 procedure TfrmSimpleNumbers.CheckAndFillSimpleNumbers(var NextNum: Integer;
@@ -204,23 +251,170 @@ begin
   end;
 end;
 
+procedure TfrmSimpleNumbers.CheckFastReport(ADllManager: IDllManager);
+var
+  intf: IInterface;
+begin
+  if not Assigned(FDllManager) then
+    FDllManager := ADllManager;
+  if not Assigned(FIntfFR) then
+  begin
+    intf := FDllManager.GetIntf(IFrxDevDS);
+    if Supports(intf, IFrxDevDS, FIntfFR) then
+      liFastReport.Visible := true;
+  end;
+end;
+
 procedure TfrmSimpleNumbers.DoCallbackProc(AMsg: WideString);
 begin
   if Assigned(FCallbackProc) then
     FCallbackProc(AMsg);
 end;
 
+procedure TfrmSimpleNumbers.FormCloseQuery(Sender: TObject;
+  var CanClose: Boolean);
+begin
+  CanClose := not FRunThreads;
+end;
+
 procedure TfrmSimpleNumbers.FormCreate(Sender: TObject);
 begin
   FCallbackProc := nil;
+  FRunThreads := false;
   FList1 := TList<integer>.Create;
   FList2 := TList<integer>.Create;
+  FDllManager := nil;
+  FIntfFR := nil;
 end;
 
 procedure TfrmSimpleNumbers.FormDestroy(Sender: TObject);
 begin
+  FDllManager := nil;
+  FIntfFR := nil;
   FreeAndNil(FList1);
   FreeAndNil(FList2);
+end;
+
+procedure TfrmSimpleNumbers.FormShow(Sender: TObject);
+begin
+  if Assigned(FDLLManager) then
+    CheckFastReport(FDllManager);
+end;
+
+function TfrmSimpleNumbers.FRCustomFunction(AFuncName,
+  ASourceName: WideString): variant;
+var
+  value: WideString;
+  i, cnt: integer;
+begin
+  Result := null;
+  if AFuncName = 'TotalCount' then
+  begin
+    Result := 0;
+    if (ASourceName = 'List1') then
+    begin
+      if Assigned(FList1) then
+        Result := FList1.Count
+    end
+      else if (ASourceName = 'List2') then
+    begin
+      if Assigned(FList2) then
+        Result := FList2.Count;
+    end;
+  end
+    else if AFuncName = 'AllValues' then
+  begin
+    value := '';
+    if (ASourceName = 'List1') then
+    begin
+      if FileExists('thread1.txt') then
+      begin
+        value := TFile.ReadAllText('thread1.txt');
+        value := ReplaceText(value, #13#10, ', ');
+      end;
+    end
+      else if (ASourceName = 'List2') then
+    begin
+      if FileExists('thread2.txt') then
+      begin
+        value := TFile.ReadAllText('thread2.txt');
+        value := ReplaceText(value, #13#10, ', ');
+      end;
+    end;
+    Result := value;
+  end
+  //разобьём все значения по частям. Будем отталкиваться от списка, где значений больше.
+    else if AFuncName = 'CountOfSplitAllValues' then
+  begin
+    Result := 1;
+    if not TryStrToInt(ASourceName, cnt) then
+      cnt := DefaultSplitValue;
+    FFRSplitValue := cnt;
+    if Assigned(FList1) and Assigned(FList2) then
+    begin
+      if FList1.Count > FList2.Count then
+        Result := (FList1.Count div cnt) + 1
+      else
+        Result := (FList2.Count div cnt) + 1;
+      FFRTotalCount := Result;
+    end;
+  end
+    else if AFuncName = 'GetPartValues' then
+  begin
+    value := '';
+    if ASourceName = 'List1' then
+    begin
+      if Assigned(FList1) then
+      begin
+        cnt := FFRCntSplit1;
+        inc(FFRCntSplit1, FFRSplitValue);
+        for i := cnt to FFRCntSplit1 - 1 do
+        begin
+          if i >= FList1.Count then
+            break;
+          if value = '' then
+            value := FList1[i].ToString
+          else
+            value := value + ',' + FList1[i].ToString;
+        end;
+      end;
+    end
+      else if ASourceName = 'List2' then
+    begin
+      if Assigned(FList2) then
+      begin
+        cnt := FFRCntSplit2;
+        inc(FFRCntSplit2, FFRSplitValue);
+        for i := cnt to FFRCntSplit2 - 1 do
+        begin
+          if i >= FList2.Count then
+            break;
+          if value = '' then
+            value := FList2[i].ToString
+          else
+            value := value + ',' + FList2[i].ToString;
+        end;
+      end;
+    end;
+    Result := value;
+  end;
+end;
+
+procedure TfrmSimpleNumbers.miFRDesignerClick(Sender: TObject);
+begin
+  if Assigned(FIntfFR) then
+  begin
+    FFRCntSplit1 := 0;
+    FFRCntSplit2 := 0;
+    FFRTotalCount := 1;
+    FFRSplitValue := DefaultSplitValue;
+    FIntfFR.SetCustomFunction(FRCustomFunction);
+    var ReportFile: string := ExtractFilePath(ParamStr(0)) + 'FastReportTemplates\SimpleNumbers.fr3';
+    if TMenuItem(Sender).Tag = 0 then
+      FIntfFR.DesignReport([], [], ReportFile)
+    else
+      FIntfFR.PreviewReport([], [], ReportFile);
+  end;
 end;
 
 procedure TfrmSimpleNumbers.vtlGetChildCount(Sender: TcxCustomTreeList;

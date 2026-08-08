@@ -7,7 +7,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, dxLayoutcxEditAdapters, cxContainer, cxEdit,
   dxLayoutContainer, cxTextEdit, cxMaskEdit, cxSpinEdit, cxClasses,
-  dxLayoutControl;
+  dxLayoutControl, dmSkins;
 
 type
   TfrmCalcPrice = class(TForm)

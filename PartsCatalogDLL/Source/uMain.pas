@@ -15,11 +15,12 @@ uses
   fCategoryEdit, fAttributeEdit, System.UITypes, fAttributeSelect, fAttributeDelete,
   cxFilter, cxCustomData, cxStyles, dxScrollbarAnnotations, cxTL, dxSkinNames,
   cxTLdxBarBuiltInMenu, cxInplaceContainer, cxTLData, cxMaskEdit, cxDropDownEdit,
-  dxSkinsCore, dxSkinBasic, dxSkinBlack, dxSkinBlue, dxSkinDevExpressDarkStyle,
-  dxSkinDevExpressStyle, dxSkinOffice2007Blue, dxSkinOffice2007Silver, dxSkinsForm,
-  dxSkinOffice2010Blue, dxSkinOffice2010Silver, dxSkinOffice2013LightGray,
-  dxSkinOffice2016Dark, dxSkinVS2010, dxLayoutLookAndFeels, dxSkinsdxRibbonPainter,        // ← для TdxRibbon + TdxBarManager
-  dxLayoutPainters;
+  dxSkinsCore, dxLayoutLookAndFeels, dxSkinsdxRibbonPainter,        // ← для TdxRibbon + TdxBarManager
+  dxLayoutPainters, uSkinHelper, dmSkins, dxSkinDevExpressDarkStyle,
+  dxSkinDevExpressStyle, dxSkinOffice2007Blue, dxSkinOffice2010Silver,
+  dxSkinOffice2013LightGray, dxSkinVS2010,
+  intf_dll_manager, frxDevDSIntf, Data.DB, Datasnap.Provider, Datasnap.DBClient,
+  dxRibbonGallery;
 
 type
   TfrmMain = class(TForm)
@@ -66,12 +67,16 @@ type
     lbtnDelAttribute: TdxBarLargeButton;
     acEditAttribute: TAction;
     lbtnEditAttribute: TdxBarLargeButton;
+    acFRDesigner: TAction;
+    btnFastReport: TdxBarLargeButton;
+    brReport: TdxBar;
     vtlCategories: TcxVirtualTreeList;
     vtlParts: TcxVirtualTreeList;
     vtlCategoriesName: TcxTreeListColumn;
     lgSkins: TdxLayoutGroup;
-    cmbSkins: TcxComboBox;
-    liSkins: TdxLayoutItem;
+    rddFastReport: TdxRibbonDropDownGallery;
+    btnFRDesigner: TdxBarLargeButton;
+    btnPreview: TdxBarLargeButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnSearchClick(Sender: TObject);
@@ -93,11 +98,11 @@ type
     procedure FormShow(Sender: TObject);
     procedure acDelAttributeExecute(Sender: TObject);
     procedure acEditAttributeExecute(Sender: TObject);
+    procedure acFRDesignerExecute(Sender: TObject);
     procedure vtlCategoriesFocusedNodeChanged(Sender: TcxCustomTreeList;
       APrevFocusedNode, AFocusedNode: TcxTreeListNode);
     procedure vtlCategoriesExpanding(Sender: TcxCustomTreeList;
       ANode: TcxTreeListNode; var Allow: Boolean);
-    procedure cmbSkinsPropertiesChange(Sender: TObject);
   private
     { Private declarations }
     FCallback: TProc<WideString>;
@@ -106,8 +111,9 @@ type
     FCurrentCategoryID: Integer;
     FCategoryDS: TVTSmartDataSource<TCategoryNodeData>;
     FPartDS: TVTLoadAllDataSource<TPartNodeData>;
+    FDllManager: IDllManager;
+    FIntfFR: IFrxDevDS;
 
-    procedure InitializeSkinList;
     function GetSelectedCategoryID: Integer;
     function GetSelectedCategoryName: string;
     function GetSelectedCategoryParentID: Integer;
@@ -119,7 +125,8 @@ type
     procedure BuildPartsColumns;
   public
     { Public declarations }
-    class function RunForm(ACallback: TProc<WideString>; var AMsg: WideString): boolean;
+    class function RunForm(ACallback: TProc<WideString>; var AMsg: WideString; ASkinName: WideString; ANativeStyle: boolean; ADllManager: IDllManager): boolean;
+    procedure SetDllManager(AMgr: IDllManager);
   end;
 
 var
@@ -143,6 +150,8 @@ begin
 end;
 
 procedure TfrmMain.FormShow(Sender: TObject);
+var
+  intf: IInterface;
 begin
   if not dmDB.PGConn.Connected then
     Application.Terminate;
@@ -150,8 +159,14 @@ begin
   FCategoryDS := TVTSmartDataSource<TCategoryNodeData>.Create(vtlCategories);
   FPartDS := TVTLoadAllDataSource<TPartNodeData>.Create(vtlParts);
 
+  if Assigned(FDllManager) then
+  begin
+    intf := FDllManager.GetIntf(IFrxDevDS);
+    if Supports(intf, IFrxDevDS, FIntfFR) then
+      brReport.Visible := Assigned(FIntfFR);
+  end;
+
   BuildCategoryTree;
-  InitializeSkinList;
 end;
 
 procedure TfrmMain.acAddAttributeExecute(Sender: TObject);
@@ -207,7 +222,7 @@ begin
       if FCatalogService.DeleteCategory(CatID, ErrMsg) then
       begin
         BuildCategoryTree;
-        vtlParts.Clear; // Очищаем таблицу деталей
+        FPartDS.Clear; // Очищаем таблицу деталей
       end
       else
         ShowMessage(ErrMsg);
@@ -465,24 +480,6 @@ begin
   end;
 end;
 
-procedure TfrmMain.cmbSkinsPropertiesChange(Sender: TObject);
-var
-  SelectedSkin: string;
-begin
-  SelectedSkin := VarToStr(cmbSkins.EditValue);
-  if SelectedSkin <> '' then
-  begin
-    RootLookAndFeel.BeginUpdate;
-    try
-      RootLookAndFeel.SkinName := SelectedSkin;
-      RootLookAndFeel.NativeStyle := False;
-      rbMain.ColorSchemeName := SelectedSkin;
-    finally
-      RootLookAndFeel.EndUpdate;
-    end;
-  end;
-end;
-
 function TfrmMain.GetSelectedCategoryID: Integer;
 var
   Data: TCategoryNodeData;
@@ -533,32 +530,6 @@ begin
     Result := Data.PartID;
 end;
 
-procedure TfrmMain.InitializeSkinList;
-var
-  SkinNames: TStringList;
-  i: Integer;
-  CurrentSkin: string;
-begin
-  SkinNames := TStringList.Create;
-  try
-    cxLookAndFeelPaintersManager.PopulateSkinNames(SkinNames);
-
-    cmbSkins.Properties.Items.Clear;
-    for i := 0 to SkinNames.Count - 1 do
-      cmbSkins.Properties.Items.Add(SkinNames[i]);
-
-    // Устанавливаем текущий скин в комбобоксе
-
-    CurrentSkin := RootLookAndFeel.SkinName;
-    if CurrentSkin = '' then
-      CurrentSkin := 'DevExpressStyle';
-
-    cmbSkins.EditValue := CurrentSkin;
-  finally
-    SkinNames.Free;
-  end;
-end;
-
 procedure TfrmMain.LoadCategoryData(ACategoryID: Integer);
 var
   i: Integer;
@@ -601,14 +572,16 @@ begin
 end;
 
 class function TfrmMain.RunForm(ACallback: TProc<WideString>;
-  var AMsg: WideString): boolean;
+  var AMsg: WideString; ASkinName: WideString; ANativeStyle: boolean; ADllManager: IDllManager): boolean;
 begin
   try
     dmDB := TdmDB.Create(nil);
     try
       frmMain := TfrmMain.Create(nil);
       try
+        ApplySkinToForm(frmMain, ASkinName, ANativeStyle, frmMain.rbMain);
         frmMain.FCallback := ACallback;
+        frmMain.SetDllManager(ADllManager);
         Result := true;
         frmMain.ShowModal;
       finally
@@ -666,6 +639,49 @@ begin
   CatData := FCategoryDS.CurrentObj;
   if Assigned(CatData) and (CatData.CategoryID > 0) then
     LoadCategoryData(CatData.CategoryID);
+end;
+
+procedure TfrmMain.SetDllManager(AMgr: IDllManager);
+begin
+  FDllManager := AMgr;
+end;
+
+procedure TfrmMain.acFRDesignerExecute(Sender: TObject);
+var
+  ReportFile, connStr: string;
+begin
+  if not Assigned(FIntfFR) then
+  begin
+    ShowMessage('Библиотека отчётов (frxDevDS) не загружена.');
+    Exit;
+  end;
+
+  ReportFile := ExtractFilePath(ParamStr(0)) + 'FastReportTemplates\PartsCatalog.fr3';
+
+  connStr := dmDB.PGConn.ConnectionString;
+  if not connStr.Contains('Password=') then
+    connStr := dmDB.PGConn.ConnectionString + ';Password=' + dmDB.PGConn.Params.Password;
+
+  dmDB.qryReportCategories.Open;
+  try
+    dmDB.qryReportParts.Open;
+    try
+      if TdxBarLargeButton(Sender).Tag = 1 then
+        FIntfFR.PreviewDBReport(
+        connStr,
+        ReportFile)
+      else
+        FIntfFR.DesignDBReport(
+        [dmDB.qryReportCategories.SQL.Text, dmDB.qryReportParts.SQL.Text],
+        ['Categories', 'Parts'],
+        connStr,
+        ReportFile);
+    finally
+      dmDB.qryReportParts.Close;
+    end;
+  finally
+    dmDB.qryReportCategories.Close;
+  end;
 end;
 
 end.

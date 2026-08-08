@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<TfrxReport Version="2023.2" DotMatrixReport="False" IniFile="\Software\Fast Reports" PreviewOptions.Buttons="167935" PreviewOptions.Zoom="1" PrintOptions.Printer="Default" PrintOptions.PrintOnSheet="0" ReportOptions.CreateDate="46239,4506500116" ReportOptions.Description.Text="" ReportOptions.LastChange="46239,4661131366" ScriptLanguage="PascalScript" ScriptText.Text="begin&#13;&#10;&#13;&#10;end.">
+  <Datasets>
+    <item DataSet="frxDS0" DataSetName="frxDS0"/>
+  </Datasets>
+  <TfrxDataPage Name="Data" HGuides.Text="" VGuides.Text="" Height="1000" Left="0" Top="0" Width="1000"/>
+  <TfrxReportPage Name="Page1" HGuides.Text="" VGuides.Text="" PaperWidth="210" PaperHeight="297" PaperSize="9" LeftMargin="10" RightMargin="10" TopMargin="10" BottomMargin="10" ColumnWidth="0" ColumnPositions.Text="" Frame.Typ="0" MirrorMode="0">
+    <TfrxMasterData Name="MasterData1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Frame.Typ="0" Height="18,89765" Left="0" Top="60,47248" Width="718,1107" ColumnWidth="0" ColumnGap="0" DataSet="frxDS0" DataSetName="frxDS0" RowCount="0">
+      <TfrxMemoView Name="frxDS0Таблица" IndexTag="1" AllowVectorExport="True" Left="0" Top="0" Width="151,1812" Height="18,89765" DataField="Таблица" DataSet="frxDS0" DataSetName="frxDS0" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="13" ParentFont="False" Text="[frxDS0.&#34;Таблица&#34;]"/>
+      <TfrxMemoView Name="frxDS0Триггер" IndexTag="1" AllowVectorExport="True" Left="377,953" Top="0" Width="151,1812" Height="18,89765" DataField="Триггер" DataSet="frxDS0" DataSetName="frxDS0" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="13" ParentFont="False" Text="[frxDS0.&#34;Триггер&#34;]"/>
+      <TfrxMemoView Name="frxDS0Логтаблица" IndexTag="1" AllowVectorExport="True" Left="529,1342" Top="0" Width="188,9765" Height="18,89765" DataField="Лог таблица" DataSet="frxDS0" DataSetName="frxDS0" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="15" ParentFont="False" Text="[frxDS0.&#34;Лог таблица&#34;]"/>
+      <TfrxMemoView Name="frxDS0Колонка" IndexTag="1" AllowVectorExport="True" Left="151,1812" Top="0" Width="226,7718" Height="18,89765" DataField="Колонка" DataSet="frxDS0" DataSetName="frxDS0" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="13" ParentFont="False" Text="[frxDS0.&#34;Колонка&#34;]"/>
+    </TfrxMasterData>
+    <TfrxHeader Name="Header1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Frame.Typ="0" Height="18,89764977" Left="0" Top="18,89765" Width="718,1107" ReprintOnNewPage="True">
+      <TfrxMemoView Name="Memo1" AllowVectorExport="True" Left="1,9E-7" Top="0" Width="151,18119883" Height="18,89764977" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="15" ParentFont="False" Text="Таблица"/>
+      <TfrxMemoView Name="Memo2" AllowVectorExport="True" Left="151,1812" Top="0" Width="226,77179883" Height="18,89764977" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="15" ParentFont="False" Text="Колонка"/>
+      <TfrxMemoView Name="Memo3" AllowVectorExport="True" Left="377,953" Top="0" Width="151,18119883" Height="18,89764977" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="15" ParentFont="False" Text="Триггер"/>
+      <TfrxMemoView Name="Memo4" AllowVectorExport="True" Left="529,1342" Top="0" Width="188,97649883" Height="18,89764977" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Arial" Font.Style="0" Frame.Typ="15" ParentFont="False" Text="Лог таблица"/>
+    </TfrxHeader>
+  </TfrxReportPage>
+</TfrxReport>

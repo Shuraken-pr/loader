@@ -13,17 +13,28 @@ uses
   intf_dll in '..\..\Common\intf_dll.pas',
   intf_common in '..\..\Common\intf_common.pas',
   intf_dll_manager in '..\..\Common\intf_dll_manager.pas',
-  uConnectionParams in 'uConnectionParams.pas' {frmConnections},
+  frxDevDSIntf in '..\..\Common\frxDevDSIntf.pas',
   uDMConn in 'uDMConn.pas' {dmConn: TDataModule},
   uLogData in 'uLogData.pas' {frmLogData},
-  cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas';
+  cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas',
+  dmSkins in '..\CommonModules\dmSkins.pas' {dmSkin: TDataModule},
+  intf_skin in '..\..\Common\intf_skin.pas',
+  FireDAC.Moni.Custom.Logger in '..\..\..\Common\FireDAC.Moni.Custom.Logger.pas',
+  FDMoniCustomLoggerHelper in '..\..\..\Common\FDMoniCustomLoggerHelper.pas',
+  uSkinHelper in '..\..\Common\uSkinHelper.pas',
+  uDBConnectionSettings in '..\..\..\Common\uDBConnectionSettings.pas',
+  uMultiDBSettingsForm in '..\..\..\Common\uMultiDBSettingsForm.pas' {frmMultiDBSettings};
 
 {$R *.res}
 
 type
-  TLogDataImpl = class(TInterfacedObject, IDLLIntf, IDllIntfRun, IUsesDllManager, ILogData)
+  TLogDataImpl = class(TInterfacedObject, IDLLIntf, IDllIntfRun, IUsesDllManager, ILogData, ISkinAware)
   private
     FDM: TdmConn;
+    FSkin: TdmSkin;
+    FSkinName: WideString;
+    FNativeStyle: boolean;
+    FIntfFR: IFrxDevDS;
     FDllManager: IDllManager;
   public
     constructor Create;
@@ -33,6 +44,7 @@ type
     function GetDescription: WideString; safecall;
     procedure Init; safecall;
     procedure Fin; safecall;
+    procedure ApplySkin(const ASkinName: WideString; ANativeStyle: Boolean = False); safecall;
 
     // IDllIntfRun
     procedure Run(ACallbackProc: TProc<WideString>; MainAppHandle: HWnd); safecall;
@@ -43,15 +55,31 @@ type
 
 { TLogDataImpl }
 
+procedure TLogDataImpl.ApplySkin(const ASkinName: WideString;
+  ANativeStyle: Boolean);
+begin
+  FSkinName := ASkinName;
+  FNativeStyle := ANativeStyle;
+   ApplySkinToDataModule(FSkin,
+     FSkin.dxSkinController,
+     FSkin.dxLayoutSkinLookAndFeel,
+     ASkinName, ANativeStyle);
+end;
+
 constructor TLogDataImpl.Create;
 begin
   inherited Create;
   dxInitialize;
+  FSkin := TdmSkin.Create(nil);
   FDM := TdmConn.Create(nil);
+  FIntfFR := nil;
 end;
 
 destructor TLogDataImpl.Destroy;
 begin
+  if Assigned(FSkin) then
+    FreeAndNil(FSkin);
+  FIntfFR := nil;
   FreeAndNil(FDM);
   dxFinalize;
   inherited;
@@ -81,16 +109,32 @@ procedure TLogDataImpl.Run(ACallbackProc: TProc<WideString>; MainAppHandle: HWnd
 var
   AMsg: WideString;
   OldHandle: HWnd;
+  intf: IInterface;
 begin
+  // Загружаем IFrxDevDS
+  if Assigned(FDllManager) and not Assigned(FIntfFR) then
+  begin
+    if not FDllManager.IsLoaded('IFrxDevDS') then
+      FDllManager.Load(DIFrxDevDS, False);
+    if FDllManager.IsLoaded('IFrxDevDS') then
+    begin
+      intf := FDllManager.GetIntf(IFrxDevDS);
+      if Assigned(intf) and Supports(intf, IFrxDevDS, FIntfFR) then
+      begin
+        FIntfFR.Init;
+      end;
+    end;
+  end;
+
   AMsg := '';
   OldHandle := Application.Handle;
   try
     Application.Handle := MainAppHandle;
 
-    if TfrmConnections.RunForm(FDM, AMsg) then
+    if FDM.Connect(AMsg) then
     begin
       ACallbackProc('Соединение успешно установлено');
-      TfrmLogData.RunForm(FDM, ACallbackProc, AMsg);
+      TfrmLogData.RunForm(FDM, ACallbackProc, AMsg, FSkinName, FNativeStyle, FIntfFR);
     end
     else
     begin

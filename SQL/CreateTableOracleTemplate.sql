@@ -1,4 +1,4 @@
-CREATE TABLE schemaname.tablename (
+﻿CREATE TABLE schemaname.tablename (
     id          NUMBER GENERATED ALWAYS AS IDENTITY NOT NULL,
 	orig_id NUMBER,
     columnsname,

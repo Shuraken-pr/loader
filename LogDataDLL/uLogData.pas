@@ -11,7 +11,10 @@ uses
   cxImageList, cxLocalization, System.Generics.Collections,
   System.StrUtils, cxVirtualTreeListHelper, cxFilter, cxCustomData, cxStyles,
   dxScrollbarAnnotations, cxTL, cxCheckBox, cxTextEdit, cxTLdxBarBuiltInMenu,
-  cxInplaceContainer, cxTLData;
+  cxInplaceContainer, cxTLData, dxLayoutLookAndFeels, dxSkinsdxRibbonPainter,
+  uSkinHelper, frxDevDSIntf, frxClass, dxRibbonGallery, dxSkinsCore,
+  dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle, dxSkinOffice2007Blue,
+  dxSkinOffice2010Silver, dxSkinOffice2013LightGray, dxSkinVS2010;
 
 {
 Таблица
@@ -92,6 +95,11 @@ type
     colColumn: TcxTreeListColumn;
     colTrigger: TcxTreeListColumn;
     colHaveLog: TcxTreeListColumn;
+    bFastReport: TdxBar;
+    btnFastReport: TdxBarLargeButton;
+    rddGallery: TdxRibbonDropDownGallery;
+    btnFRDesigner: TdxBarLargeButton;
+    btnFRPreview: TdxBarLargeButton;
     procedure acReconnectExecute(Sender: TObject);
     procedure acSaveExecute(Sender: TObject);
     procedure acDelTriggersExecute(Sender: TObject);
@@ -102,6 +110,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure acRefreshExecute(Sender: TObject);
     procedure colCheckPropertiesEditValueChanged(Sender: TObject);
+    procedure btnFRDesignerClick(Sender: TObject);
   private
     { Private declarations }
     FDM: TdmConn;
@@ -111,6 +120,7 @@ type
     FTrgList: TStringList;
     FCallback: TProc<WideString>;
     FDSLog: TVTLoadAllDataSource<TVTLogData>;
+    FIntfFR: IFrxDevDS;
     function LoadResourceToStringList(const AResName: WideString; AList: TStringList): boolean;
     procedure FillGrid;
     procedure SetDM;
@@ -125,9 +135,11 @@ type
     function BuildDropFunctionSQL(ASchema, ATableName: string): string;
     procedure ReplaceTemplateVars(ATemplate: TStringList; ASchema, ATableName, AColDefs,
       AColNames, ANewCols, AOldCols: string);
+    function FRCustomFunction(AFuncName: WideString; ASourceName: WideString): variant;
   public
     { Public declarations }
-    class function RunForm(ADM: TdmConn; ACallback: TProc<WideString>; var AMsg: WideString): boolean;
+    class function RunForm(ADM: TdmConn; ACallback: TProc<WideString>; var AMsg: WideString; ASkinName: WideString;
+      ANativeStyle: boolean; const AIntfFR: IFrxDevDS = nil): boolean;
   end;
 
 var
@@ -136,7 +148,7 @@ var
 implementation
 
 uses
-  uConnectionParams;
+  uConnectionParams, uDBConnectionSettings, uMultiDBSettingsForm;
 
 {$R *.dfm}
 
@@ -229,7 +241,7 @@ procedure TfrmLogData.acReconnectExecute(Sender: TObject);
 var
   AMsg: WideString;
 begin
-  if TfrmConnections.RunForm(FDM, AMsg) then
+  if FDM.Connect(AMsg, true) then
   begin
     FCallback('Переподключение к БД выполнено');
     SetDM;
@@ -299,6 +311,19 @@ begin
     for SchemaTable in TablesToProcess.Keys do
       TablesToProcess[SchemaTable].Columns.Free;
     TablesToProcess.Free;
+  end;
+end;
+
+procedure TfrmLogData.btnFRDesignerClick(Sender: TObject);
+begin
+  if Assigned(FIntfFR) then
+  begin
+    FIntfFR.SetCustomFunction(FRCustomFunction);
+    var ReportFile: string := ExtractFilePath(ParamStr(0)) + 'FastReportTemplates\LogData.fr3';
+    if TdxBarLargeButton(Sender).Tag = 1 then
+      FIntfFR.PreviewReport([TVTBaseDataSource<TVTBaseRecord>(FDSLog)], [vtlLog], ReportFile)
+    else
+      FIntfFR.DesignReport([TVTBaseDataSource<TVTBaseRecord>(FDSLog)], [vtlLog], ReportFile);
   end;
 end;
 
@@ -377,10 +402,12 @@ begin
   FCreateList := TStringList.Create;
   FTrgList := TStringList.Create;
   FDSLog := TVTLoadAllDataSource<TVTLogData>.Create(vtlLog);
+  FIntfFR := nil;
 end;
 
 procedure TfrmLogData.FormDestroy(Sender: TObject);
 begin
+  FIntfFR := nil;
   FreeAndNil(FTrgList);
   FreeAndNil(FCreateList);
   FreeAndNil(FCheckList);
@@ -389,7 +416,22 @@ end;
 
 procedure TfrmLogData.FormShow(Sender: TObject);
 begin
+  bFastReport.Visible := Assigned(FIntfFR);
   FillGrid;
+end;
+
+function TfrmLogData.FRCustomFunction(AFuncName,
+  ASourceName: WideString): variant;
+begin
+  Result := null;
+  if ASourceName = 'DSLog' then
+  begin
+    if AFuncName = 'GetCurrentLevel' then
+    begin
+      if Assigned(FDSLog) and Assigned(FDSLog.CalcNode) then
+        Result := FDSLog.CalcNode.Level;
+    end;
+  end;
 end;
 
 function TfrmLogData.LoadResourceToStringList(const AResName: WideString;
@@ -435,7 +477,8 @@ begin
   end;
 end;
 
-class function TfrmLogData.RunForm(ADM: TdmConn; ACallback: TProc<WideString>; var AMsg: WideString): boolean;
+class function TfrmLogData.RunForm(ADM: TdmConn; ACallback: TProc<WideString>; var AMsg: WideString;
+  ASkinName: WideString; ANativeStyle: boolean; const AIntfFR: IFrxDevDS = nil): boolean;
 begin
   Result := Assigned(ADM);
   if not Result then
@@ -447,9 +490,11 @@ begin
     if not Assigned(frmLogData) then
       frmLogData := TfrmLogData.Create(nil);
     try
+      ApplySkinToForm(frmLogData, ASkinName, ANativeStyle, frmLogData.rbActions);
       frmLogData.FDM := ADM;
       frmLogData.FCallback := ACallback;
       frmLogData.SetDM;
+      frmLogData.FIntfFR := AIntfFR;
       frmLogData.ShowModal;
     finally
       FreeAndNil(frmLogData);

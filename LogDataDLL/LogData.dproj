@@ -118,9 +118,7 @@
         <DCCReference Include="..\..\Common\intf_dll.pas"/>
         <DCCReference Include="..\..\Common\intf_common.pas"/>
         <DCCReference Include="..\..\Common\intf_dll_manager.pas"/>
-        <DCCReference Include="uConnectionParams.pas">
-            <Form>frmConnections</Form>
-        </DCCReference>
+        <DCCReference Include="..\..\Common\frxDevDSIntf.pas"/>
         <DCCReference Include="uDMConn.pas">
             <Form>dmConn</Form>
             <DesignClass>TDataModule</DesignClass>
@@ -129,6 +127,19 @@
             <Form>frmLogData</Form>
         </DCCReference>
         <DCCReference Include="..\..\Common\cxVirtualTreeListHelper.pas"/>
+        <DCCReference Include="..\CommonModules\dmSkins.pas">
+            <Form>dmSkin</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="..\..\Common\intf_skin.pas"/>
+        <DCCReference Include="..\..\..\Common\FireDAC.Moni.Custom.Logger.pas"/>
+        <DCCReference Include="..\..\..\Common\FDMoniCustomLoggerHelper.pas"/>
+        <DCCReference Include="..\..\Common\uSkinHelper.pas"/>
+        <DCCReference Include="..\..\..\Common\uDBConnectionSettings.pas"/>
+        <DCCReference Include="..\..\..\Common\uMultiDBSettingsForm.pas">
+            <Form>frmMultiDBSettings</Form>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

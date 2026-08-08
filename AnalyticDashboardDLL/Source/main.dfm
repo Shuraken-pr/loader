@@ -61,98 +61,6 @@ object frmMain: TfrmMain
     Align = alClient
     TabOrder = 2
     LayoutLookAndFeel = dmSkin.dxLayoutSkinLookAndFeel
-    object vtlEvents: TcxVirtualTreeList
-      Left = 26
-      Top = 53
-      Width = 960
-      Height = 288
-      Bands = <
-        item
-        end>
-      Navigator.Buttons.CustomButtons = <>
-      OptionsBehavior.ImmediateEditor = False
-      OptionsBehavior.MultiSort = False
-      OptionsBehavior.Sorting = False
-      OptionsData.Editing = False
-      OptionsData.Deleting = False
-      OptionsView.GridLines = tlglBoth
-      OptionsView.ShowRoot = False
-      OptionsView.TreeLineStyle = tllsSolid
-      ScrollbarAnnotations.CustomAnnotations = <>
-      TabOrder = 0
-      object vtlEventsID: TcxTreeListColumn
-        Caption.Text = 'id'
-        Width = 100
-        Position.ColIndex = 0
-        Position.RowIndex = 0
-        Position.BandIndex = 0
-        Summary.FooterSummaryItems = <>
-        Summary.GroupFooterSummaryItems = <>
-      end
-      object vtlEventsUserName: TcxTreeListColumn
-        Caption.Text = #1055#1086#1083#1100#1079#1086#1074#1072#1090#1077#1083#1100
-        Width = 100
-        Position.ColIndex = 1
-        Position.RowIndex = 0
-        Position.BandIndex = 0
-        Summary.FooterSummaryItems = <>
-        Summary.GroupFooterSummaryItems = <>
-      end
-      object vtlEventsDTChange: TcxTreeListColumn
-        Caption.Text = #1044#1072#1090#1072' '#1080#1079#1084#1077#1085#1077#1085#1080#1103
-        Width = 100
-        Position.ColIndex = 2
-        Position.RowIndex = 0
-        Position.BandIndex = 0
-        Summary.FooterSummaryItems = <>
-        Summary.GroupFooterSummaryItems = <>
-      end
-      object vtlEventsEventType: TcxTreeListColumn
-        Caption.Text = #1058#1080#1087' '#1089#1086#1073#1099#1090#1080#1103
-        Width = 100
-        Position.ColIndex = 3
-        Position.RowIndex = 0
-        Position.BandIndex = 0
-        Summary.FooterSummaryItems = <>
-        Summary.GroupFooterSummaryItems = <>
-      end
-      object vtlEventsIp: TcxTreeListColumn
-        Caption.Text = 'Ip'
-        Width = 100
-        Position.ColIndex = 4
-        Position.RowIndex = 0
-        Position.BandIndex = 0
-        Summary.FooterSummaryItems = <>
-        Summary.GroupFooterSummaryItems = <>
-      end
-      object vtlEventsSource: TcxTreeListColumn
-        Caption.Text = #1048#1089#1090#1086#1095#1085#1080#1082
-        Width = 100
-        Position.ColIndex = 5
-        Position.RowIndex = 0
-        Position.BandIndex = 0
-        Summary.FooterSummaryItems = <>
-        Summary.GroupFooterSummaryItems = <>
-      end
-      object vtlEventsStatus: TcxTreeListColumn
-        Caption.Text = #1057#1090#1072#1090#1091#1089
-        Width = 100
-        Position.ColIndex = 6
-        Position.RowIndex = 0
-        Position.BandIndex = 0
-        Summary.FooterSummaryItems = <>
-        Summary.GroupFooterSummaryItems = <>
-      end
-      object vtlEventsLatency: TcxTreeListColumn
-        Caption.Text = #1047#1072#1076#1077#1088#1078#1082#1072' ('#1084#1089')'
-        Width = 100
-        Position.ColIndex = 7
-        Position.RowIndex = 0
-        Position.BandIndex = 0
-        Summary.FooterSummaryItems = <>
-        Summary.GroupFooterSummaryItems = <>
-      end
-    end
     object vtlEventsStats: TcxVirtualTreeList
       Left = 10000
       Top = 10000
@@ -237,6 +145,65 @@ object frmMain: TfrmMain
         Summary.GroupFooterSummaryItems = <>
       end
     end
+    object grEvents: TcxGrid
+      Left = 26
+      Top = 53
+      Width = 960
+      Height = 288
+      TabOrder = 0
+      object tvEvents: TcxGridTableView
+        Navigator.Buttons.CustomButtons = <>
+        ScrollbarAnnotations.CustomAnnotations = <>
+        DataController.Summary.DefaultGroupSummaryItems = <>
+        DataController.Summary.FooterSummaryItems = <>
+        DataController.Summary.SummaryGroups = <>
+        OptionsBehavior.ImmediateEditor = False
+        OptionsCustomize.ColumnFiltering = False
+        OptionsCustomize.ColumnGrouping = False
+        OptionsCustomize.ColumnMoving = False
+        OptionsCustomize.ColumnSorting = False
+        OptionsCustomize.ColumnsQuickCustomizationShowCommands = False
+        OptionsData.Deleting = False
+        OptionsData.DeletingConfirmation = False
+        OptionsData.Editing = False
+        OptionsData.Inserting = False
+        OptionsView.CellAutoHeight = True
+        OptionsView.GroupByBox = False
+        object tvcId: TcxGridColumn
+          Caption = 'Id'
+        end
+        object tvcUserName: TcxGridColumn
+          Caption = #1055#1086#1083#1100#1079#1086#1074#1072#1090#1077#1083#1100
+          Width = 109
+        end
+        object tvcDTChange: TcxGridColumn
+          Caption = #1044#1072#1090#1072' '#1080#1079#1084#1077#1085#1077#1085#1080#1103
+          Width = 119
+        end
+        object tvcEventType: TcxGridColumn
+          Caption = #1058#1080#1087' '#1089#1086#1073#1099#1090#1080#1103
+          Width = 94
+        end
+        object tvcIp: TcxGridColumn
+          Caption = 'Ip'
+          Width = 99
+        end
+        object tvcSource: TcxGridColumn
+          Caption = #1048#1089#1090#1086#1095#1085#1080#1082
+          Width = 84
+        end
+        object tvcStatus: TcxGridColumn
+          Caption = #1057#1090#1072#1090#1091#1089
+        end
+        object tvcLatency: TcxGridColumn
+          Caption = #1047#1072#1076#1077#1088#1078#1082#1072' ('#1084#1089')'
+          Width = 143
+        end
+      end
+      object glEvents: TcxGridLevel
+        GridView = tvEvents
+      end
+    end
     object lcMainGroup_Root: TdxLayoutGroup
       AlignHorz = ahClient
       AlignVert = avClient
@@ -257,22 +224,22 @@ object frmMain: TfrmMain
       CaptionOptions.Text = #1057#1090#1072#1090#1080#1089#1090#1080#1082#1072' '#1087#1086' '#1089#1086#1073#1099#1090#1080#1103#1084
       Index = 1
     end
-    object liEvents: TdxLayoutItem
-      Parent = lgEventsInfo
-      AlignHorz = ahClient
-      AlignVert = avClient
-      Control = vtlEvents
-      ControlOptions.OriginalHeight = 150
-      ControlOptions.OriginalWidth = 250
-      ControlOptions.ShowBorder = False
-      Index = 0
-    end
     object liEventsStats: TdxLayoutItem
       Parent = lgEventsStats
       AlignHorz = ahClient
       AlignVert = avClient
       Control = vtlEventsStats
       ControlOptions.OriginalHeight = 150
+      ControlOptions.OriginalWidth = 250
+      ControlOptions.ShowBorder = False
+      Index = 0
+    end
+    object liEvents: TdxLayoutItem
+      Parent = lgEventsInfo
+      AlignHorz = ahClient
+      AlignVert = avClient
+      Control = grEvents
+      ControlOptions.OriginalHeight = 200
       ControlOptions.OriginalWidth = 250
       ControlOptions.ShowBorder = False
       Index = 0

@@ -25,7 +25,72 @@ uses
   dxSkinOffice2010Silver, dxSkinOffice2013LightGray, dxSkinVS2010, uSkinHelper,
   cxFilter, cxCustomData, cxStyles, dxScrollbarAnnotations, cxTL,
   cxTLdxBarBuiltInMenu, cxInplaceContainer, cxTLData, cxVirtualTreeListHelper,
-  VirtualEventsDataSource;
+  cxData, cxDataStorage, cxNavigator, dxDateRanges,
+  cxGridCustomView, cxGridCustomTableView, cxGridTableView, cxGridLevel, cxGrid;
+
+{
+id
+Пользователь
+Дата изменения
+Тип события
+Ip
+Источник
+Статус
+Задержка (мс)
+}
+
+type
+  /// <summary>
+  /// Простой класс-контейнер для данных события.
+  /// Используется в TVirtualDataCache и отображается через cxGrid OnGetCellDisplayText.
+  /// </summary>
+  TEventRecord = class
+  private
+    FId: Integer;
+    FUserName: string;
+    FOccured: TDateTime;
+    FEventType: string;
+    FIp: string;
+    FSource: string;
+    FStatus: string;
+    FLatencyMS: string;
+  public
+    property Id: Integer read FId write FId;
+    property UserName: string read FUserName write FUserName;
+    property Occured: TDateTime read FOccured write FOccured;
+    property EventType: string read FEventType write FEventType;
+    property Ip: string read FIp write FIp;
+    property Source: string read FSource write FSource;
+    property Status: string read FStatus write FStatus;
+    property LatencyMS: string read FLatencyMS write FLatencyMS;
+  end;
+
+  /// <summary>
+  /// Запись статистики событий для TVTLoadAllDataSource<TEventStatsRecord>.
+  /// Наследуется от TVTBaseRecord для интеграции с cxVirtualTreeList (vtlEventsStats).
+  /// </summary>
+  TEventStatsRecord = class(TVTBaseRecord)
+  private
+    FHour: TDateTime;
+    FSource: string;
+    FEventCount: Integer;
+    FAvgLatency: Extended;
+    FLatencyTrend: Extended;
+    FGrowthPct: Extended;
+    FAllEvents: Integer;
+  public
+    function GetValue(ColIdx: Integer): Variant; override;
+    procedure SetValue(ColIdx: Integer; const AValue: Variant); override;
+    procedure Assign(Source: TVTBaseRecord); override;
+
+    property Hour: TDateTime read FHour write FHour;
+    property Source: string read FSource write FSource;
+    property EventCount: Integer read FEventCount write FEventCount;
+    property AvgLatency: Extended read FAvgLatency write FAvgLatency;
+    property LatencyTrend: Extended read FLatencyTrend write FLatencyTrend;
+    property GrowthPct: Extended read FGrowthPct write FGrowthPct;
+    property AllEvents: Integer read FAllEvents write FAllEvents;
+  end;
 
 type
   TfrmMain = class(TForm)
@@ -53,18 +118,8 @@ type
     ilSmall: TcxImageList;
     btnFRDesigner: TdxBarLargeButton;
     btnFRPreview: TdxBarLargeButton;
-    vtlEvents: TcxVirtualTreeList;
-    liEvents: TdxLayoutItem;
     vtlEventsStats: TcxVirtualTreeList;
     liEventsStats: TdxLayoutItem;
-    vtlEventsID: TcxTreeListColumn;
-    vtlEventsUserName: TcxTreeListColumn;
-    vtlEventsDTChange: TcxTreeListColumn;
-    vtlEventsEventType: TcxTreeListColumn;
-    vtlEventsIp: TcxTreeListColumn;
-    vtlEventsSource: TcxTreeListColumn;
-    vtlEventsStatus: TcxTreeListColumn;
-    vtlEventsLatency: TcxTreeListColumn;
     vtlEventsStatsHour: TcxTreeListColumn;
     vtlEventsStatsSource: TcxTreeListColumn;
     vtlEventsStatsEventCount: TcxTreeListColumn;
@@ -72,6 +127,18 @@ type
     vtlEventsStatslatencyTrend: TcxTreeListColumn;
     vtlEventsStatsGrouwthPct: TcxTreeListColumn;
     vtlEventsStatsAllEvents: TcxTreeListColumn;
+    glEvents: TcxGridLevel;
+    grEvents: TcxGrid;
+    liEvents: TdxLayoutItem;
+    tvEvents: TcxGridTableView;
+    tvcId: TcxGridColumn;
+    tvcUserName: TcxGridColumn;
+    tvcDTChange: TcxGridColumn;
+    tvcEventType: TcxGridColumn;
+    tvcIp: TcxGridColumn;
+    tvcSource: TcxGridColumn;
+    tvcStatus: TcxGridColumn;
+    tvcLatency: TcxGridColumn;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnRefreshEventsClick(Sender: TObject);
@@ -93,7 +160,6 @@ type
     FRunningUpdateEventsStats: boolean;
     FCriticalSection: TCriticalSection;
     FEventCache: TVirtualDataCache<TEventRecord>;
-    FEventsDS: TEventsCacheDataSource;
     FEventsStatsDS: TVTLoadAllDataSource<TEventStatsRecord>;
     FLoadEventsStatsList: TObjectList<TEventStatsRecord>;
     FPoller: TRealTimePoller;
@@ -102,6 +168,13 @@ type
     procedure HandleCacheError(Sender: TObject; const ErrorMsg: string);
     procedure DoCallback(const AMsg: WideString);
     function FRCustomFunction(ANameFunc: WideString; ANameParam: WideString): variant;
+    // Обработчики событий cxGrid для виртуального режима (unbound mode)
+    procedure tvEventsTopRecordIndexChanged(Sender: TObject);
+    procedure tvcGetDisplayText(Sender: TcxCustomGridTableItem;
+      ARecord: TcxCustomGridRecord; var AText: string);
+    procedure tvEventsCustomDrawCell(Sender: TcxCustomGridTableView;
+      ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+      var ADone: Boolean);
   public
     { Public declarations }
     function InitConnectionPool: boolean;
@@ -179,6 +252,12 @@ begin
   // Создаём DataSource для статистики
   FEventsStatsDS := TVTLoadAllDataSource<TEventStatsRecord>.Create(vtlEventsStats);
 
+  // Подключаем обработчики событий cxGrid для виртуального режима
+  for var i := 0 to tvEvents.ColumnCount - 1 do
+    tvEvents.Columns[i].OnGetDisplayText := tvcGetDisplayText;
+  tvEvents.OnTopRecordIndexChanged := tvEventsTopRecordIndexChanged;
+  tvEvents.OnCustomDrawCell := tvEventsCustomDrawCell;
+
   edFilterSource.Properties.ImmediatePost := true;
   if InitConnectionPool then
   begin
@@ -205,7 +284,6 @@ begin
   end;
 
   FreeAndNil(FLoadEventsStatsList);
-  FreeAndNil(FEventsDS);
   FreeAndNil(FEventsStatsDS);
   FreeAndNil(FEventCache);
   FreeAndNil(FCriticalSection);
@@ -254,26 +332,49 @@ end;
 procedure TfrmMain.HandleNewPollerEvents(const AEvents: TArray<TEventPayload>);
 var
   i: Integer;
+  Rec: TEventRecord;
 begin
   if Length(AEvents) = 0 then
     Exit;
 
-  if not Assigned(FEventsDS) then
+  if not Assigned(FEventCache) then
     Exit;
 
-  vtlEvents.BeginUpdate;
+  tvEvents.BeginUpdate;
   try
     for i := Low(AEvents) to High(AEvents) do
-      FEventsDS.PrependRecord(AEvents[i]);
+    begin
+      Rec := TEventRecord.Create;
+      Rec.Id := AEvents[i].Id;
+      Rec.UserName := AEvents[i].UserName;
+      Rec.Occured := AEvents[i].Occured;
+      Rec.EventType := AEvents[i].EventType;
+      Rec.Ip := AEvents[i].Ip;
+      Rec.Source := AEvents[i].Source;
+      Rec.Status := AEvents[i].Status;
+      Rec.LatencyMS := AEvents[i].LatencyMS;
+      FEventCache.PrependRecord(Rec);
+    end;
+    // Обновляем количество записей в гриде
+    tvEvents.DataController.RecordCount := FEventCache.TotalCount;
   finally
-    vtlEvents.EndUpdate;
+    tvEvents.EndUpdate;
   end;
 end;
 
 procedure TfrmMain.HandlePageLoaded(Sender: TObject; PageIndex: Integer);
 begin
-  if Assigned(FEventsDS) then
-    FEventsDS.NotifyDataChanged;
+  // После загрузки страницы перерисовываем видимые ячейки
+  if Assigned(tvEvents) then
+  begin
+    tvEvents.BeginUpdate;
+    try
+      // Обновляем количество записей (на случай PrependRecord)
+      tvEvents.DataController.RecordCount := FEventCache.TotalCount;
+    finally
+      tvEvents.EndUpdate;
+    end;
+  end;
 end;
 
 procedure TfrmMain.HandleCacheError(Sender: TObject; const ErrorMsg: string);
@@ -444,18 +545,17 @@ begin
           FreeAndNil(conn);
         end;
 
-        // Шаг 2: Переход в UI-поток — создание кэша и настройка DataSource
+        // Шаг 2: Переход в UI-поток — создание кэша и настройка грида
         TThread.Synchronize(nil, procedure
         begin
-          // Освобождаем предыдущий DataSource и кэш
-          FreeAndNil(FEventsDS);
+          // Освобождаем предыдущий кэш
           FreeAndNil(FEventCache);
 
           // Создаём новый кэш с маппер-функцией
           FEventCache := TVirtualDataCache<TEventRecord>.Create('PgPool', 1000,
             function(qr: TFDQuery): TEventRecord
             begin
-              Result := TEventRecord.Create(nil);
+              Result := TEventRecord.Create;
               Result.Id := qr.FieldByName('id').AsInteger;
               Result.UserName := qr.FieldByName('username').AsString;
               Result.EventType := qr.FieldByName('event_type').AsString;
@@ -476,9 +576,13 @@ begin
           FEventCache.OnPageLoaded := HandlePageLoaded;
           FEventCache.OnError := HandleCacheError;
 
-          // Создаём DataSource для vtlEvents
-          FEventsDS := TEventsCacheDataSource.Create(vtlEvents, FEventCache);
-          vtlEvents.OptionsData.SmartLoad := False;
+          // Настраиваем грид: устанавливаем количество записей (без создания объектов)
+          tvEvents.BeginUpdate;
+          try
+            tvEvents.DataController.RecordCount := Total;
+          finally
+            tvEvents.EndUpdate;
+          end;
 
           // Скрываем прогресс-бар
           pbLoad.Visible := False;
@@ -659,6 +763,138 @@ end;
 procedure TfrmMain.SetDllManager(AMgr: IDllManager);
 begin
   FDllManager := AMgr;
+end;
+
+{ TEventStatsRecord }
+
+function TEventStatsRecord.GetValue(ColIdx: Integer): Variant;
+begin
+  case ColIdx of
+    0: Result := FormatDateTime('dd.mm.yyyy hh:nn', FHour);
+    1: Result := FSource;
+    2: Result := IntToStr(FEventCount);
+    3: if not IsZero(FAvgLatency) then
+         Result := FormatFloat('0.00 ms', FAvgLatency)
+       else
+         Result := '';
+    4: if not IsZero(FLatencyTrend) then
+         Result := FormatFloat('0.00 ms', FLatencyTrend)
+       else
+         Result := '';
+    5: if IsZero(FGrowthPct) then
+         Result := '-'
+       else if FGrowthPct > 0 then
+         Result := '+' + FormatFloat('0.0', FGrowthPct) + '%'
+       else
+         Result := FormatFloat('0.0', FGrowthPct) + '%';
+    6: Result := IntToStr(FAllEvents);
+  else
+    Result := '';
+  end;
+end;
+
+procedure TEventStatsRecord.SetValue(ColIdx: Integer; const AValue: Variant);
+begin
+  // Только для чтения
+end;
+
+procedure TEventStatsRecord.Assign(Source: TVTBaseRecord);
+var
+  Src: TEventStatsRecord;
+begin
+  if Source is TEventStatsRecord then
+  begin
+    Src := TEventStatsRecord(Source);
+    FHour := Src.FHour;
+    FSource := Src.FSource;
+    FEventCount := Src.FEventCount;
+    FAvgLatency := Src.FAvgLatency;
+    FLatencyTrend := Src.FLatencyTrend;
+    FGrowthPct := Src.FGrowthPct;
+    FAllEvents := Src.FAllEvents;
+  end;
+end;
+
+procedure TfrmMain.tvcGetDisplayText(Sender: TcxCustomGridTableItem;
+  ARecord: TcxCustomGridRecord; var AText: string);
+var
+  Rec: TEventRecord;
+  PageIdx: Integer;
+begin
+  // Пробуем получить запись из кэша
+  if Assigned(FEventCache) and FEventCache.GetRecord(ARecord.Index, Rec) then
+  begin
+    // Данные загружены — отображаем значение
+    case Sender.Index of
+      0: AText := IntToStr(Rec.Id);
+      1: AText := Rec.UserName;
+      2: AText := FormatDateTime('dd.mm.yyyy hh:nn:ss', Rec.Occured);
+      3: AText := Rec.EventType;
+      4: AText := Rec.Ip;
+      5: AText := Rec.Source;
+      6: AText := Rec.Status;
+      7: AText := Rec.LatencyMS;
+    else
+      AText := '';
+    end;
+  end
+  else
+  begin
+    // Данные не загружены — показываем плейсхолдер
+    AText := '⌛ ...';
+
+    // Запрашиваем загрузку нужной страницы асинхронно
+    if Assigned(FEventCache) then
+    begin
+      PageIdx := ARecord.Index div FEventCache.PageSize;
+      FEventCache.RequestPage(PageIdx);
+      // Предзагружаем следующую страницу
+      FEventCache.RequestPage(PageIdx + 1);
+    end;
+  end;
+end;
+
+{ Обработчики событий cxGrid для виртуального режима (unbound mode) }
+
+procedure TfrmMain.tvEventsTopRecordIndexChanged(Sender: TObject);
+var
+  TopIdx, LastVisibleIdx, NextPageIdx: Integer;
+  tv: TcxCustomGridTableView;
+begin
+  if sender is TcxCustomGridTableView then
+  begin
+    if not Assigned(FEventCache) then
+      Exit;
+    tv := TcxCustomGridTableView(Sender);
+
+    TopIdx := tv.Controller.TopRecordIndex;
+    if TopIdx < 0 then Exit;
+
+    // Определяем индекс последней видимой записи + буфер предзагрузки
+    LastVisibleIdx := TopIdx + tv.ViewData.RecordCount + FEventCache.PageSize;
+
+    // Загружаем страницу для буфера предзагрузки
+    NextPageIdx := LastVisibleIdx div FEventCache.PageSize;
+    FEventCache.RequestPage(NextPageIdx);
+    FEventCache.RequestPage(NextPageIdx + 1);
+  end;
+end;
+
+procedure TfrmMain.tvEventsCustomDrawCell(Sender: TcxCustomGridTableView;
+  ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
+  var ADone: Boolean);
+var
+  Rec: TEventRecord;
+begin
+  if not Assigned(FEventCache) then Exit;
+
+  // Если данные ещё не загружены — рисуем серым курсивом
+  if not FEventCache.GetRecord(AViewInfo.RecordViewInfo.GridRecord.Index, Rec) then
+  begin
+    ACanvas.Font.Color := clGray;
+    ACanvas.Font.Style := [fsItalic];
+  end;
+  ADone := False; // Позволяем стандартную отрисовку после наших настроек
 end;
 
 end.

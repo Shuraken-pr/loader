@@ -1772,8 +1772,8 @@ object frmRunTasks: TfrmRunTasks
   object dxFloatDockSite1: TdxFloatDockSite
     Left = 0
     Top = 0
-    Width = 545
-    Height = 536
+    Width = 1017
+    Height = 576
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -12
@@ -1782,6 +1782,8 @@ object frmRunTasks: TfrmRunTasks
     Visible = False
     FloatLeft = 870
     FloatTop = 209
+    ExplicitWidth = 545
+    ExplicitHeight = 536
     DockingType = 0
     OriginalWidth = 545
     OriginalHeight = 536

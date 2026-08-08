@@ -107,14 +107,14 @@ begin
     try
       SettingsFile := ExtractFilePath(Application.ExeName) + 'PartsCatalog.xml';
       if FileExists(SettingsFile) then
-        Settings.LoadFromFile(SettingsFile);
+        Settings.LoadFromFile(SettingsFile, []);
       NeedShowForm := not (Settings.IsValid(ErrMsg) and Settings.TestConnection(ErrMsg));
       if NeedShowForm then
       begin
         Settings.DBType := dbPostgreSQL;
         Settings.ShowDBTypeSelector := false;
         if TfrmMultiDBSettings.Execute(Settings) then
-          Settings.SaveToFile('PartsCatalog.xml')
+          Settings.SaveToFile('PartsCatalog.xml', [])
         else
           exit;
       end;

@@ -243,7 +243,7 @@ begin
         liStop.Visible := false;
       if AStatus in [rtsBreak, rtsFinish] then
       begin
-        liFastReport.Visible := true;
+        liFastReport.Visible := Assigned(FIntfFR);
         AObj.dtEnd := Now;
         if supports(AObj.TaskIntf, IRunTaskFindInExeFile) then
         begin

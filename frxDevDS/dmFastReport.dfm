@@ -189,4 +189,8 @@ object dmFR: TdmFR
     Left = 224
     Top = 232
   end
+  object frxDialogControls1: TfrxDialogControls
+    Left = 332
+    Top = 168
+  end
 end

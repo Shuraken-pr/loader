@@ -81,6 +81,7 @@ type
     rddGallery: TdxRibbonDropDownGallery;
     btnFRDesigner: TdxBarLargeButton;
     btnFRPreview: TdxBarLargeButton;
+    btnAnalyticDashboard: TdxBarLargeButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnFRDesignerClick(Sender: TObject);
@@ -336,6 +337,7 @@ begin
   FButtons.AddEntry(btnRunTasks, DIRunTasks, nil);
   FButtons.AddEntry(btnLogData, DILogData, nil);
   FButtons.AddEntry(btnCatalogParts, DICatalogParts, nil);
+  FButtons.AddEntry(btnAnalyticDashboard, DIAnalyticDashboard, nil);
 
   LoadAllDlls;
   FSLog := TVTLoadAllDataSource<TVTVLog>.Create(vtlLog);

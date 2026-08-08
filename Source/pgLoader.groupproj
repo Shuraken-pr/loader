@@ -33,6 +33,9 @@
         <Projects Include="..\frxDevDS\frxDevDS.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="..\AnalyticDashboardDLL\Source\AnalyticDashboard.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -131,14 +134,23 @@
     <Target Name="frxDevDS:Make">
         <MSBuild Projects="..\frxDevDS\frxDevDS.dproj" Targets="Make"/>
     </Target>
+    <Target Name="AnalyticDashboard">
+        <MSBuild Projects="..\AnalyticDashboardDLL\Source\AnalyticDashboard.dproj"/>
+    </Target>
+    <Target Name="AnalyticDashboard:Clean">
+        <MSBuild Projects="..\AnalyticDashboardDLL\Source\AnalyticDashboard.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="AnalyticDashboard:Make">
+        <MSBuild Projects="..\AnalyticDashboardDLL\Source\AnalyticDashboard.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="loader;SimpleNumbers;CalcPrice;Explorer;RunTaskFind;RunTaskShellExecute;RunTasks;LogData;PartsCatalog;frxDevDS"/>
+        <CallTarget Targets="loader;SimpleNumbers;CalcPrice;Explorer;RunTaskFind;RunTaskShellExecute;RunTasks;LogData;PartsCatalog;frxDevDS;AnalyticDashboard"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="loader:Clean;SimpleNumbers:Clean;CalcPrice:Clean;Explorer:Clean;RunTaskFind:Clean;RunTaskShellExecute:Clean;RunTasks:Clean;LogData:Clean;PartsCatalog:Clean;frxDevDS:Clean"/>
+        <CallTarget Targets="loader:Clean;SimpleNumbers:Clean;CalcPrice:Clean;Explorer:Clean;RunTaskFind:Clean;RunTaskShellExecute:Clean;RunTasks:Clean;LogData:Clean;PartsCatalog:Clean;frxDevDS:Clean;AnalyticDashboard:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="loader:Make;SimpleNumbers:Make;CalcPrice:Make;Explorer:Make;RunTaskFind:Make;RunTaskShellExecute:Make;RunTasks:Make;LogData:Make;PartsCatalog:Make;frxDevDS:Make"/>
+        <CallTarget Targets="loader:Make;SimpleNumbers:Make;CalcPrice:Make;Explorer:Make;RunTaskFind:Make;RunTaskShellExecute:Make;RunTasks:Make;LogData:Make;PartsCatalog:Make;frxDevDS:Make;AnalyticDashboard:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

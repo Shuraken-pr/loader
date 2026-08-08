@@ -418,7 +418,7 @@ object frmMain: TfrmMain
     object brParts: TdxBar
       Caption = #1044#1077#1090#1072#1083#1080
       CaptionButtons = <>
-      DockedLeft = 417
+      DockedLeft = 488
       DockedTop = 0
       FloatLeft = 780
       FloatTop = 2
@@ -446,7 +446,7 @@ object frmMain: TfrmMain
     object brXML: TdxBar
       Caption = 'XML'
       CaptionButtons = <>
-      DockedLeft = 572
+      DockedLeft = 643
       DockedTop = 0
       FloatLeft = 780
       FloatTop = 2
@@ -484,7 +484,7 @@ object frmMain: TfrmMain
       OneOnRow = False
       Row = 0
       UseOwnFont = False
-      Visible = True
+      Visible = False
       WholeRow = False
     end
     object lbtnAddCategory: TdxBarLargeButton

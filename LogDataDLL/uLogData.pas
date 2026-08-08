@@ -416,6 +416,7 @@ end;
 
 procedure TfrmLogData.FormShow(Sender: TObject);
 begin
+  bFastReport.Visible := Assigned(FIntfFR);
   FillGrid;
 end;
 

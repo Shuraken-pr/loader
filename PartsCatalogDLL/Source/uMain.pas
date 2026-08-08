@@ -658,6 +658,7 @@ begin
 
   ReportFile := ExtractFilePath(ParamStr(0)) + 'FastReportTemplates\PartsCatalog.fr3';
 
+  connStr := dmDB.PGConn.ConnectionString;
   if not connStr.Contains('Password=') then
     connStr := dmDB.PGConn.ConnectionString + ';Password=' + dmDB.PGConn.Params.Password;
 

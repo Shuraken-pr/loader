@@ -16,7 +16,7 @@ uses
   cxProgressBar, FireDAC.DApt, System.Generics.Collections, Vcl.ComCtrls, RealTimePoller,
   dxLayoutContainer, dxLayoutControl, cxPC, dxDockControl, dxDockPanel,
   dxLayoutcxEditAdapters, cxTextEdit, cxMaskEdit, cxSpinEdit, Vcl.StdCtrls,
-  dxLayoutControlAdapters, Vcl.Buttons, settings, cxCalendar,
+  dxLayoutControlAdapters, Vcl.Buttons, cxCalendar,
   dxDateTimeWheelPicker, cxBarEditItem, FDMoniCustomLoggerHelper,
   VirtualDataCache, uConnectionSemaphore, intf_dll_manager, frxDevDSIntf,
   uDBConnectionSettings, uMultiDBSettingsForm, dxRibbonGallery,
@@ -370,7 +370,10 @@ begin
     tvEvents.BeginUpdate;
     try
       // Обновляем количество записей (на случай PrependRecord)
-      tvEvents.DataController.RecordCount := FEventCache.TotalCount;
+      if tvEvents.DataController.RecordCount <> FEventCache.TotalCount then
+        tvEvents.DataController.RecordCount := FEventCache.TotalCount
+      else
+        tvEvents.DataController.Refresh;
     finally
       tvEvents.EndUpdate;
     end;
@@ -552,7 +555,7 @@ begin
           FreeAndNil(FEventCache);
 
           // Создаём новый кэш с маппер-функцией
-          FEventCache := TVirtualDataCache<TEventRecord>.Create('PgPool', 1000,
+          FEventCache := TVirtualDataCache<TEventRecord>.Create('PgPool', 10000,
             function(qr: TFDQuery): TEventRecord
             begin
               Result := TEventRecord.Create;

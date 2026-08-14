@@ -1,4 +1,4 @@
-program DllManagerFixture;
+﻿program DllManagerFixture;
 
 {$IFNDEF TESTINSIGHT}
 {$APPTYPE CONSOLE}

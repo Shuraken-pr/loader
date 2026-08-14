@@ -158,6 +158,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="..\..\Common\intf_dll.pas"/>
+        <DCCReference Include="..\..\Common\intf_common.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -198,7 +199,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\exe\TestDLL.dll" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="exe\TestDLL.dll" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>TestDLL.dll</RemoteName>
                         <Overwrite>true</Overwrite>

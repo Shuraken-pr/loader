@@ -7,3 +7,8 @@
 *.ident*
 *.txt
 *.skincfg
+*.dsk
+*.rsm
+*.xml
+*.json
+*.rc

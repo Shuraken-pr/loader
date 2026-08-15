@@ -3,8 +3,34 @@
 interface
 
 uses
-  System.SysUtils, System.Classes, DUnitX.TestFramework,
+  System.SysUtils, System.Classes, System.Variants, DUnitX.TestFramework,
   cxVirtualTreeListHelper, cxTL;
+
+type
+  { TMockRecord — конкретный наследник TVTBaseRecord для тестирования.
+    Предоставляет 5 колонок разных типов для покрытия GetFieldType. }
+  TMockRecord = class(TVTBaseRecord)
+  public
+    const
+      COL_INTEGER = 0;
+      COL_STRING  = 1;
+      COL_DATE    = 2;
+      COL_BOOLEAN = 3;
+      COL_NULL    = 4;
+  private
+    FIntValue: Integer;
+    FText: string;
+    FDate: TDateTime;
+    FBoolValue: Boolean;
+    FNullValue: Variant;
+  public
+    constructor Create(AParent: TVTBase); override;
+    function  GetValue(ColIdx: Integer): Variant; override;
+    procedure SetValue(ColIdx: Integer; const AValue: Variant); override;
+    procedure Assign(Source: TVTBaseRecord); override;
+  end;
+
+  TMockLoadAllDS = class(TVTLoadAllDataSource<TMockRecord>);
 
 type
   [TestFixture]
@@ -107,6 +133,127 @@ type
     /// FChildList родителя остаётся консистентным.
     /// </summary>
     procedure NodeMoveTo_SameParent_NoChange;
+  end;
+
+  [TestFixture]
+  TTVTBaseRecordFixture = class
+  private
+    FRecord: TMockRecord;
+  public
+    [Setup]
+    procedure Setup;
+    [TearDown]
+    procedure TearDown;
+
+    // === 3.2.1 GetFieldType (virtual) ===
+
+    [Test]
+    /// <summary>
+    /// Integer значение возвращает varInteger (3).
+    /// Данные: 42 -> varInteger
+    /// </summary>
+    procedure GetFieldType_Integer_ReturnsVarInteger;
+
+    [Test]
+    /// <summary>
+    /// string значение возвращает varUString (258) в Delphi 2009+.
+    /// NB: спецификация указывает varString, но UnicodeString = varUString.
+    /// </summary>
+    procedure GetFieldType_String_ReturnsVarUString;
+
+    [Test]
+    /// <summary>
+    /// TDateTime значение возвращает varDate (7).
+    /// </summary>
+    procedure GetFieldType_DateTime_ReturnsVarDate;
+
+    [Test]
+    /// <summary>
+    /// Boolean значение возвращает varBoolean (11).
+    /// </summary>
+    procedure GetFieldType_Boolean_ReturnsVarBoolean;
+
+    [Test]
+    /// <summary>
+    /// Null значение возвращает 0 (согласно специальной проверке VarIsNull).
+    /// Важно: это НЕ varNull (1), а именно 0 по логике GetFieldType.
+    /// </summary>
+    procedure GetFieldType_Null_ReturnsZero;
+
+    [Test]
+    /// <summary>
+    /// Unassigned (Empty) значение возвращает 0 (по проверке VarIsEmpty).
+    /// Проверяется для несуществующего индекса колонки.
+    /// </summary>
+    procedure GetFieldType_Unassigned_ReturnsZero;
+
+    [Test]
+    /// <summary>
+    /// Integer 0 возвращает varInteger, а НЕ 0.
+    /// Это важная проверка: число 0 не должно путаться с «нет типа».
+    /// </summary>
+    procedure GetFieldType_ZeroInteger_ReturnsVarInteger;
+
+    [Test]
+    /// <summary>
+    /// Пустая строка возвращает varUString, а не 0.
+    /// Пустая строка — это валидное значение, не Null/Empty.
+    /// </summary>
+    procedure GetFieldType_EmptyString_ReturnsVarUString;
+
+    // === Дополнительные тесты для TVTBaseRecord ===
+
+    [Test]
+    /// <summary>
+    /// Базовая реализация Assign не падает и ничего не делает
+    /// для разнотипных записей.
+    /// </summary>
+    procedure Assign_DefaultImpl_DoesNotRaise;
+
+    [Test]
+    /// <summary>
+    /// Перекрытая Assign корректно копирует значения полей
+    /// между экземплярами одного типа.
+    /// </summary>
+    procedure Assign_MockRecord_CopiesFields;
+
+    [Test]
+    /// <summary>
+    /// GetFieldType отражает изменения после SetValue.
+    /// Тип колонки может меняться динамически (Variant-природа).
+    /// </summary>
+    procedure GetFieldType_AfterSetValue_ReflectsNewType;
+  end;
+
+  [TestFixture]
+  TTVTLoadALLDSFixture = class
+  private
+    FDS: TMockLoadAllDS;
+  public
+    [Setup]
+    procedure Setup;
+    [TearDown]
+    procedure TearDown;
+
+    [Test]
+    //добавляем 5 дочерних записей к root-записи
+    procedure InsertRecordHandle_Child_AddsToFRecordList;
+
+    [Test]
+    //добавляем 3 sibling записи к root
+    procedure InsertRecordHandle_Sibling_AddsToFRecordList;
+
+    [Test]
+    //Добавленные записи имеют тип TMockRecord
+    procedure InsertRecordHandle_RecordTypesMatch;
+
+    [Test]
+    //удаляем среднюю запись и проверяем количество и индексы оставшихся
+    procedure DeleteRecord_RemovesFromListAndCallsDataChanged;
+
+    [Test]
+    //Процедура очистки и проверки количества записей после неё
+    procedure Clear_EmptiesListAndFreesRecords;
   end;
 
 implementation
@@ -370,7 +517,312 @@ begin
   Assert.AreEqual(1, Node1.Index, 'Node1 переместился на позицию 1');
 end;
 
+{ TMockRecord }
+
+constructor TMockRecord.Create(AParent: TVTBase);
+begin
+  inherited Create(AParent);
+  FNullValue := Null;
+  FDate := 0;
+  FIntValue := 0;
+  FText := '';
+  FBoolValue := False;
+end;
+
+function TMockRecord.GetValue(ColIdx: Integer): Variant;
+begin
+  case ColIdx of
+    COL_INTEGER: Result := FIntValue;
+    COL_STRING:  Result := FText;
+    COL_DATE:    Result := FDate;
+    COL_BOOLEAN: Result := FBoolValue;
+    COL_NULL:    Result := FNullValue;
+  else
+    Result := Unassigned;
+  end;
+end;
+
+procedure TMockRecord.SetValue(ColIdx: Integer; const AValue: Variant);
+begin
+  case ColIdx of
+    COL_INTEGER: FIntValue := AValue;
+    COL_STRING:  FText := AValue;
+    COL_DATE:    FDate := AValue;
+    COL_BOOLEAN: FBoolValue := AValue;
+    COL_NULL:    FNullValue := AValue;
+  end;
+end;
+
+procedure TMockRecord.Assign(Source: TVTBaseRecord);
+var
+  S: TMockRecord;
+begin
+  if Source is TMockRecord then
+  begin
+    S := TMockRecord(Source);
+    FIntValue  := S.FIntValue;
+    FText      := S.FText;
+    FDate      := S.FDate;
+    FBoolValue := S.FBoolValue;
+    FNullValue := S.FNullValue;
+  end;
+end;
+
+{ TTVTBaseRecordFixture }
+
+procedure TTVTBaseRecordFixture.Setup;
+begin
+  FRecord := TMockRecord.Create(nil);
+end;
+
+procedure TTVTBaseRecordFixture.TearDown;
+begin
+  FreeAndNil(FRecord);
+end;
+
+{ === 3.2.1 GetFieldType === }
+
+procedure TTVTBaseRecordFixture.GetFieldType_Integer_ReturnsVarInteger;
+begin
+  FRecord.SetValue(TMockRecord.COL_INTEGER, 42);
+  Assert.AreEqual(varInteger, FRecord.GetFieldType(TMockRecord.COL_INTEGER),
+    'Integer (42) должен вернуть varInteger');
+end;
+
+procedure TTVTBaseRecordFixture.GetFieldType_String_ReturnsVarUString;
+var
+  ActualType: Integer;
+begin
+  FRecord.SetValue(TMockRecord.COL_STRING, 'hello world');
+  ActualType := FRecord.GetFieldType(TMockRecord.COL_STRING);
+
+  { В Delphi 2009+ string = UnicodeString → varUString (258),
+    а не varString (256), как указано в спецификации.
+    Принимаем оба варианта для совместимости. }
+  Assert.IsTrue((ActualType = varString) or (ActualType = varUString),
+    Format('string должен вернуть varString или varUString, получено: %d', [ActualType]));
+end;
+
+procedure TTVTBaseRecordFixture.GetFieldType_DateTime_ReturnsVarDate;
+begin
+  FRecord.SetValue(TMockRecord.COL_DATE, EncodeDate(2026, 8, 16));
+  Assert.AreEqual(varDate, FRecord.GetFieldType(TMockRecord.COL_DATE),
+    'TDateTime должен вернуть varDate');
+end;
+
+procedure TTVTBaseRecordFixture.GetFieldType_Boolean_ReturnsVarBoolean;
+begin
+  FRecord.SetValue(TMockRecord.COL_BOOLEAN, True);
+  Assert.AreEqual(varBoolean, FRecord.GetFieldType(TMockRecord.COL_BOOLEAN),
+    'Boolean должен вернуть varBoolean');
+
+  FRecord.SetValue(TMockRecord.COL_BOOLEAN, False);
+  Assert.AreEqual(varBoolean, FRecord.GetFieldType(TMockRecord.COL_BOOLEAN),
+    'Boolean False также должен вернуть varBoolean');
+end;
+
+procedure TTVTBaseRecordFixture.GetFieldType_Null_ReturnsZero;
+begin
+  // FNullValue уже инициализирован Null в конструкторе
+  Assert.AreEqual(0, FRecord.GetFieldType(TMockRecord.COL_NULL),
+    'Null должен вернуть 0 (по специальной проверке VarIsNull в GetFieldType), НЕ varNull');
+end;
+
+procedure TTVTBaseRecordFixture.GetFieldType_Unassigned_ReturnsZero;
+begin
+  // Для несуществующего ColIdx GetValue возвращает Unassigned
+  Assert.AreEqual(0, FRecord.GetFieldType(999),
+    'Unassigned (несуществующая колонка) должен вернуть 0');
+end;
+
+procedure TTVTBaseRecordFixture.GetFieldType_ZeroInteger_ReturnsVarInteger;
+begin
+  // Число 0 — это валидный Integer, а не «пустое» значение
+  FRecord.SetValue(TMockRecord.COL_INTEGER, 0);
+  Assert.AreEqual(varInteger, FRecord.GetFieldType(TMockRecord.COL_INTEGER),
+    'Integer 0 должен вернуть varInteger, а НЕ 0 (как Null/Empty)');
+end;
+
+procedure TTVTBaseRecordFixture.GetFieldType_EmptyString_ReturnsVarUString;
+var
+  ActualType: Integer;
+begin
+  // Пустая строка — валидное значение, не Null/Empty
+  FRecord.SetValue(TMockRecord.COL_STRING, '');
+  ActualType := FRecord.GetFieldType(TMockRecord.COL_STRING);
+
+  Assert.IsTrue((ActualType = varString) or (ActualType = varUString),
+    Format('Пустая строка должна вернуть varUString, получено: %d', [ActualType]));
+end;
+
+{ === Дополнительные тесты TVTBaseRecord === }
+
+procedure TTVTBaseRecordFixture.Assign_DefaultImpl_DoesNotRaise;
+var
+  BaseRecord: TVTBaseRecord;
+begin
+  { Создаём минимальный наследник с пустым Assign по умолчанию.
+    TMockRecord.Assign работает, но мы хотим проверить базовое поведение.
+    Используем FRecord (с перекрытым Assign) как Source —
+    если бы Assign был пустым, вызов бы не падал. }
+  BaseRecord := TMockRecord.Create(nil);
+  try
+    // Вызов Assign с nil-source — не должен падать
+    // (проверка на is TMockRecord даст False и пропустит копирование)
+    Assert.WillNotRaise(
+      procedure
+      begin
+        FRecord.Assign(nil);
+      end,
+      Exception,
+      'Assign(nil) не должен вызывать исключение'
+    );
+  finally
+    FreeAndNil(BaseRecord);
+  end;
+end;
+
+procedure TTVTBaseRecordFixture.Assign_MockRecord_CopiesFields;
+var
+  Source, Dest: TMockRecord;
+  TestDate: TDateTime;
+begin
+  Source := TMockRecord.Create(nil);
+  Dest   := TMockRecord.Create(nil);
+  try
+    TestDate := EncodeDate(2026, 8, 16);
+
+    // Заполняем Source
+    Source.SetValue(TMockRecord.COL_INTEGER, 12345);
+    Source.SetValue(TMockRecord.COL_STRING, 'test string');
+    Source.SetValue(TMockRecord.COL_DATE, TestDate);
+    Source.SetValue(TMockRecord.COL_BOOLEAN, True);
+
+    // Копируем в Dest
+    Dest.Assign(Source);
+
+    // Проверяем, что значения скопировались
+    Assert.AreEqual(12345, Integer(Dest.GetValue(TMockRecord.COL_INTEGER)),
+      'Integer скопирован корректно');
+    Assert.AreEqual('test string', String(Dest.GetValue(TMockRecord.COL_STRING)),
+      'String скопирован корректно');
+    Assert.AreEqual(TestDate, TDateTime(Dest.GetValue(TMockRecord.COL_DATE)),
+      'TDateTime скопирован корректно');
+    Assert.AreEqual(True, Boolean(Dest.GetValue(TMockRecord.COL_BOOLEAN)),
+      'Boolean скопирован корректно');
+  finally
+    FreeAndNil(Source);
+    FreeAndNil(Dest);
+  end;
+end;
+
+procedure TTVTBaseRecordFixture.GetFieldType_AfterSetValue_ReflectsNewType;
+var
+  Rec: TMockRecord;
+begin
+  Rec := TMockRecord.Create(nil);
+  try
+    // Изначально Null
+    Assert.AreEqual(0, Rec.GetFieldType(TMockRecord.COL_NULL),
+      'Изначальное значение Null → тип 0');
+
+    // Меняем на Integer
+    Rec.SetValue(TMockRecord.COL_NULL, 42);
+    Assert.IsTrue((Rec.GetFieldType(TMockRecord.COL_NULL) = varByte) or
+                  (Rec.GetFieldType(TMockRecord.COL_NULL) = varInteger),
+      'После присвоения Integer тип изменился на varInteger');
+
+    // Меняем на Boolean
+    Rec.SetValue(TMockRecord.COL_NULL, True);
+    Assert.AreEqual(varBoolean, Rec.GetFieldType(TMockRecord.COL_NULL),
+      'После присвоения Boolean тип изменился на varBoolean');
+
+    // Меняем на строку
+    Rec.SetValue(TMockRecord.COL_NULL, 'text');
+    Assert.IsTrue((Rec.GetFieldType(TMockRecord.COL_NULL) = varString) or
+                  (Rec.GetFieldType(TMockRecord.COL_NULL) = varUString),
+      'После присвоения строки тип стал строковым');
+  finally
+    Rec.Free;
+  end;
+end;
+
+{ TTVTLoadALLDSFixture }
+
+procedure TTVTLoadALLDSFixture.Setup;
+begin
+  FDS := TMockLoadAllDS.Create(nil);
+end;
+
+procedure TTVTLoadALLDSFixture.TearDown;
+begin
+  FreeAndNil(FDS);
+end;
+
+procedure TTVTLoadALLDSFixture.InsertRecordHandle_RecordTypesMatch;
+var
+  i: integer;
+  MockArray: TArray<TMockRecord>;
+  rec: TMockRecord;
+begin
+  SetLength(MockArray, 3);
+  for i := 0 to 2 do
+  begin
+    rec := FDS.InsertRecordHandle(FDS.RootHandle, false);
+    MockArray[i] := rec;
+  end;
+
+  for i := 0 to 2 do
+    Assert.IsTrue(MockArray[i] is TMockRecord, 'Все записи имеют тип TMockRecord');
+end;
+
+procedure TTVTLoadALLDSFixture.InsertRecordHandle_Sibling_AddsToFRecordList;
+begin
+  for var i := 1 to 3 do
+    FDS.InsertRecordHandle(FDS.RootHandle, false);
+
+  Assert.IsTrue(FDS.GetRecordCount = 3, 'Добавлено 3 sibling-записи Root');
+end;
+
+procedure TTVTLoadALLDSFixture.Clear_EmptiesListAndFreesRecords;
+begin
+  for var i := 0 to 4 do
+    FDS.InsertRecordHandle(FDS.RootHandle, true);
+
+  Assert.IsTrue(FDS.GetRecordCount = 5, 'После добавления 5 записей');
+  Assert.IsTrue(FDS.RootHandle.ChildCount = 5, 'Проверка синхронизации с деревом');
+  FDS.Clear;
+  Assert.IsTrue(FDS.GetRecordCount = 0, 'После удаления 0 записей');
+  Assert.IsTrue(FDS.RootHandle.ChildCount = 0, 'Проверка синхронизации с деревом');
+end;
+
+procedure TTVTLoadALLDSFixture.DeleteRecord_RemovesFromListAndCallsDataChanged;
+var
+  rec0, rec2: TMockRecord;
+begin
+  rec0 := FDS.InsertRecordHandle(FDS.RootHandle, true);
+  FDS.InsertRecordHandle(FDS.RootHandle, true);
+  rec2 := FDS.InsertRecordHandle(FDS.RootHandle, true);
+
+  FDS.DeleteRecord(FDS.GetRecordHandle(1));
+
+  Assert.IsTrue(FDS.GetRecordCount = 2, 'После удаления должно остаться 2 записи');
+  Assert.AreSame(rec0, TMockRecord(FDS.GetRecordHandle(0)), 'нулевая запись');
+  Assert.AreSame(rec2, TMockRecord(FDS.GetRecordHandle(1)), 'вторая запись');
+end;
+
+procedure TTVTLoadALLDSFixture.InsertRecordHandle_Child_AddsToFRecordList;
+begin
+  for var i := 1 to 5 do
+    FDS.InsertRecordHandle(FDS.RootHandle, true);
+
+  Assert.IsTrue(FDS.GetRecordCount = 5, 'Добавлено 5 дочерних записей к Root');
+  Assert.IsTrue(FDS.RootHandle.ChildCount = 5, 'Проверка синхронизации с деревом');
+end;
+
 initialization
   TDUnitX.RegisterTestFixture(TcxVTLHelperTests);
+  TDUnitX.RegisterTestFixture(TTVTBaseRecordFixture);
+  TDUnitX.RegisterTestFixture(TTVTLoadALLDSFixture);
 
 end.

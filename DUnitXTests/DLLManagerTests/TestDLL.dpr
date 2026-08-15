@@ -4,8 +4,8 @@ uses
   System.SysUtils,
   System.Classes,
   WinApi.Windows,
-  intf_dll in '..\..\Common\intf_dll.pas',
-  intf_common in '..\..\Common\intf_common.pas';
+  intf_dll in '..\..\..\Common\intf_dll.pas',
+  intf_common in '..\..\..\Common\intf_common.pas';
 
 {$R *.res}
 

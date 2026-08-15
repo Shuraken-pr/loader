@@ -14,9 +14,9 @@ uses
   {$ENDIF }
   DUnitX.TestFramework,
   uDllManagerFixture in 'uDllManagerFixture.pas',
-  DllManager in '..\..\Common\DllManager.pas',
-  intf_common in '..\..\Common\intf_common.pas',
-  intf_dll in '..\..\Common\intf_dll.pas';
+  DllManager in '..\..\..\Common\DllManager.pas',
+  intf_common in '..\..\..\Common\intf_common.pas',
+  intf_dll in '..\..\..\Common\intf_dll.pas';
 
 { keep comment here to protect the following conditional from being removed by the IDE when adding a unit }
 {$IFNDEF TESTINSIGHT}

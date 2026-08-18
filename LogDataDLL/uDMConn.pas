@@ -50,7 +50,7 @@ begin
   try
     SettingsFile := ExtractFilePath(Application.ExeName) + 'LogData.xml';
     if FileExists(SettingsFile) then
-      Settings.LoadFromFile(SettingsFile);
+      Settings.LoadFromFile(SettingsFile, []);
     if NeedReconnect then
       NeedShowForm := true
     else
@@ -58,7 +58,7 @@ begin
     if NeedShowForm then
     begin
       if TfrmMultiDBSettings.Execute(Settings) then
-        Settings.SaveToFile('LogData.xml')
+        Settings.SaveToFile('LogData.xml', [])
       else
         exit;
     end;

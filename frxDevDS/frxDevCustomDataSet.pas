@@ -27,16 +27,17 @@ type
     FCurrentRecNo: Integer;           { 0 = не начинали, 1 = на записи, 2+ = EOF }
     FEofFlag: Boolean;
   protected
-    function GetValue(Index: string): Variant; override;
     function GetDisplayText(Index: string): WideString; override;
     function GetFieldType(Index: string): TfrxFieldType; override;
     property FieldIndexes: TList<Integer> read FFieldIndexes;
     property FieldTypes: TList<TfrxFieldType> read FFieldTypes;
+    property FieldNames: TStringList read FFieldNames;
   public
     constructor Create(AOwner: TComponent; ASource: TVTBaseRecord;
       AFieldNames: TStringList; AFieldIndexes: TList<Integer>;
       AFieldTypes: TList<TfrxFieldType>); reintroduce;
     destructor Destroy; override;
+    function GetValue(Index: string): Variant; override;
     procedure Open; override;
     procedure Close; override;
     procedure First; override;
@@ -74,6 +75,7 @@ type
     function GetFieldType(Index: string): TfrxFieldType; override;
     property FieldIndexes: TList<Integer> read FFieldIndexes;
     property FieldTypes: TList<TfrxFieldType> read FFieldTypes;
+    property CurrentIndex: Integer read FCurrentIndex;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -350,6 +352,7 @@ end;
 procedure TfrxDevCustomDataSet.Open;
 begin
   FCurrentIndex := -1;
+  FCurrentNode := nil;
   inherited;
 end;
 
@@ -357,6 +360,7 @@ procedure TfrxDevCustomDataSet.Close;
 begin
   FCurrentIndex := -1;
   FActiveAdapter := nil;
+  FCurrentNode := nil;
   inherited;
 end;
 

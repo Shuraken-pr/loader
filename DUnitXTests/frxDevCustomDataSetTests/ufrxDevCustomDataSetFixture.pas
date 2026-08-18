@@ -351,6 +351,178 @@ type
     procedure GetAdapterForRecord_CacheClearedOnReassign;
   end;
 
+  { ============================================================ }
+  { TfrxDevCustomDataSetAdapterFixture — изолированные тесты      }
+  { TVTRecordAdapter без VCL-зависимостей.                        }
+  { Полностью автономная фикстура, проверяющая сам адаптер        }
+  { без участия TfrxDevCustomDataSet и TcxVirtualTreeList.        }
+  { ============================================================ }
+  [TestFixture]
+  TfrxDevCustomDataSetAdapterFixture = class
+  private
+    FSource: TMockRecord;
+    FFieldNames: TStringList;
+    FFieldIndexes: TList<Integer>;
+    FFieldTypes: TList<TfrxFieldType>;
+
+    /// <summary>
+    /// Заполняет метаданные стандартными значениями (ID, Name, Date).
+    /// </summary>
+    procedure PrepareMetadata;
+  public
+    [Setup]
+    procedure Setup;
+    [TearDown]
+    procedure TearDown;
+
+    { ============================================================ }
+    { === 4.2.1 Конструктор и инициализация === }
+    { ============================================================ }
+
+    /// <summary>
+    /// 4.2.1.1 Конструктор корректно инициализирует все поля:
+    /// FSource = ASource, FFieldNames/FFieldIndexes/FFieldTypes
+    /// скопированы (не по ссылке), FCurrentRecNo = 0, FEofFlag = False.
+    /// </summary>
+    [Test]
+    procedure Create_InitializesFieldsCorrectly;
+
+    /// <summary>
+    /// 4.2.1.2 Конструктор с nil коллекциями не вызывает исключений.
+    /// Проверяет устойчивость к некорректным параметрам.
+    /// </summary>
+    [Test]
+    procedure Create_WithNilCollections_DoesNotRaise;
+
+    { ============================================================ }
+    { === 4.2.2 Навигация (всегда одна запись) === }
+    { ============================================================ }
+
+    /// <summary>
+    /// 4.2.2.1 Open сбрасывает FCurrentRecNo в 0 и FEofFlag в False.
+    /// </summary>
+    [Test]
+    procedure Open_ResetsRecNo;
+
+    /// <summary>
+    /// 4.2.2.2 First сбрасывает FCurrentRecNo в 0.
+    /// </summary>
+    [Test]
+    procedure First_ResetsRecNo;
+
+    /// <summary>
+    /// 4.2.2.3 После First + Next FEofFlag становится True
+    /// (семантика "одна запись на адаптер").
+    /// </summary>
+    [Test]
+    procedure Next_SetsEofToTrue;
+
+    /// <summary>
+    /// 4.2.2.4 Eof возвращает True после Next (FCurrentRecNo >= 1).
+    /// </summary>
+    [Test]
+    procedure Eof_TrueAfterNext;
+
+    /// <summary>
+    /// 4.2.2.5 RecordCount всегда возвращает 1
+    /// (семантика "одна запись на адаптер").
+    /// </summary>
+    [Test]
+    procedure RecordCount_AlwaysOne;
+
+    /// <summary>
+    /// 4.2.2.6 (дополнительный) Повторный First после Next
+    /// сбрасывает состояние в начало.
+    /// </summary>
+    [Test]
+    procedure First_AfterNext_ResetsState;
+
+    /// <summary>
+    /// 4.2.2.7 (дополнительный) Повторный Next после Eof
+    /// не вызывает исключений.
+    /// </summary>
+    [Test]
+    procedure Next_AfterEof_IsSafe;
+
+    { ============================================================ }
+    { === 4.2.3 GetValue === }
+    { ============================================================ }
+
+    /// <summary>
+    /// 4.2.3.1 GetValue для известного поля возвращает значение
+    /// из FSource по индексу FFieldIndexes[ColIdx].
+    /// </summary>
+    [Test]
+    procedure GetValue_KnownField_ReturnsValue;
+
+    /// <summary>
+    /// 4.2.3.2 GetValue для неизвестного поля возвращает Null
+    /// (FFieldNames.IndexOf вернул -1).
+    /// </summary>
+    [Test]
+    procedure GetValue_UnknownField_ReturnsNull;
+
+    /// <summary>
+    /// 4.2.3.3 GetValue при FSource = nil возвращает Null
+    /// (без Access Violation).
+    /// </summary>
+    [Test]
+    procedure GetValue_NilSource_ReturnsNull;
+
+    { ============================================================ }
+    { === 4.2.4 GetFieldList === }
+    { ============================================================ }
+
+    /// <summary>
+    /// 4.2.4.1 GetFieldList копирует FFieldNames в переданный список
+    /// через List.Assign.
+    /// </summary>
+    [Test]
+    procedure GetFieldList_ReturnsFieldNames;
+
+    { ============================================================ }
+    { === 4.2.5 FieldsCount === }
+    { ============================================================ }
+
+    /// <summary>
+    /// 4.2.5.1 FieldsCount возвращает FFieldNames.Count.
+    /// </summary>
+    [Test]
+    procedure FieldsCount_ReturnsFieldNamesCount;
+
+    { ============================================================ }
+    { === 4.2.6 Дополнительные тесты === }
+    { ============================================================ }
+
+    /// <summary>
+    /// 4.2.6.1 (дополнительный) GetDisplayText форматирует значения:
+    /// Integer -> '42', String -> 'Test', Boolean -> 'True', Null -> ''.
+    /// </summary>
+    [Test]
+    procedure GetDisplayText_FormatsValues;
+
+    /// <summary>
+    /// 4.2.6.2 (дополнительный) GetFieldType возвращает тип из
+    /// FFieldTypes[ColIdx] для известного поля.
+    /// </summary>
+    [Test]
+    procedure GetFieldType_ReturnsMappedType;
+
+    /// <summary>
+    /// 4.2.6.3 (дополнительный) GetFieldType для неизвестного поля
+    /// возвращает fftString (default).
+    /// </summary>
+    [Test]
+    procedure GetFieldType_UnknownField_ReturnsString;
+
+    /// <summary>
+    /// 4.2.6.4 (дополнительный) Поиск имён полей в GetValue
+    /// case-insensitive (TStringList.CaseSensitive=False по умолчанию).
+    /// </summary>
+    [Test]
+    procedure GetValue_CaseInsensitive;
+  end;
+
 implementation
 
 { ================================================================ }
@@ -2109,7 +2281,857 @@ begin
   end;
 end;
 
+{ ================================================================ }
+{ TfrxDevCustomDataSetAdapterFixture implementation                }
+{ ================================================================ }
+
+procedure TfrxDevCustomDataSetAdapterFixture.PrepareMetadata;
+begin
+  FFieldNames.AddStrings(['ID', 'Name', 'Date']);
+  FFieldIndexes.AddRange([TMockRecord.COL_INTEGER,
+                          TMockRecord.COL_STRING,
+                          TMockRecord.COL_DATE]);
+  FFieldTypes.AddRange([fftNumeric, fftString, fftDateTime]);
+end;
+
+procedure TfrxDevCustomDataSetAdapterFixture.Setup;
+begin
+  { Создаём минимальную инфраструктуру: одну запись и метаданные.
+    VCL-инициализация НЕ требуется (тесты полностью автономны).
+    TcxVirtualTreeList и TfrxDevCustomDataSet не используются. }
+  FSource := TMockRecord.Create(nil);
+  FFieldNames := TStringList.Create;
+  FFieldIndexes := TList<Integer>.Create;
+  FFieldTypes := TList<TfrxFieldType>.Create;
+
+  { Заполняем стандартными метаданными для большинства тестов. }
+  PrepareMetadata;
+
+  { Инициализируем запись конкретными значениями. }
+  FSource.SetValue(TMockRecord.COL_INTEGER, 42);
+  FSource.SetValue(TMockRecord.COL_STRING, 'Test');
+  FSource.SetValue(TMockRecord.COL_DATE, EncodeDate(2026, 1, 15));
+  FSource.SetValue(TMockRecord.COL_BOOLEAN, True);
+  FSource.SetValue(TMockRecord.COL_NULL, Null);
+end;
+
+procedure TfrxDevCustomDataSetAdapterFixture.TearDown;
+begin
+  { Освобождаем в обратном порядке.
+    ВАЖНО: TVTRecordAdapter при создании делает КОПИИ коллекций
+    (через Assign/AddRange), поэтому он владеет своими копиями,
+    а не нашими FFieldNames/FFieldIndexes/FFieldTypes.
+    Наши коллекции освобождаем мы сами. }
+  FreeAndNil(FFieldTypes);
+  FreeAndNil(FFieldIndexes);
+  FreeAndNil(FFieldNames);
+  FreeAndNil(FSource);
+end;
+
+{ === 4.2.1.1 Create_InitializesFieldsCorrectly === }
+procedure TfrxDevCustomDataSetAdapterFixture.Create_InitializesFieldsCorrectly;
+var
+  Adapter: TTestTVTRecordAdapter;
+begin
+  { Спецификация:
+    - Конструктор TVTRecordAdapter.Create(AOwner, ASource, AFieldNames,
+      AFieldIndexes, AFieldTypes) должен:
+      1. Сохранить FSource = ASource
+      2. Скопировать FFieldNames из AFieldNames (через Assign)
+      3. Скопировать FFieldIndexes из AFieldIndexes (через AddRange)
+      4. Скопировать FFieldTypes из AFieldTypes (через AddRange)
+      5. Инициализировать FCurrentRecNo = 0
+      6. Инициализировать FEofFlag = False
+
+    Для проверки используем TTestTVTRecordAdapter (реэкспорт
+    protected-свойств FieldIndexes, FieldTypes, FieldNames). }
+
+  // === Act ===
+  Adapter := TTestTVTRecordAdapter.Create(
+    nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    // === Assert: FSource сохранён ===
+    Assert.AreSame(FSource, Adapter.SourceRecord,
+      'FSource должен быть сохранён в Adapter.SourceRecord');
+
+    // === Assert: FFieldNames скопирован (копия, а не ссылка) ===
+    Assert.AreEqual(3, Adapter.FieldNames.Count,
+      'FieldNames.Count = 3 (скопировано из AFieldNames)');
+    Assert.AreEqual('ID', Adapter.FieldNames[0], 'FieldNames[0] = ID');
+    Assert.AreEqual('Name', Adapter.FieldNames[1], 'FieldNames[1] = Name');
+    Assert.AreEqual('Date', Adapter.FieldNames[2], 'FieldNames[2] = Date');
+    Assert.AreNotSame(FFieldNames, Adapter.FieldNames,
+      'Adapter должен владеть СВОЕЙ копией FieldNames, а не ссылкой');
+
+    FFieldNames[0] := 'ChangedName';
+    FFieldNames.Add('AddedName');
+    Assert.AreEqual('ID', Adapter.FieldNames[0],
+      'Изменение исходных FieldNames не должно менять копию адаптера');
+    Assert.AreEqual(3, Adapter.FieldNames.Count,
+      'Добавление в исходные FieldNames не должно менять копию адаптера');
+
+    // === Assert: FFieldIndexes скопирован (копия, а не ссылка) ===
+    Assert.AreEqual(3, Adapter.FieldIndexes.Count,
+      'FieldIndexes.Count = 3 (скопировано из AFieldIndexes)');
+    Assert.AreEqual(TMockRecord.COL_INTEGER, Adapter.FieldIndexes[0],
+      'FieldIndexes[0] = COL_INTEGER');
+    Assert.AreEqual(TMockRecord.COL_STRING, Adapter.FieldIndexes[1],
+      'FieldIndexes[1] = COL_STRING');
+    Assert.AreEqual(TMockRecord.COL_DATE, Adapter.FieldIndexes[2],
+      'FieldIndexes[2] = COL_DATE');
+    Assert.AreNotSame(FFieldIndexes, Adapter.FieldIndexes,
+      'Adapter должен владеть СВОЕЙ копией FieldIndexes, а не ссылкой');
+
+    FFieldIndexes[0] := TMockRecord.COL_BOOLEAN;
+    FFieldIndexes.Add(TMockRecord.COL_NULL);
+    Assert.AreEqual(TMockRecord.COL_INTEGER, Adapter.FieldIndexes[0],
+      'Изменение исходных FieldIndexes не должно менять копию адаптера');
+    Assert.AreEqual(3, Adapter.FieldIndexes.Count,
+      'Добавление в исходные FieldIndexes не должно менять копию адаптера');
+
+    // === Assert: FFieldTypes скопирован (копия, а не ссылка) ===
+    Assert.AreEqual(3, Adapter.FieldTypes.Count,
+      'FieldTypes.Count = 3 (скопировано из AFieldTypes)');
+    Assert.AreEqual(fftNumeric, Adapter.FieldTypes[0],
+      'FieldTypes[0] = fftNumeric');
+    Assert.AreEqual(fftString, Adapter.FieldTypes[1],
+      'FieldTypes[1] = fftString');
+    Assert.AreEqual(fftDateTime, Adapter.FieldTypes[2],
+      'FieldTypes[2] = fftDateTime');
+    Assert.AreNotSame(FFieldTypes, Adapter.FieldTypes,
+      'Adapter должен владеть СВОЕЙ копией FieldTypes, а не ссылкой');
+
+    FFieldTypes[0] := fftBoolean;
+    FFieldTypes.Add(fftString);
+    Assert.AreEqual(fftNumeric, Adapter.FieldTypes[0],
+      'Изменение исходных FieldTypes не должно менять копию адаптера');
+    Assert.AreEqual(3, Adapter.FieldTypes.Count,
+      'Добавление в исходные FieldTypes не должно менять копию адаптера');
+
+    // === Assert: FCurrentRecNo = 0, FEofFlag = False (проверяем через поведение) ===
+    Assert.IsFalse(Adapter.Eof,
+      'После создания: Eof = False (FEofFlag = False)');
+    Assert.AreEqual(1, Adapter.RecordCount,
+      'RecordCount = 1 (семантика "одна запись")');
+  finally
+    FreeAndNil(Adapter);
+  end;
+end;
+
+{ === 4.2.1.2 Create_WithNilCollections_DoesNotRaise === }
+procedure TfrxDevCustomDataSetAdapterFixture.Create_WithNilCollections_DoesNotRaise;
+var
+  Adapter: TVTRecordAdapter;
+begin
+  { Спецификация:
+    - Конструктор с nil коллекциями не должен вызывать исключений.
+    - Это защита от некорректных параметров (багоустойчивость).
+
+    Источник логики (TVTRecordAdapter.Create):
+      if Assigned(AFieldNames) then
+        FFieldNames.Assign(AFieldNames);
+      if Assigned(AFieldIndexes) then
+        FFieldIndexes.AddRange(AFieldIndexes);
+      if Assigned(AFieldTypes) then
+        FFieldTypes.AddRange(AFieldTypes);
+    Все операции обёрнуты в Assigned-проверки. }
+
+  // === Act + Assert: все три коллекции nil ===
+  Assert.WillNotRaise(
+    procedure
+    begin
+      Adapter := TVTRecordAdapter.Create(nil, nil, nil, nil, nil);
+      try
+        Assert.IsNotNull(Adapter, 'Adapter должен быть создан даже с nil параметрами');
+      finally
+        FreeAndNil(Adapter);
+      end;
+    end,
+    Exception,
+    'Создание с nil коллекциями не должно вызывать исключений');
+
+  // === Act + Assert: только FSource nil ===
+  Assert.WillNotRaise(
+    procedure
+    begin
+      Adapter := TVTRecordAdapter.Create(
+        nil, nil, FFieldNames, FFieldIndexes, FFieldTypes);
+      try
+        Assert.IsNotNull(Adapter, 'Adapter с nil Source должен быть создан');
+      finally
+        FreeAndNil(Adapter);
+      end;
+    end,
+    Exception,
+    'Создание с nil Source не должно вызывать исключений');
+end;
+
+{ === 4.2.2.1 Open_ResetsRecNo === }
+procedure TfrxDevCustomDataSetAdapterFixture.Open_ResetsRecNo;
+var
+  Adapter: TVTRecordAdapter;
+begin
+  { Спецификация:
+    - Open сбрасывает FCurrentRecNo в 0 и FEofFlag в False.
+    - Это подготовка к навигации.
+
+    Источник логики (TVTRecordAdapter.Open):
+      procedure TVTRecordAdapter.Open;
+      begin
+        FCurrentRecNo := 0;
+        FEofFlag := False;
+        ...
+      end; }
+
+  Adapter := TVTRecordAdapter.Create(
+    nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    // Имитируем состояние после Next (Eof = True)
+    Adapter.Next;
+    Assert.IsTrue(Adapter.Eof,
+      'После Next: Eof = True (FCurrentRecNo >= 1)');
+
+    // === Act ===
+    Adapter.Open;
+
+    // === Assert: состояние сброшено ===
+    Assert.IsFalse(Adapter.Eof,
+      'После Open: Eof = False (FEofFlag сброшен)');
+
+    // Косвенная проверка FCurrentRecNo = 0: First должен работать
+    Adapter.First;
+    Assert.IsFalse(Adapter.Eof,
+      'После Open + First: на записи (FCurrentRecNo = 0)');
+  finally
+    FreeAndNil(Adapter);
+  end;
+end;
+
+{ === 4.2.2.2 First_ResetsRecNo === }
+procedure TfrxDevCustomDataSetAdapterFixture.First_ResetsRecNo;
+var
+  Adapter: TVTRecordAdapter;
+begin
+  { Спецификация:
+    - First сбрасывает FCurrentRecNo в 0.
+    - Это возвращение к началу набора данных.
+
+    Источник логики (TVTRecordAdapter.First):
+      procedure TVTRecordAdapter.First;
+      begin
+        FCurrentRecNo := 0;
+        FEofFlag := False;
+        ...
+      end; }
+
+  Adapter := TVTRecordAdapter.Create(
+    nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    // Имитируем состояние в конце (Eof = True)
+    Adapter.Next;
+    Assert.IsTrue(Adapter.Eof, 'После Next: Eof = True');
+
+    // === Act ===
+    Adapter.First;
+
+    // === Assert: указатель на первой записи ===
+    Assert.IsFalse(Adapter.Eof,
+      'После First: Eof = False (FCurrentRecNo = 0)');
+    Assert.IsFalse(VarIsNull(Adapter.GetValue('ID')),
+      'После First: GetValue работает (на записи)');
+  finally
+    FreeAndNil(Adapter);
+  end;
+end;
+
+{ === 4.2.2.3 Next_SetsEofToTrue === }
+procedure TfrxDevCustomDataSetAdapterFixture.Next_SetsEofToTrue;
+var
+  Adapter: TVTRecordAdapter;
+begin
+  { Спецификация:
+    - После First + Next FEofFlag становится True.
+    - Это следствие семантики "одна запись на адаптер":
+      после перехода на следующую запись мы вышли за пределы
+      единственной записи.
+
+    Источник логики (TVTRecordAdapter.Next):
+      procedure TVTRecordAdapter.Next;
+      begin
+        Inc(FCurrentRecNo);
+        FEofFlag := FCurrentRecNo >= 1;  // Одна запись на адаптер
+        ...
+      end; }
+
+  Adapter := TVTRecordAdapter.Create(
+    nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    Adapter.First;
+    Assert.IsFalse(Adapter.Eof,
+      'После First: Eof = False (FCurrentRecNo = 0)');
+
+    // === Act ===
+    Adapter.Next;
+
+    // === Assert: FCurrentRecNo = 1, FEofFlag = True ===
+    Assert.IsTrue(Adapter.Eof,
+      'После Next: Eof = True (FCurrentRecNo >= 1, вышли за пределы)');
+  finally
+    FreeAndNil(Adapter);
+  end;
+end;
+
+{ === 4.2.2.4 Eof_TrueAfterNext === }
+procedure TfrxDevCustomDataSetAdapterFixture.Eof_TrueAfterNext;
+var
+  Adapter: TVTRecordAdapter;
+begin
+  { Спецификация:
+    - Eof возвращает True после Next.
+    - Это свойство Eof, которое читает FEofFlag.
+
+    Источник логики (TVTRecordAdapter.Eof):
+      function TVTRecordAdapter.Eof: Boolean;
+      begin
+        Result := FEofFlag;
+      end; }
+
+  Adapter := TVTRecordAdapter.Create(
+    nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    // === Assert: до First Eof = False (сброс в конструкторе) ===
+    Assert.IsFalse(Adapter.Eof,
+      'До First: Eof = False (FEofFlag = False в конструкторе)');
+
+    Adapter.First;
+    Assert.IsFalse(Adapter.Eof,
+      'После First: Eof = False (на записи)');
+
+    // === Act ===
+    Adapter.Next;
+
+    // === Assert ===
+    Assert.IsTrue(Adapter.Eof,
+      'После Next: Eof = True (FEofFlag = True, FCurrentRecNo = 1)');
+  finally
+    FreeAndNil(Adapter);
+  end;
+end;
+
+{ === 4.2.2.5 RecordCount_AlwaysOne === }
+procedure TfrxDevCustomDataSetAdapterFixture.RecordCount_AlwaysOne;
+var
+  Adapter: TVTRecordAdapter;
+  EmptyNames: TStringList;
+  EmptyIndexes: TList<Integer>;
+  EmptyTypes: TList<TfrxFieldType>;
+begin
+  { Спецификация:
+    - RecordCount ВСЕГДА возвращает 1.
+    - Это не зависит от метаданных или FSource.
+    - Это следствие семантики "одна запись на адаптер".
+
+    Источник логики (TVTRecordAdapter.RecordCount):
+      function TVTRecordAdapter.RecordCount: Integer;
+      begin
+        Result := 1;
+      end; }
+
+  // === Test 1: полный набор метаданных ===
+  Adapter := TVTRecordAdapter.Create(
+    nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    Assert.AreEqual(1, Adapter.RecordCount,
+      'RecordCount = 1 (стандартные метаданные)');
+  finally
+    FreeAndNil(Adapter);
+  end;
+
+  // === Test 2: пустые метаданные ===
+  EmptyNames := TStringList.Create;
+  EmptyIndexes := TList<Integer>.Create;
+  EmptyTypes := TList<TfrxFieldType>.Create;
+  try
+    Adapter := TVTRecordAdapter.Create(
+      nil, FSource, EmptyNames, EmptyIndexes, EmptyTypes);
+    try
+      Assert.AreEqual(1, Adapter.RecordCount,
+        'RecordCount = 1 (пустые метаданные — не зависит от размера)');
+    finally
+      FreeAndNil(Adapter);
+    end;
+  finally
+    FreeAndNil(EmptyNames);
+    FreeAndNil(EmptyIndexes);
+    FreeAndNil(EmptyTypes);
+  end;
+
+  // === Test 3: nil Source ===
+  Adapter := TVTRecordAdapter.Create(
+    nil, nil, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    Assert.AreEqual(1, Adapter.RecordCount,
+      'RecordCount = 1 (nil Source — не зависит от FSource)');
+  finally
+    FreeAndNil(Adapter);
+  end;
+end;
+
+{ === 4.2.2.6 First_AfterNext_ResetsState === }
+procedure TfrxDevCustomDataSetAdapterFixture.First_AfterNext_ResetsState;
+var
+  Adapter: TVTRecordAdapter;
+begin
+  { Спецификация:
+    - Повторный First после Next сбрасывает состояние.
+    - Это свойство идемпотентности First. }
+
+  Adapter := TVTRecordAdapter.Create(
+    nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    Adapter.First;
+    Assert.IsFalse(Adapter.Eof, 'После первого First: Eof = False');
+
+    Adapter.Next;
+    Assert.IsTrue(Adapter.Eof, 'После Next: Eof = True');
+
+    // === Act: повторный First ===
+    Adapter.First;
+
+    // === Assert: состояние сброшено ===
+    Assert.IsFalse(Adapter.Eof,
+      'Повторный First: Eof = False (FCurrentRecNo = 0)');
+    Assert.IsFalse(VarIsNull(Adapter.GetValue('ID')),
+      'Повторный First: GetValue работает');
+  finally
+    FreeAndNil(Adapter);
+  end;
+end;
+
+{ === 4.2.2.7 Next_AfterEof_IsSafe === }
+procedure TfrxDevCustomDataSetAdapterFixture.Next_AfterEof_IsSafe;
+var
+  Adapter: TVTRecordAdapter;
+begin
+  { Спецификация:
+    - Повторный Next после Eof не вызывает исключений.
+    - Это свойство идемпотентности Next и защита от ошибок клиента. }
+
+  Adapter := TVTRecordAdapter.Create(
+    nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    Adapter.First;
+    Adapter.Next;
+    Assert.IsTrue(Adapter.Eof, 'После First + Next: Eof = True');
+
+    // === Act: повторные Next ===
+    Assert.WillNotRaise(
+      procedure
+      begin
+        Adapter.Next;
+        Adapter.Next;
+        Adapter.Next;
+      end,
+      Exception,
+      'Повторные Next после Eof не должны вызывать исключений');
+
+    // === Assert: Eof остаётся True ===
+    Assert.IsTrue(Adapter.Eof,
+      'После повторных Next: Eof остаётся True');
+  finally
+    FreeAndNil(Adapter);
+  end;
+end;
+
+{ === 4.2.3.1 GetValue_KnownField_ReturnsValue === }
+procedure TfrxDevCustomDataSetAdapterFixture.GetValue_KnownField_ReturnsValue;
+var
+  Adapter: TVTRecordAdapter;
+  V: Variant;
+begin
+  { Спецификация:
+    - GetValue для известного поля возвращает значение из FSource
+      по индексу FFieldIndexes[ColIdx].
+
+    Источник логики (TVTRecordAdapter.GetValue):
+      ColIdx := FFieldNames.IndexOf(Index);
+      if (ColIdx >= 0) and (ColIdx < FFieldIndexes.Count) then
+        Result := FSource.GetValue(FFieldIndexes[ColIdx]);
+
+    Цепочка делегирования:
+      Adapter.GetValue('ID')
+        -> FFieldNames.IndexOf('ID') = 0
+        -> FFieldIndexes[0] = TMockRecord.COL_INTEGER (0)
+        -> FSource.GetValue(0) = 42 }
+
+  Adapter := TVTRecordAdapter.Create(
+    nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    // === Assert: Integer поле (ID) ===
+    V := Adapter.GetValue('ID');
+    Assert.IsFalse(VarIsNull(V), 'GetValue(ID) не Null');
+    Assert.AreEqual(42, Integer(V), 'GetValue(ID) = 42');
+    Assert.AreEqual(varInteger, VarType(V), 'Тип ID = varInteger');
+
+    // === Assert: String поле (Name) ===
+    V := Adapter.GetValue('Name');
+    Assert.IsFalse(VarIsNull(V), 'GetValue(Name) не Null');
+    Assert.AreEqual('Test', string(V), 'GetValue(Name) = "Test"');
+    Assert.IsTrue((VarType(V) = varString) or (VarType(V) = varUString),
+      'Тип Name = varString/varUString');
+
+    // === Assert: Date поле (Date) ===
+    V := Adapter.GetValue('Date');
+    Assert.IsFalse(VarIsNull(V), 'GetValue(Date) не Null');
+    Assert.AreEqual(EncodeDate(2026, 1, 15), TDateTime(V),
+      'GetValue(Date) = 2026-01-15');
+    Assert.AreEqual(varDate, VarType(V), 'Тип Date = varDate');
+  finally
+    FreeAndNil(Adapter);
+  end;
+end;
+
+{ === 4.2.3.2 GetValue_UnknownField_ReturnsNull === }
+procedure TfrxDevCustomDataSetAdapterFixture.GetValue_UnknownField_ReturnsNull;
+var
+  Adapter: TVTRecordAdapter;
+begin
+  { Спецификация:
+    - GetValue для неизвестного поля возвращает Null.
+    - Это следствие FFieldNames.IndexOf('X') = -1.
+
+    Источник логики (TVTRecordAdapter.GetValue):
+      Result := Null;  // начальное значение
+      ColIdx := FFieldNames.IndexOf(Index);
+      if (ColIdx >= 0) and (ColIdx < FFieldIndexes.Count) then
+        Result := FSource.GetValue(FFieldIndexes[ColIdx]);
+      // Если IndexOf вернул -1, условие ложно, Result остаётся Null. }
+
+  Adapter := TVTRecordAdapter.Create(
+    nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    // === Assert: существующие поля работают ===
+    Assert.IsFalse(VarIsNull(Adapter.GetValue('ID')),
+      'Существующее поле ID возвращает значение');
+    Assert.IsFalse(VarIsNull(Adapter.GetValue('Name')),
+      'Существующее поле Name возвращает значение');
+
+    // === Assert: несуществующие поля возвращают Null ===
+    Assert.IsTrue(VarIsNull(Adapter.GetValue('NonExistent')),
+      'Несуществующее поле -> Null');
+    Assert.IsTrue(VarIsNull(Adapter.GetValue('Foo')),
+      'Несуществующее поле Foo -> Null');
+    Assert.IsTrue(VarIsNull(Adapter.GetValue('')),
+      'Пустое имя поля -> Null');
+  finally
+    FreeAndNil(Adapter);
+  end;
+end;
+
+{ === 4.2.3.3 GetValue_NilSource_ReturnsNull === }
+procedure TfrxDevCustomDataSetAdapterFixture.GetValue_NilSource_ReturnsNull;
+var
+  Adapter: TVTRecordAdapter;
+begin
+  { Спецификация:
+    - GetValue при FSource = nil возвращает Null (без AV).
+    - Это защита от некорректного состояния адаптера.
+
+    Источник логики (TVTRecordAdapter.GetValue):
+      if not Assigned(FSource) then
+        Exit;  // Result остаётся Null (начальное значение)
+      ColIdx := FFieldNames.IndexOf(Index);
+      ... }
+
+  Adapter := TVTRecordAdapter.Create(
+    nil, nil, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    // === Assert: GetValue не падает и возвращает Null ===
+    Assert.WillNotRaise(
+      procedure
+      begin
+        Assert.IsTrue(VarIsNull(Adapter.GetValue('ID')),
+          'GetValue(ID) с nil Source должен вернуть Null');
+      end,
+      Exception,
+      'GetValue с nil Source не должен вызывать Access Violation');
+
+    Assert.IsTrue(VarIsNull(Adapter.GetValue('Name')),
+      'GetValue(Name) с nil Source = Null');
+    Assert.IsTrue(VarIsNull(Adapter.GetValue('Date')),
+      'GetValue(Date) с nil Source = Null');
+  finally
+    FreeAndNil(Adapter);
+  end;
+end;
+
+{ === 4.2.4.1 GetFieldList_ReturnsFieldNames === }
+procedure TfrxDevCustomDataSetAdapterFixture.GetFieldList_ReturnsFieldNames;
+var
+  Adapter: TVTRecordAdapter;
+  List: TStringList;
+begin
+  { Спецификация:
+    - GetFieldList(List) копирует FFieldNames в List через List.Assign.
+    - После вызова List содержит те же имена, что и FFieldNames.
+
+    Источник логики (TVTRecordAdapter.GetFieldList):
+      procedure TVTRecordAdapter.GetFieldList(List: TStrings);
+      begin
+        List.Assign(FFieldNames);
+      end; }
+
+  Adapter := TVTRecordAdapter.Create(
+    nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    List := TStringList.Create;
+    try
+      // === Act ===
+      Adapter.GetFieldList(List);
+
+      // === Assert: List содержит те же имена, что и FFieldNames ===
+      Assert.AreEqual(3, List.Count,
+        'List.Count = 3 (скопировано из FFieldNames)');
+      Assert.AreEqual('ID', List[0], 'List[0] = ID');
+      Assert.AreEqual('Name', List[1], 'List[1] = Name');
+      Assert.AreEqual('Date', List[2], 'List[2] = Date');
+
+      // Assert: List содержит копию, а не ссылку
+      Assert.AreNotSame(FFieldNames, List,
+        'List должен быть отдельным объектом (не ссылкой на FFieldNames)');
+    finally
+      FreeAndNil(List);
+    end;
+  finally
+    FreeAndNil(Adapter);
+  end;
+end;
+
+{ === 4.2.5.1 FieldsCount_ReturnsFieldNamesCount === }
+procedure TfrxDevCustomDataSetAdapterFixture.FieldsCount_ReturnsFieldNamesCount;
+var
+  Adapter: TVTRecordAdapter;
+  EmptyNames: TStringList;
+  EmptyIndexes: TList<Integer>;
+  EmptyTypes: TList<TfrxFieldType>;
+begin
+  { Спецификация:
+    - FieldsCount возвращает FFieldNames.Count.
+    - Это свойство, зависящее только от размера FFieldNames.
+
+    Источник логики (TVTRecordAdapter.FieldsCount):
+      function TVTRecordAdapter.FieldsCount: Integer;
+      begin
+        Result := FFieldNames.Count;
+      end; }
+
+  // === Test 1: стандартные метаданные (3 поля) ===
+  Adapter := TVTRecordAdapter.Create(
+    nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    Assert.AreEqual(3, Adapter.FieldsCount,
+      'FieldsCount = 3 (3 поля в метаданных)');
+  finally
+    FreeAndNil(Adapter);
+  end;
+
+  // === Test 2: пустые метаданные (0 полей) ===
+  EmptyNames := TStringList.Create;
+  EmptyIndexes := TList<Integer>.Create;
+  EmptyTypes := TList<TfrxFieldType>.Create;
+  try
+    Adapter := TVTRecordAdapter.Create(
+      nil, FSource, EmptyNames, EmptyIndexes, EmptyTypes);
+    try
+      Assert.AreEqual(0, Adapter.FieldsCount,
+        'FieldsCount = 0 (пустые метаданные)');
+    finally
+      FreeAndNil(Adapter);
+    end;
+  finally
+    FreeAndNil(EmptyNames);
+    FreeAndNil(EmptyIndexes);
+    FreeAndNil(EmptyTypes);
+  end;
+end;
+
+{ === 4.2.6.1 GetDisplayText_FormatsValues === }
+procedure TfrxDevCustomDataSetAdapterFixture.GetDisplayText_FormatsValues;
+var
+  Adapter: TTestTVTRecordAdapter;
+begin
+  { Спецификация:
+    - GetDisplayText форматирует значения в WideString:
+      Integer 42 -> '42' (через VarToWideStr)
+      String 'Test' -> 'Test' (прямая передача через VarIsStr)
+      Boolean True -> 'True' (через BoolToStr(V, True))
+      Null -> '' (через VarIsNull)
+
+    Источник логики (TVTRecordAdapter.GetDisplayText):
+      V := GetValue(Index);
+      if VarIsNull(V) then Result := ''
+      else if VarIsStr(V) then Result := V
+      else if VarType(V) = varBoolean then
+        Result := BoolToStr(Boolean(V), True)
+      else
+        Result := VarToWideStr(V); }
+
+  Adapter := TTestTVTRecordAdapter.Create(
+    nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    // === Assert: Integer -> '42' ===
+    Assert.AreEqual('42', string(Adapter.GetDisplayText('ID')),
+      'Integer 42 -> "42"');
+
+    // === Assert: String -> 'Test' (прямая передача) ===
+    Assert.AreEqual('Test', string(Adapter.GetDisplayText('Name')),
+      'String "Test" -> "Test"');
+
+    // === Assert: Date -> непустая строка (формат зависит от локали) ===
+    var DateText := string(Adapter.GetDisplayText('Date'));
+    Assert.IsTrue(Length(DateText) > 0,
+      'Date должен быть преобразован в непустую строку');
+
+    // === Assert: Boolean -> 'True' ===
+    // Для этого теста нужны метаданные с Boolean полем.
+    // Создаём отдельный адаптер с 5 колонками.
+    var BoolNames := TStringList.Create;
+    var BoolIndexes := TList<Integer>.Create;
+    var BoolTypes := TList<TfrxFieldType>.Create;
+    try
+      BoolNames.AddStrings(['IntCol', 'StrCol', 'DateCol', 'BoolCol', 'NullCol']);
+      BoolIndexes.AddRange([TMockRecord.COL_INTEGER, TMockRecord.COL_STRING,
+                            TMockRecord.COL_DATE, TMockRecord.COL_BOOLEAN,
+                            TMockRecord.COL_NULL]);
+      BoolTypes.AddRange([fftNumeric, fftString, fftDateTime, fftBoolean, fftString]);
+
+      var BoolAdapter := TTestTVTRecordAdapter.Create(
+        nil, FSource, BoolNames, BoolIndexes, BoolTypes);
+      try
+        Assert.AreEqual('True', string(BoolAdapter.GetDisplayText('BoolCol')),
+          'Boolean True -> "True"');
+
+        // === Assert: Null -> '' ===
+        Assert.AreEqual('', string(BoolAdapter.GetDisplayText('NullCol')),
+          'Null -> "" (пустая строка)');
+      finally
+        FreeAndNil(BoolAdapter);
+      end;
+    finally
+      FreeAndNil(BoolNames);
+      FreeAndNil(BoolIndexes);
+      FreeAndNil(BoolTypes);
+    end;
+  finally
+    FreeAndNil(Adapter);
+  end;
+end;
+
+{ === 4.2.6.2 GetFieldType_ReturnsMappedType === }
+procedure TfrxDevCustomDataSetAdapterFixture.GetFieldType_ReturnsMappedType;
+var
+  Adapter: TTestTVTRecordAdapter;
+begin
+  { Спецификация:
+    - GetFieldType возвращает тип из FFieldTypes[ColIdx] для известного поля.
+
+    Источник логики (TVTRecordAdapter.FieldType):
+      Result := fftString;  // default
+      I := FieldIndex(FieldName);
+      if (I >= 0) and (I < FFieldTypes.Count) then
+        Result := FFieldTypes[I];
+
+    FieldIndex использует FFieldNames.IndexOf (case-insensitive). }
+
+  Adapter := TTestTVTRecordAdapter.Create(
+    nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    // === Assert: типы полей соответствуют метаданным ===
+    Assert.AreEqual(fftNumeric, Adapter.GetFieldType('ID'),
+      'ID -> fftNumeric');
+    Assert.AreEqual(fftString, Adapter.GetFieldType('Name'),
+      'Name -> fftString');
+    Assert.AreEqual(fftDateTime, Adapter.GetFieldType('Date'),
+      'Date -> fftDateTime');
+  finally
+    FreeAndNil(Adapter);
+  end;
+end;
+
+{ === 4.2.6.3 GetFieldType_UnknownField_ReturnsString === }
+procedure TfrxDevCustomDataSetAdapterFixture.GetFieldType_UnknownField_ReturnsString;
+var
+  Adapter: TTestTVTRecordAdapter;
+begin
+  { Спецификация:
+    - GetFieldType для неизвестного поля возвращает fftString (default).
+
+    Источник логики:
+      Result := fftString;  // default
+      I := FieldIndex(FieldName);
+      if (I >= 0) and (I < FFieldTypes.Count) then
+        Result := FFieldTypes[I];
+      // Для неизвестного поля I = -1, условие ложно,
+      // Result остаётся fftString. }
+
+  Adapter := TTestTVTRecordAdapter.Create(
+    nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    // === Assert: неизвестные поля возвращают fftString ===
+    Assert.AreEqual(fftString, Adapter.GetFieldType('NonExistent'),
+      'Несуществующее поле -> fftString (default)');
+    Assert.AreEqual(fftString, Adapter.GetFieldType('Foo'),
+      'Несуществующее поле Foo -> fftString (default)');
+    Assert.AreEqual(fftString, Adapter.GetFieldType(''),
+      'Пустое имя поля -> fftString (default)');
+  finally
+    FreeAndNil(Adapter);
+  end;
+end;
+
+{ === 4.2.6.4 GetValue_CaseInsensitive === }
+procedure TfrxDevCustomDataSetAdapterFixture.GetValue_CaseInsensitive;
+var
+  Adapter: TTestTVTRecordAdapter;
+begin
+  { Спецификация:
+    - Поиск имён полей в GetValue case-insensitive.
+    - TStringList.CaseSensitive = False по умолчанию.
+    - 'ID', 'id', 'Id', 'ID' эквивалентны.
+
+    Источник логики:
+      FFieldNames := TStringList.Create;
+      // CaseSensitive = False (по умолчанию)
+      ColIdx := FFieldNames.IndexOf(Index);
+      // IndexOf case-insensitive по умолчанию }
+
+  Adapter := TTestTVTRecordAdapter.Create(
+    nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
+  try
+    // === Assert: разный регистр = одно поле ===
+    Assert.AreEqual(42, Integer(Adapter.GetValue('ID')),
+      'GetValue(ID) = 42');
+    Assert.AreEqual(42, Integer(Adapter.GetValue('id')),
+      'GetValue(id) = 42 (case-insensitive)');
+    Assert.AreEqual(42, Integer(Adapter.GetValue('Id')),
+      'GetValue(Id) = 42 (case-insensitive)');
+    Assert.AreEqual(42, Integer(Adapter.GetValue('iD')),
+      'GetValue(iD) = 42 (case-insensitive)');
+
+    Assert.AreEqual('Test', string(Adapter.GetValue('NAME')),
+      'GetValue(NAME) = "Test" (case-insensitive)');
+    Assert.AreEqual('Test', string(Adapter.GetValue('name')),
+      'GetValue(name) = "Test" (case-insensitive)');
+
+    Assert.AreEqual(EncodeDate(2026, 1, 15), TDateTime(Adapter.GetValue('DATE')),
+      'GetValue(DATE) = 2026-01-15 (case-insensitive)');
+  finally
+    FreeAndNil(Adapter);
+  end;
+end;
+
 initialization
   TDUnitX.RegisterTestFixture(TfrxDevCustomDataSetFixture);
+  TDUnitX.RegisterTestFixture(TfrxDevCustomDataSetAdapterFixture);
 
 end.

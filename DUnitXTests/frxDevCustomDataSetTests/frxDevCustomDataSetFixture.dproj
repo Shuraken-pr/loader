@@ -1,17 +1,52 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{5638951F-BE68-4A6A-A819-95FA3AE71F7D}</ProjectGuid>
+        <ProjectGuid>{6A06DEF7-0D14-4E28-8747-5D7ED5830075}</ProjectGuid>
         <ProjectVersion>20.1</ProjectVersion>
-        <FrameworkType>VCL</FrameworkType>
+        <FrameworkType>None</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <ProjectName Condition="'$(ProjectName)'==''">frxDevCustomDataSetFixture</ProjectName>
         <TargetedPlatforms>1</TargetedPlatforms>
-        <AppType>Library</AppType>
-        <MainSource>LogData.dpr</MainSource>
-        <ProjectName Condition="'$(ProjectName)'==''">LogData</ProjectName>
+        <AppType>Console</AppType>
+        <MainSource>frxDevCustomDataSetFixture.dpr</MainSource>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Android' and '$(Base)'=='true') or '$(Base_Android)'!=''">
+        <Base_Android>true</Base_Android>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Android64' and '$(Base)'=='true') or '$(Base_Android64)'!=''">
+        <Base_Android64>true</Base_Android64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='iOSDevice64' and '$(Base)'=='true') or '$(Base_iOSDevice64)'!=''">
+        <Base_iOSDevice64>true</Base_iOSDevice64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='iOSSimARM64' and '$(Base)'=='true') or '$(Base_iOSSimARM64)'!=''">
+        <Base_iOSSimARM64>true</Base_iOSSimARM64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Linux64' and '$(Base)'=='true') or '$(Base_Linux64)'!=''">
+        <Base_Linux64>true</Base_Linux64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='OSX64' and '$(Base)'=='true') or '$(Base_OSX64)'!=''">
+        <Base_OSX64>true</Base_OSX64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='OSXARM64' and '$(Base)'=='true') or '$(Base_OSXARM64)'!=''">
+        <Base_OSXARM64>true</Base_OSXARM64>
+        <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
@@ -35,12 +70,6 @@
         <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win64)'!=''">
-        <Cfg_1_Win64>true</Cfg_1_Win64>
-        <CfgParent>Cfg_1</CfgParent>
-        <Cfg_1>true</Cfg_1>
-        <Base>true</Base>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
@@ -48,35 +77,51 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
-        <DCC_ExeOutput>..\..\exe</DCC_ExeOutput>
+        <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_E>false</DCC_E>
         <DCC_N>false</DCC_N>
         <DCC_S>false</DCC_S>
         <DCC_F>false</DCC_F>
         <DCC_K>false</DCC_K>
-        <GenDll>true</GenDll>
-        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
+        <UsingDelphiRTL>true</UsingDelphiRTL>
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
-        <SanitizedProjectName>LogData</SanitizedProjectName>
-        <VerInfo_Locale>1049</VerInfo_Locale>
+        <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
+        <DCC_UnitSearchPath>$(DUnitX);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <SanitizedProjectName>frxDevCustomDataSetFixture</SanitizedProjectName>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Android)'!=''">
+        <DCC_UsePackage>bindengine;IndyIPCommon;dbxcds;dbexpress;inet;FireDACDBXDriver;CustomIPTransport;ZComponent;rtl;DBXSqliteDriver;FireDAC;xmlrtl;dsnap;bindcompfmx;DataSnapCommon;fmxase;DBXInterBaseDriver;ZPlain;DataSnapClient;emsclientfiredac;FireDACDSDriver;tethering;CloudService;soapserver;FireDACIBDriver;fmx;DbxCommonDriver;emsclient;IndyProtocols;FireDACSqliteDriver;DbxClientDriver;soapmidas;ZCore;ZParseSql;IndySystem;FireDACCommon;bindcompdbx;DataSnapFireDAC;odac290;DataSnapNativeClient;FireDACCommonDriver;IndyIPClient;fmxFireDAC;dbrtl;bindcomp;IndyCore;RESTBackendComponents;RESTComponents;IndyIPServer;dsnapxml;DataSnapProviderClient;dac290;ZDbc;soaprtl;$(DCC_UsePackage)</DCC_UsePackage>
+        <EnabledSysJars>activity-1.7.2.dex.jar;annotation-experimental-1.3.0.dex.jar;annotation-jvm-1.6.0.dex.jar;annotations-13.0.dex.jar;appcompat-1.2.0.dex.jar;appcompat-resources-1.2.0.dex.jar;billing-6.0.1.dex.jar;biometric-1.1.0.dex.jar;browser-1.4.0.dex.jar;cloud-messaging.dex.jar;collection-1.1.0.dex.jar;concurrent-futures-1.1.0.dex.jar;core-1.10.1.dex.jar;core-common-2.2.0.dex.jar;core-ktx-1.10.1.dex.jar;core-runtime-2.2.0.dex.jar;cursoradapter-1.0.0.dex.jar;customview-1.0.0.dex.jar;documentfile-1.0.0.dex.jar;drawerlayout-1.0.0.dex.jar;error_prone_annotations-2.9.0.dex.jar;exifinterface-1.3.6.dex.jar;firebase-annotations-16.2.0.dex.jar;firebase-common-20.3.1.dex.jar;firebase-components-17.1.0.dex.jar;firebase-datatransport-18.1.7.dex.jar;firebase-encoders-17.0.0.dex.jar;firebase-encoders-json-18.0.0.dex.jar;firebase-encoders-proto-16.0.0.dex.jar;firebase-iid-interop-17.1.0.dex.jar;firebase-installations-17.1.3.dex.jar;firebase-installations-interop-17.1.0.dex.jar;firebase-measurement-connector-19.0.0.dex.jar;firebase-messaging-23.1.2.dex.jar;fmx.dex.jar;fragment-1.2.5.dex.jar;google-play-licensing.dex.jar;interpolator-1.0.0.dex.jar;javax.inject-1.dex.jar;kotlin-stdlib-1.8.22.dex.jar;kotlin-stdlib-common-1.8.22.dex.jar;kotlin-stdlib-jdk7-1.8.22.dex.jar;kotlin-stdlib-jdk8-1.8.22.dex.jar;kotlinx-coroutines-android-1.6.4.dex.jar;kotlinx-coroutines-core-jvm-1.6.4.dex.jar;legacy-support-core-utils-1.0.0.dex.jar;lifecycle-common-2.6.1.dex.jar;lifecycle-livedata-2.6.1.dex.jar;lifecycle-livedata-core-2.6.1.dex.jar;lifecycle-runtime-2.6.1.dex.jar;lifecycle-service-2.6.1.dex.jar;lifecycle-viewmodel-2.6.1.dex.jar;lifecycle-viewmodel-savedstate-2.6.1.dex.jar;listenablefuture-1.0.dex.jar;loader-1.0.0.dex.jar;localbroadcastmanager-1.0.0.dex.jar;okio-jvm-3.4.0.dex.jar;play-services-ads-22.2.0.dex.jar;play-services-ads-base-22.2.0.dex.jar;play-services-ads-identifier-18.0.0.dex.jar;play-services-ads-lite-22.2.0.dex.jar;play-services-appset-16.0.1.dex.jar;play-services-base-18.1.0.dex.jar;play-services-basement-18.1.0.dex.jar;play-services-cloud-messaging-17.0.1.dex.jar;play-services-location-21.0.1.dex.jar;play-services-maps-18.1.0.dex.jar;play-services-measurement-base-20.1.2.dex.jar;play-services-measurement-sdk-api-20.1.2.dex.jar;play-services-stats-17.0.2.dex.jar;play-services-tasks-18.0.2.dex.jar;print-1.0.0.dex.jar;profileinstaller-1.3.0.dex.jar;room-common-2.2.5.dex.jar;room-runtime-2.2.5.dex.jar;savedstate-1.2.1.dex.jar;sqlite-2.1.0.dex.jar;sqlite-framework-2.1.0.dex.jar;startup-runtime-1.1.1.dex.jar;tracing-1.0.0.dex.jar;transport-api-3.0.0.dex.jar;transport-backend-cct-3.1.8.dex.jar;transport-runtime-3.1.8.dex.jar;user-messaging-platform-2.0.0.dex.jar;vectordrawable-1.1.0.dex.jar;vectordrawable-animated-1.1.0.dex.jar;versionedparcelable-1.1.1.dex.jar;viewpager-1.0.0.dex.jar;work-runtime-2.7.0.dex.jar</EnabledSysJars>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Android64)'!=''">
+        <DCC_UsePackage>bindengine;IndyIPCommon;dbxcds;dbexpress;inet;FireDACDBXDriver;CustomIPTransport;ZComponent;FMX.dxLayoutControlR;rtl;DBXSqliteDriver;FireDAC;xmlrtl;dsnap;bindcompfmx;DataSnapCommon;DBXInterBaseDriver;ZPlain;DataSnapClient;emsclientfiredac;FireDACDSDriver;tethering;FMX.dxMemDataR;FMX.dxGridR;CloudService;soapserver;FireDACIBDriver;fmx;DbxCommonDriver;emsclient;IndyProtocols;FireDACSqliteDriver;DbxClientDriver;soapmidas;Tee929;ZCore;ZParseSql;IndySystem;FireDACCommon;bindcompdbx;DataSnapFireDAC;DataSnapNativeClient;FireDACCommonDriver;IndyIPClient;fmxFireDAC;dbrtl;FMX.dxControlsR;bindcomp;IndyCore;RESTBackendComponents;RESTComponents;IndyIPServer;dsnapxml;DataSnapProviderClient;ZDbc;soaprtl;$(DCC_UsePackage)</DCC_UsePackage>
+        <EnabledSysJars>activity-1.7.2.dex.jar;annotation-experimental-1.3.0.dex.jar;annotation-jvm-1.6.0.dex.jar;annotations-13.0.dex.jar;appcompat-1.2.0.dex.jar;appcompat-resources-1.2.0.dex.jar;billing-6.0.1.dex.jar;biometric-1.1.0.dex.jar;browser-1.4.0.dex.jar;cloud-messaging.dex.jar;collection-1.1.0.dex.jar;concurrent-futures-1.1.0.dex.jar;core-1.10.1.dex.jar;core-common-2.2.0.dex.jar;core-ktx-1.10.1.dex.jar;core-runtime-2.2.0.dex.jar;cursoradapter-1.0.0.dex.jar;customview-1.0.0.dex.jar;documentfile-1.0.0.dex.jar;drawerlayout-1.0.0.dex.jar;error_prone_annotations-2.9.0.dex.jar;exifinterface-1.3.6.dex.jar;firebase-annotations-16.2.0.dex.jar;firebase-common-20.3.1.dex.jar;firebase-components-17.1.0.dex.jar;firebase-datatransport-18.1.7.dex.jar;firebase-encoders-17.0.0.dex.jar;firebase-encoders-json-18.0.0.dex.jar;firebase-encoders-proto-16.0.0.dex.jar;firebase-iid-interop-17.1.0.dex.jar;firebase-installations-17.1.3.dex.jar;firebase-installations-interop-17.1.0.dex.jar;firebase-measurement-connector-19.0.0.dex.jar;firebase-messaging-23.1.2.dex.jar;fmx.dex.jar;fragment-1.2.5.dex.jar;google-play-licensing.dex.jar;interpolator-1.0.0.dex.jar;javax.inject-1.dex.jar;kotlin-stdlib-1.8.22.dex.jar;kotlin-stdlib-common-1.8.22.dex.jar;kotlin-stdlib-jdk7-1.8.22.dex.jar;kotlin-stdlib-jdk8-1.8.22.dex.jar;kotlinx-coroutines-android-1.6.4.dex.jar;kotlinx-coroutines-core-jvm-1.6.4.dex.jar;legacy-support-core-utils-1.0.0.dex.jar;lifecycle-common-2.6.1.dex.jar;lifecycle-livedata-2.6.1.dex.jar;lifecycle-livedata-core-2.6.1.dex.jar;lifecycle-runtime-2.6.1.dex.jar;lifecycle-service-2.6.1.dex.jar;lifecycle-viewmodel-2.6.1.dex.jar;lifecycle-viewmodel-savedstate-2.6.1.dex.jar;listenablefuture-1.0.dex.jar;loader-1.0.0.dex.jar;localbroadcastmanager-1.0.0.dex.jar;okio-jvm-3.4.0.dex.jar;play-services-ads-22.2.0.dex.jar;play-services-ads-base-22.2.0.dex.jar;play-services-ads-identifier-18.0.0.dex.jar;play-services-ads-lite-22.2.0.dex.jar;play-services-appset-16.0.1.dex.jar;play-services-base-18.1.0.dex.jar;play-services-basement-18.1.0.dex.jar;play-services-cloud-messaging-17.0.1.dex.jar;play-services-location-21.0.1.dex.jar;play-services-maps-18.1.0.dex.jar;play-services-measurement-base-20.1.2.dex.jar;play-services-measurement-sdk-api-20.1.2.dex.jar;play-services-stats-17.0.2.dex.jar;play-services-tasks-18.0.2.dex.jar;print-1.0.0.dex.jar;profileinstaller-1.3.0.dex.jar;room-common-2.2.5.dex.jar;room-runtime-2.2.5.dex.jar;savedstate-1.2.1.dex.jar;sqlite-2.1.0.dex.jar;sqlite-framework-2.1.0.dex.jar;startup-runtime-1.1.1.dex.jar;tracing-1.0.0.dex.jar;transport-api-3.0.0.dex.jar;transport-backend-cct-3.1.8.dex.jar;transport-runtime-3.1.8.dex.jar;user-messaging-platform-2.0.0.dex.jar;vectordrawable-1.1.0.dex.jar;vectordrawable-animated-1.1.0.dex.jar;versionedparcelable-1.1.1.dex.jar;viewpager-1.0.0.dex.jar;work-runtime-2.7.0.dex.jar</EnabledSysJars>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_iOSDevice64)'!=''">
+        <DCC_UsePackage>bindengine;IndyIPCommon;dbxcds;dbexpress;inet;FireDACDBXDriver;CustomIPTransport;ZComponent;FMX.dxLayoutControlR;rtl;DBXSqliteDriver;FireDAC;xmlrtl;dsnap;bindcompfmx;DataSnapCommon;fmxase;DBXInterBaseDriver;ZPlain;DataSnapClient;emsclientfiredac;FireDACDSDriver;tethering;FMX.dxMemDataR;FMX.dxGridR;CloudService;soapserver;FireDACIBDriver;fmx;DbxCommonDriver;emsclient;IndyProtocols;FireDACSqliteDriver;DbxClientDriver;soapmidas;Tee929;ZCore;ZParseSql;IndySystem;FireDACCommon;bindcompdbx;DataSnapFireDAC;odac290;DataSnapNativeClient;FireDACCommonDriver;IndyIPClient;fmxFireDAC;dbrtl;FMX.dxControlsR;bindcomp;IndyCore;RESTBackendComponents;RESTComponents;IndyIPServer;dsnapxml;DataSnapProviderClient;dac290;ZDbc;soaprtl;$(DCC_UsePackage)</DCC_UsePackage>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_iOSSimARM64)'!=''">
+        <DCC_UsePackage>bindengine;IndyIPCommon;dbxcds;dbexpress;inet;FireDACDBXDriver;CustomIPTransport;ZComponent;rtl;DBXSqliteDriver;FireDAC;xmlrtl;dsnap;bindcompfmx;DataSnapCommon;fmxase;DBXInterBaseDriver;ZPlain;DataSnapClient;emsclientfiredac;FireDACDSDriver;tethering;CloudService;soapserver;FireDACIBDriver;fmx;DbxCommonDriver;emsclient;IndyProtocols;FireDACSqliteDriver;DbxClientDriver;soapmidas;ZCore;ZParseSql;IndySystem;FireDACCommon;bindcompdbx;DataSnapFireDAC;DataSnapNativeClient;FireDACCommonDriver;IndyIPClient;fmxFireDAC;dbrtl;bindcomp;IndyCore;RESTBackendComponents;RESTComponents;IndyIPServer;dsnapxml;DataSnapProviderClient;ZDbc;soaprtl;$(DCC_UsePackage)</DCC_UsePackage>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Linux64)'!=''">
+        <DCC_UsePackage>bindengine;dbxcds;dbexpress;inet;CustomIPTransport;FireDACMSSQLDriver;FireDACODBCDriver;emsserverresource;rtl;FireDAC;xmlrtl;dsnap;FireDACDb2Driver;DatasnapConnectorsFreePascal;FireDACASADriver;FireDACInfxDriver;DataSnapCommon;DataSnapIndy10ServerTransport;DataSnapClient;emsclientfiredac;FireDACPgDriver;CloudService;soapserver;FireDACIBDriver;DataSnapServer;fmx;DbxCommonDriver;FireDACCommonODBC;emsclient;IndyProtocols;FireDACSqliteDriver;DbxClientDriver;soapmidas;Tee929;IndySystem;FireDACCommon;DataSnapServerMidas;FireDACMySQLDriver;DataSnapFireDAC;odac290;DataSnapNativeClient;emshosting;FireDACCommonDriver;emsedge;inetdb;dbrtl;FireDACOracleDriver;DataSnapConnectors;FireDACMongoDBDriver;FireDACTDataDriver;bindcomp;IndyCore;RESTBackendComponents;FireDACADSDriver;RESTComponents;dsnapxml;dac290;soaprtl;$(DCC_UsePackage)</DCC_UsePackage>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_OSX64)'!=''">
+        <DCC_UsePackage>bindengine;IndyIPCommon;dbxcds;dbexpress;inet;FireDACDBXDriver;CustomIPTransport;FireDACMSSQLDriver;FireDACODBCDriver;FMX.dxLayoutControlR;rtl;DBXSqliteDriver;inetdbxpress;FireDAC;xmlrtl;dsnap;DBXOracleDriver;bindcompfmx;FireDACASADriver;DBXMySQLDriver;DataSnapCommon;fmxase;DataSnapIndy10ServerTransport;DBXInterBaseDriver;DataSnapClient;emsclientfiredac;FireDACPgDriver;FireDACDSDriver;tethering;FMX.dxMemDataR;FMX.dxGridR;CloudService;soapserver;FireDACIBDriver;DataSnapServer;fmx;DbxCommonDriver;FireDACCommonODBC;emsclient;IndyProtocols;DBXFirebirdDriver;FireDACSqliteDriver;DbxClientDriver;soapmidas;Tee929;fmxdae;IndySystem;FireDACCommon;DataSnapServerMidas;bindcompdbx;FireDACMySQLDriver;DataSnapFireDAC;DBXInformixDriver;fmxobj;DataSnapNativeClient;FireDACCommonDriver;IndyIPClient;inetdb;fmxFireDAC;dbrtl;FireDACOracleDriver;FMX.dxControlsR;FireDACMongoDBDriver;FireDACTDataDriver;bindcomp;IndyCore;RESTBackendComponents;RESTComponents;IndyIPServer;dsnapxml;DataSnapProviderClient;DBXSybaseASADriver;soaprtl;$(DCC_UsePackage)</DCC_UsePackage>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_OSXARM64)'!=''">
+        <DCC_UsePackage>bindengine;IndyIPCommon;dbxcds;dbexpress;inet;FireDACDBXDriver;CustomIPTransport;FireDACMSSQLDriver;FireDACODBCDriver;rtl;DBXSqliteDriver;inetdbxpress;FireDAC;xmlrtl;dsnap;DBXOracleDriver;bindcompfmx;FireDACASADriver;DBXMySQLDriver;DataSnapCommon;fmxase;DataSnapIndy10ServerTransport;DBXInterBaseDriver;DataSnapClient;emsclientfiredac;FireDACPgDriver;FireDACDSDriver;tethering;CloudService;soapserver;FireDACIBDriver;DataSnapServer;fmx;DbxCommonDriver;FireDACCommonODBC;emsclient;IndyProtocols;DBXFirebirdDriver;FireDACSqliteDriver;DbxClientDriver;soapmidas;fmxdae;IndySystem;FireDACCommon;DataSnapServerMidas;bindcompdbx;FireDACMySQLDriver;DataSnapFireDAC;DBXInformixDriver;fmxobj;DataSnapNativeClient;FireDACCommonDriver;IndyIPClient;inetdb;fmxFireDAC;dbrtl;FireDACOracleDriver;FireDACMongoDBDriver;FireDACTDataDriver;bindcomp;IndyCore;RESTBackendComponents;RESTComponents;IndyIPServer;dsnapxml;DataSnapProviderClient;DBXSybaseASADriver;soaprtl;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <DCC_UsePackage>dxComnRS29;dxRibbonRS29;dxBarRS29;dxDockingRS29;dxLayoutControl;cxLibraryRS29;cxEditorsRS29;cxGraphicsRS29;cxControlsRS29;VirtualTreesR;vclFireDAC;FireDACCommon;FireDACMSSQLDriver;FireDACPgDriver;FireDACOracleDriver;FireDAC.Phys.PGDef;FireDAC.Phys.MSSQLDef;FireDAC.Phys.OracleDef;vcl;vclx;vclimg;rtl;dbrtl;dxCoreRS29;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>dxPScxExtCommonRS29;dxRichEditControlCoreRS29;vclie;bindengine;IndyIPCommon;cxVerticalGridRS29;dbxcds;vcledge;FMXTeeDB929;cxSchedulerWebServiceStorageRS29;dxRichEditControlRS29;dxPsPrVwAdvRS29;JvAppFrm;dxPSdxGaugeControlLnkRS29;JclVcl;dxRibbonCustomizationFormRS29;Jcl;dbexpress;JvManagedThreads;dxEMFRS29;inet;vcltouch;dxPSdxFCLnkRS29;FireDACDBXDriver;dxSpreadSheetCoreConditionalFormattingDialogsRS29;FMXTeeImport929;CustomIPTransport;FireDACMSSQLDriver;JvSystem;madExcept_;JvCrypt;dxPScxTLLnkRS29;VirtualTreesR;vclFireDAC;FMXTeeLanguage929;dxSpreadSheetRS29;FireDACODBCDriver;emsserverresource;dxPScxVGridLnkRS29;ZComponent;FMX.dxLayoutControlR;rtl;TeeGL929;dxServerModeRS29;DBXSqliteDriver;dxBarDBNavRS29;DBXSybaseASEDriver;JvRuntimeDesign;JvXPCtrls;inetdbxpress;FireDAC;JvDocking;xmlrtl;TeeImport929;dsnap;JvCmp;FireDACDb2Driver;dxPSdxLCLnkRS29;DBXOracleDriver;ExStatusBarDcl;DatasnapConnectorsFreePascal;dxPSLnksRS29;dxPSdxOCLnkRS29;cxSchedulerGridRS29;dxPSdxDBTVLnkRS29;dxGaugeControlRS29;bindcompvclwinx;dxOrgChartAdvancedCustomizeFormRS29;bindcompfmx;madBasic_;JvBands;dxFlowChartLayoutsRS29;dxdborRS29;FireDACASADriver;dxPScxGridLnkRS29;vclactnband;TeeWorld929;officeXPrt;FireDACInfxDriver;dxRichEditCoreRS29;DBXMySQLDriver;dxFlowChartAdvancedCustomizeFormRS29;VclSmp;DataSnapCommon;fmxase;dxFlowChartRS29;JvPluginSystem;cxGridRS29;dxSpellCheckerRS29;DataSnapIndy10ServerTransport;JclDeveloperTools;dxMapControlRS29;vcldsnap;DBXInterBaseDriver;JvWizards;vcldb;cxSchedulerTreeBrowserRS29;JvCore;dxTabbedMDIRS29;ZPlain;dxHttpIndyRequestRS29;TeeLanguage929;cxPivotGridOLAPRS29;JvDotNetCtrls;vcl;JvHMI;DataSnapClient;dxCoreRS29;dxSkinsCoreRS29;FmxTeeUI929;emsclientfiredac;FireDACPgDriver;FireDACDSDriver;JvPrintPreview;tethering;JvStdCtrls;FMX.dxMemDataR;bindcompvcl;FMX.dxGridR;CloudService;SASMyProfGrid;cxSchedulerRS29;soapserver;dxPScxCommonRS29;FireDACIBDriver;dxRibbonRS29;vclwinx;DataSnapServer;frReportFiles;ProfGridDXE2;fmx;dxSpreadSheetReportDesignerRS29;DbxCommonDriver;VCLRESTComponents;TeePro929;FireDACCommonODBC;DBXMSSQLDriver;dxComnRS29;emsclient;dxFlowChartDesignerRS29;appanalytics;IndyProtocols;vclx;Skia.Package.RTL;dxBarExtDBItemsRS29;cxFireDACAdaptersRS29;DBXFirebirdDriver;RDSLib;dacvcl290;FireDACSqliteDriver;DbxClientDriver;soapmidas;dxDockingRS29;Tee929;JvDB;dxorgcRS29;TeeImage929;fmxdae;dxPSRichEditControlLnkRS29;dxPSdxSpreadSheetLnkRS29;JvCustom;ZCore;ZParseSql;JvControls;cxADOAdaptersRS29;odacvcl290;JvJans;dxPSPrVwRibbonRS29;IndySystem;JvMM;frTeeChartFiles;dxPSdxDBOCLnkRS29;JvGlobus;dxGDIPlusRS29;JclContainers;JvPageComps;dxPSCoreRS29;madDisAsm_;FireDACCommon;DataSnapServerMidas;dxPSdxMapControlLnkRS29;cxGridEMFRS29;dxGanttControlRS29;dxPScxPivotGridLnkRS29;dxADOServerModeRS29;dxWizardControlRS29;bindcompdbx;FireDACMySQLDriver;dxCloudServiceLibraryRS29;TeeMaker129;dxSpreadSheetCoreRS29;dxNavBarRS29;vclimg;DataSnapFireDAC;JvDlgs;odac290;dxFireDACEMFRS29;madShell_;DBXInformixDriver;fmxobj;bindcompvclsmp;DataSnapNativeClient;madSecurity_;dxmdsRS29;dxPScxSchedulerLnkRS29;FMXTeePro929;emshosting;dxADOEMFRS29;dxChartControlRS29;Graph;FireDACCommonDriver;IndyIPClient;dxPDFViewerRS29;emsedge;dxBarExtItemsRS29;TeeDB929;crcontrols290;inetdb;cxPivotGridChartRS29;fmxFireDAC;cxTreeListdxBarPopupMenuRS29;cxSchedulerRibbonStyleEventEditorRS29;JvPascalInterpreter;dxtrmdRS29;DBXOdbcDriver;JvTimeFramework;dbrtl;dxPScxPCProdRS29;FireDACOracleDriver;Skia.Package.FMX;FMX.dxControlsR;FMXTee929;FireDACMSAccDriver;dxRichEditDocumentModelRS29;DataSnapConnectors;FireDACMongoDBDriver;TeeUI929;FireDACTDataDriver;cxLibraryRS29;Skia.Package.VCL;dxPSdxPDFViewerLnkRS29;bindcomp;cxExportRS29;IndyCore;RESTBackendComponents;dxTileControlRS29;dxFireDACServerModeRS29;FireDACADSDriver;RESTComponents;IndyIPServer;dsnapxml;adortl;dxdbtrRS29;dsnapcon;cxPivotGridRS29;DataSnapProviderClient;dac290;DBXDb2Driver;dxBarRS29;ZDbc;SASExceptor;DBXSybaseASADriver;dxSpreadSheetConditionalFormattingDialogsRS29;cxTreeListRS29;soaprtl;dxDBXServerModeRS29;JvNet;$(DCC_UsePackage)</DCC_UsePackage>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <DCC_UsePackage>dxComnRS29;dxRibbonRS29;dxBarRS29;dxDockingRS29;dxLayoutControl;cxLibraryRS29;cxEditorsRS29;cxGraphicsRS29;cxControlsRS29;VirtualTreesR;vclFireDAC;FireDACCommon;FireDACMSSQLDriver;FireDACPgDriver;FireDACOracleDriver;FireDAC.Phys.PGDef;FireDAC.Phys.MSSQLDef;FireDAC.Phys.OracleDef;vcl;vclx;vclimg;rtl;dbrtl;dxCoreRS29;$(DCC_UsePackage)</DCC_UsePackage>
-        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
-        <BT_BuildType>Debug</BT_BuildType>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <VerInfo_Locale>1033</VerInfo_Locale>
-        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <DCC_UsePackage>dxPScxExtCommonRS29;dxRichEditControlCoreRS29;vclie;bindengine;IndyIPCommon;cxVerticalGridRS29;dbxcds;vcledge;cxSchedulerWebServiceStorageRS29;dxRichEditControlRS29;dxPsPrVwAdvRS29;dxPSdxGaugeControlLnkRS29;dxRibbonCustomizationFormRS29;dbexpress;dxEMFRS29;inet;vcltouch;dxPSdxFCLnkRS29;FireDACDBXDriver;dxSpreadSheetCoreConditionalFormattingDialogsRS29;CustomIPTransport;FireDACMSSQLDriver;dxPScxTLLnkRS29;VirtualTreesR;vclFireDAC;dxSpreadSheetRS29;FireDACODBCDriver;emsserverresource;dxPScxVGridLnkRS29;ZComponent;FMX.dxLayoutControlR;rtl;dxServerModeRS29;DBXSqliteDriver;dxBarDBNavRS29;DBXSybaseASEDriver;inetdbxpress;FireDAC;xmlrtl;dsnap;FireDACDb2Driver;dxPSdxLCLnkRS29;DBXOracleDriver;DatasnapConnectorsFreePascal;dxPSLnksRS29;dxPSdxOCLnkRS29;cxSchedulerGridRS29;dxPSdxDBTVLnkRS29;dxGaugeControlRS29;bindcompvclwinx;dxOrgChartAdvancedCustomizeFormRS29;bindcompfmx;dxFlowChartLayoutsRS29;dxdborRS29;FireDACASADriver;dxPScxGridLnkRS29;vclactnband;officeXPrt;FireDACInfxDriver;dxRichEditCoreRS29;DBXMySQLDriver;dxFlowChartAdvancedCustomizeFormRS29;VclSmp;DataSnapCommon;fmxase;dxFlowChartRS29;cxGridRS29;dxSpellCheckerRS29;DataSnapIndy10ServerTransport;dxMapControlRS29;vcldsnap;DBXInterBaseDriver;vcldb;cxSchedulerTreeBrowserRS29;dxTabbedMDIRS29;ZPlain;dxHttpIndyRequestRS29;cxPivotGridOLAPRS29;vcl;DataSnapClient;dxCoreRS29;dxSkinsCoreRS29;emsclientfiredac;FireDACPgDriver;FireDACDSDriver;tethering;FMX.dxMemDataR;bindcompvcl;FMX.dxGridR;CloudService;cxSchedulerRS29;soapserver;dxPScxCommonRS29;FireDACIBDriver;dxRibbonRS29;vclwinx;DataSnapServer;frReportFiles;fmx;dxSpreadSheetReportDesignerRS29;DbxCommonDriver;VCLRESTComponents;FireDACCommonODBC;DBXMSSQLDriver;dxComnRS29;emsclient;dxFlowChartDesignerRS29;appanalytics;IndyProtocols;vclx;dxBarExtDBItemsRS29;cxFireDACAdaptersRS29;DBXFirebirdDriver;dacvcl290;FireDACSqliteDriver;DbxClientDriver;soapmidas;dxDockingRS29;dxorgcRS29;fmxdae;dxPSRichEditControlLnkRS29;dxPSdxSpreadSheetLnkRS29;ZCore;ZParseSql;cxADOAdaptersRS29;odacvcl290;dxPSPrVwRibbonRS29;IndySystem;frTeeChartFiles;dxPSdxDBOCLnkRS29;dxGDIPlusRS29;dxPSCoreRS29;FireDACCommon;DataSnapServerMidas;dxPSdxMapControlLnkRS29;cxGridEMFRS29;dxGanttControlRS29;dxPScxPivotGridLnkRS29;dxADOServerModeRS29;dxWizardControlRS29;bindcompdbx;FireDACMySQLDriver;dxCloudServiceLibraryRS29;dxSpreadSheetCoreRS29;dxNavBarRS29;vclimg;DataSnapFireDAC;odac290;dxFireDACEMFRS29;DBXInformixDriver;fmxobj;bindcompvclsmp;DataSnapNativeClient;dxmdsRS29;dxPScxSchedulerLnkRS29;emshosting;dxADOEMFRS29;dxChartControlRS29;FireDACCommonDriver;IndyIPClient;dxPDFViewerRS29;emsedge;dxBarExtItemsRS29;crcontrols290;inetdb;cxPivotGridChartRS29;fmxFireDAC;cxTreeListdxBarPopupMenuRS29;cxSchedulerRibbonStyleEventEditorRS29;dxtrmdRS29;DBXOdbcDriver;dbrtl;dxPScxPCProdRS29;FireDACOracleDriver;FMX.dxControlsR;FireDACMSAccDriver;dxRichEditDocumentModelRS29;DataSnapConnectors;FireDACMongoDBDriver;FireDACTDataDriver;cxLibraryRS29;Skia.Package.VCL;dxPSdxPDFViewerLnkRS29;bindcomp;cxExportRS29;IndyCore;RESTBackendComponents;dxTileControlRS29;dxFireDACServerModeRS29;FireDACADSDriver;RESTComponents;IndyIPServer;dsnapxml;adortl;dxdbtrRS29;dsnapcon;cxPivotGridRS29;DataSnapProviderClient;dac290;DBXDb2Driver;dxBarRS29;ZDbc;DBXSybaseASADriver;dxSpreadSheetConditionalFormattingDialogsRS29;cxTreeListRS29;soaprtl;dxDBXServerModeRS29;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -89,57 +134,27 @@
         <DCC_RangeChecking>true</DCC_RangeChecking>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <DCC_DebugDCUs>true</DCC_DebugDCUs>
-        <DCC_ExeOutput>..\exe</DCC_ExeOutput>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <DCC_RemoteDebug>false</DCC_RemoteDebug>
+        <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_ExeOutput>.\exe</DCC_ExeOutput>
         <VerInfo_Locale>1033</VerInfo_Locale>
+        <Manifest_File>(None)</Manifest_File>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
-        <DCC_DebugDCUs>true</DCC_DebugDCUs>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
-        <DCC_Optimize>true</DCC_Optimize>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+        <DCC_DebugInformation>0</DCC_DebugInformation>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <RcCompile Include="..\SQL\mssql.rc">
-            <Form>mssql.res</Form>
-        </RcCompile>
-        <RcCompile Include="..\SQL\Oracle.rc">
-            <Form>Oracle.res</Form>
-        </RcCompile>
-        <RcCompile Include="..\SQL\Postgre.rc">
-            <Form>Postgre.res</Form>
-        </RcCompile>
-        <DCCReference Include="..\..\Common\intf_dll.pas"/>
-        <DCCReference Include="..\..\Common\intf_common.pas"/>
-        <DCCReference Include="..\..\Common\intf_dll_manager.pas"/>
-        <DCCReference Include="..\..\Common\frxDevDSIntf.pas"/>
-        <DCCReference Include="uDMConn.pas">
-            <Form>dmConn</Form>
-            <DesignClass>TDataModule</DesignClass>
-        </DCCReference>
-        <DCCReference Include="uLogData.pas">
-            <Form>frmLogData</Form>
-        </DCCReference>
-        <DCCReference Include="..\..\Common\cxVirtualTreeListHelper.pas"/>
-        <DCCReference Include="..\CommonModules\dmSkins.pas">
-            <Form>dmSkin</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TDataModule</DesignClass>
-        </DCCReference>
-        <DCCReference Include="..\..\Common\intf_skin.pas"/>
-        <DCCReference Include="..\..\Common\FireDAC.Moni.Custom.Logger.pas"/>
-        <DCCReference Include="..\..\Common\FDMoniCustomLoggerHelper.pas"/>
-        <DCCReference Include="..\..\Common\uSkinHelper.pas"/>
-        <DCCReference Include="..\..\Common\uDBConnectionSettings.pas"/>
-        <DCCReference Include="..\..\Common\uMultiDBSettingsForm.pas">
-            <Form>frmMultiDBSettings</Form>
-        </DCCReference>
+        <DCCReference Include="ufrxDevCustomDataSetFixture.pas"/>
+        <DCCReference Include="..\..\..\Common\cxVirtualTreeListHelper.pas"/>
+        <DCCReference Include="..\..\..\Common\frxDevDSIntf.pas"/>
+        <DCCReference Include="..\..\frxDevDS\frxDevCustomDataSet.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -152,33 +167,46 @@
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
     </ItemGroup>
-    <Import Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')" Project="$(BDS)\Bin\CodeGear.Delphi.Targets"/>
     <ProjectExtensions>
         <Borland.Personality>Delphi.Personality.12</Borland.Personality>
-        <Borland.ProjectType/>
+        <Borland.ProjectType>Application</Borland.ProjectType>
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">LogData.dpr</Source>
+                    <Source Name="MainSource">frxDevCustomDataSetFixture.dpr</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="E:\Distrib\Delphi\FastReport 2023-2 VCL Enterprise D12\FastReport 2023.2 VCL Enterprise D10.4-12\Lib23.0\VCL\Win32\dclfrReportFiles290.bpl">FastReport VCL Components dcl</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k290.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
-            <Platforms>
-                <Platform value="Win32">True</Platform>
-                <Platform value="Win64">False</Platform>
-            </Platforms>
             <Deployment Version="4">
-                <DeployFile LocalName="..\exe\LogData.dll" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libcgunwind.1.0.dylib" Class="DependencyModule">
+                    <Platform Name="iOSSimulator">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libpcre.dylib" Class="DependencyModule">
+                    <Platform Name="iOSSimulator">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\Redist\osx32\libcgunwind.1.0.dylib" Class="DependencyModule">
+                    <Platform Name="OSX32">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win32\Debug\frxDevCustomDataSetFixture.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>LogData.dll</RemoteName>
+                        <RemoteName>frxDevCustomDataSetFixture.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="Win32">
@@ -592,6 +620,7 @@
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="Win32">
@@ -600,14 +629,17 @@
                 </DeployClass>
                 <DeployClass Name="DependencyFramework">
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.framework</Extensions>
                     </Platform>
                     <Platform Name="OSX64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.framework</Extensions>
                     </Platform>
                     <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.framework</Extensions>
                     </Platform>
@@ -616,15 +648,30 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="DependencyModule">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="OSX64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
@@ -647,14 +694,17 @@
                         <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="OSX64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
@@ -680,12 +730,15 @@
                         <Operation>0</Operation>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\Resources\StartUp\</RemoteDir>
                         <Operation>0</Operation>
                     </Platform>
                     <Platform Name="OSX64">
+                        <RemoteDir>Contents\Resources\StartUp\</RemoteDir>
                         <Operation>0</Operation>
                     </Platform>
                     <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\Resources\StartUp\</RemoteDir>
                         <Operation>0</Operation>
                     </Platform>
                     <Platform Name="Win32">
@@ -700,9 +753,44 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="ProjectOSXDebug"/>
-                <DeployClass Name="ProjectOSXEntitlements"/>
-                <DeployClass Name="ProjectOSXInfoPList"/>
+                <DeployClass Name="ProjectOSXDebug">
+                    <Platform Name="OSX64">
+                        <RemoteDir>..\$(PROJECTNAME).app.dSYM\Contents\Resources\DWARF</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>..\$(PROJECTNAME).app.dSYM\Contents\Resources\DWARF</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectOSXEntitlements">
+                    <Platform Name="OSX32">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSX64">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectOSXInfoPList">
+                    <Platform Name="OSX32">
+                        <RemoteDir>Contents</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSX64">
+                        <RemoteDir>Contents</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>Contents</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="ProjectOSXResource">
                     <Platform Name="OSX32">
                         <RemoteDir>Contents\Resources</RemoteDir>
@@ -739,12 +827,15 @@
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="OSX64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="Win32">
@@ -782,9 +873,41 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <DeployClass Name="ProjectiOSEntitlements"/>
-                <DeployClass Name="ProjectiOSInfoPList"/>
-                <DeployClass Name="ProjectiOSLaunchScreen"/>
+                <DeployClass Name="ProjectiOSEntitlements">
+                    <Platform Name="iOSDevice32">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectiOSInfoPList">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectiOSLaunchScreen">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen</RemoteDir>
+                        <Operation>64</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen</RemoteDir>
+                        <Operation>64</Operation>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="ProjectiOSResource">
                     <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
@@ -1022,16 +1145,28 @@
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="iOSSimARM64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Linux64" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="OSX64" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="OSXARM64" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="OSX64" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="OSXARM64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Win64x" Name="$(PROJECTNAME)"/>
             </Deployment>
+            <Platforms>
+                <Platform value="Android">False</Platform>
+                <Platform value="Android64">False</Platform>
+                <Platform value="iOSDevice64">False</Platform>
+                <Platform value="iOSSimARM64">False</Platform>
+                <Platform value="Linux64">False</Platform>
+                <Platform value="OSX64">False</Platform>
+                <Platform value="OSXARM64">False</Platform>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">False</Platform>
+            </Platforms>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
-    <Import Condition="Exists('$(MSBuildProjectName).deployproj')" Project="$(MSBuildProjectName).deployproj"/>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+    <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
 </Project>

@@ -19,11 +19,11 @@ uses
   cxVirtualTreeListHelper in '..\..\Common\cxVirtualTreeListHelper.pas',
   dmSkins in '..\CommonModules\dmSkins.pas' {dmSkin: TDataModule},
   intf_skin in '..\..\Common\intf_skin.pas',
-  FireDAC.Moni.Custom.Logger in '..\..\..\Common\FireDAC.Moni.Custom.Logger.pas',
-  FDMoniCustomLoggerHelper in '..\..\..\Common\FDMoniCustomLoggerHelper.pas',
+  FireDAC.Moni.Custom.Logger in '..\..\Common\FireDAC.Moni.Custom.Logger.pas',
+  FDMoniCustomLoggerHelper in '..\..\Common\FDMoniCustomLoggerHelper.pas',
   uSkinHelper in '..\..\Common\uSkinHelper.pas',
-  uDBConnectionSettings in '..\..\..\Common\uDBConnectionSettings.pas',
-  uMultiDBSettingsForm in '..\..\..\Common\uMultiDBSettingsForm.pas' {frmMultiDBSettings};
+  uDBConnectionSettings in '..\..\Common\uDBConnectionSettings.pas',
+  uMultiDBSettingsForm in '..\..\Common\uMultiDBSettingsForm.pas' {frmMultiDBSettings};
 
 {$R *.res}
 

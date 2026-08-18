@@ -30,6 +30,8 @@ type
     function GetValue(Index: string): Variant; override;
     function GetDisplayText(Index: string): WideString; override;
     function GetFieldType(Index: string): TfrxFieldType; override;
+    property FieldIndexes: TList<Integer> read FFieldIndexes;
+    property FieldTypes: TList<TfrxFieldType> read FFieldTypes;
   public
     constructor Create(AOwner: TComponent; ASource: TVTBaseRecord;
       AFieldNames: TStringList; AFieldIndexes: TList<Integer>;
@@ -70,6 +72,8 @@ type
     function GetValue(Index: string): Variant; override;
     function GetDisplayText(Index: string): WideString; override;
     function GetFieldType(Index: string): TfrxFieldType; override;
+    property FieldIndexes: TList<Integer> read FFieldIndexes;
+    property FieldTypes: TList<TfrxFieldType> read FFieldTypes;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;

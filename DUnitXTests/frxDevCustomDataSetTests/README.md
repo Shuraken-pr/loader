@@ -1,197 +1,92 @@
-# frxDevCustomDataSetTests — DUnitX тесты адаптера FastReport
+# frxDevCustomDataSetTests
 
-![Platform](https://img.shields.io/badge/platform-Win32-blue)
-![Framework](https://img.shields.io/badge/framework-DUnitX-green)
-![Delphi](https://img.shields.io/badge/Delphi-XE%2B-red)
-![Coverage](https://img.shields.io/badge/coverage-34_tests-brightgreen)
-![Sections](https://img.shields.io/badge/sections-4.1.1_+_4.1.2_+_4.1.3_+_4.1.4-blue)
+DUnitX-тесты адаптера `TfrxDevCustomDataSet` и автономного адаптера одной записи `TVTRecordAdapter`.
 
-Модульные тесты DUnitX для компонента `TfrxDevCustomDataSet` — адаптера между `TVTBaseDataSource<TVTBaseRecord>` (DevExpress cxVirtualTreeList) и FastReport.
+## Текущее состояние
 
----
+- Платформа проекта: **Win32**.
+- Тип приложения: консольный DUnitX runner.
+- Зарегистрировано **52 теста**.
+- Фикстуры:
+  - `TfrxDevCustomDataSetFixture` — 34 теста, интеграция с `TcxVirtualTreeList`;
+  - `TfrxDevCustomDataSetAdapterFixture` — 18 тестов, автономная проверка `TVTRecordAdapter`.
+- Последний сохранённый результат в `exe/dunitx-results.xml`: **52 теста, 0 ошибок, 0 падений** (2026-08-19).
+- Проект не использует отдельный файл `frxDevCustomDataSetTests.dpr`; фактический runner — `frxDevCustomDataSetFixture.dpr`.
 
-## 📋 Обзор
+## Структура каталога
 
-**Тестируемый модуль:** `loader\frxDevDS\frxDevCustomDataSet.pas`  
-**Тестируемые классы:**
-- `TfrxDevCustomDataSet` — главный адаптер FastReport
-- `TVTRecordAdapter` — адаптер одной записи (для Master-Detail)
-
-**Текущий статус:** Реализованы **все 4 раздела спецификации 4.1** — 34 теста (7 + 11 + 8 + 8), все проходят.
-
-| Раздел | Тестов | Статус |
-|--------|--------|--------|
-| 4.1.1 Привязка к источнику | 7 | ✅ Реализовано |
-| 4.1.2 Навигация по записям | 11 | ✅ Реализовано |
-| 4.1.3 GetValue / GetDisplayText | 8 | ✅ Реализовано |
-| 4.1.4 Адаптер записи (Master-Detail) | 8 | ✅ Реализовано |
-| **Итого** | **34** | ✅ **100%** |
-
----
-
-## 🏗 Структура проекта
-
-```
+```text
 frxDevCustomDataSetTests/
-├── frxDevCustomDataSetFixture.dpr          ← DUnitX runner
-├── frxDevCustomDataSetFixture.dproj        ← проект Delphi
-├── ufrxDevCustomDataSetFixture.pas         ← фикстура + все тесты
-├── frxDevCustomDataSetFixture.md           ← подробная спецификация
-└── README.md                               ← этот файл
+├── frxDevCustomDataSetFixture.dpr       # главный DUnitX runner
+├── frxDevCustomDataSetFixture.dproj     # проект Delphi
+├── ufrxDevCustomDataSetFixture.pas      # TMockRecord, фикстуры и тесты
+├── frxDevCustomDataSetFixture.md        # подробная спецификация тестов
+├── README.md                            # описание проекта
+└── exe/
+    ├── frxDevCustomDataSetFixture.exe   # сохранённый бинарный результат сборки
+    └── dunitx-results.xml               # NUnit XML последнего запуска
 ```
 
----
+Каталоги `Win32\Debug` и `Win32\Release` используются Delphi для DCU-файлов. Файлы IDE (`.dsk`, `.dsv`, `.identcache`, `.skincfg`, `.dproj.local`) не являются частью тестовой логики.
 
-## 🔗 Зависимости
+## Что тестируется
 
-### Productive code
-| Модуль | Путь | Назначение |
-|--------|------|-----------|
-| `cxVirtualTreeListHelper` | `Common\` | Дженерик-фреймворк TVT |
-| `frxDevDSIntf` | `Common\` | Интерфейсы frxDev |
-| `frxDevCustomDataSet` | `loader\frxDevDS\` | Тестируемый компонент |
+Тестируемый production-модуль:
 
-### External
-- **DevExpress VCL** — `cxTL`, `cxTLData`, `cxCustomData` (TcxVirtualTreeList, TcxTreeListColumn)
-- **FastReport** — `frxClass`, `frxDsgnIntf` (TfrxUserDataSet, TfrxFieldType)
-- **DUnitX** — фреймворк тестирования
-
----
-
-## 🎭 Тестовая инфраструктура
-
-### TMockRecord
-Конкретный наследник `TVTBaseRecord` с 5 колонками разных типов для полного покрытия `GetFieldType`:
-
-| ColIdx | Тип Delphi | VarType | FastReport тип |
-|--------|------------|---------|----------------|
-| 0 | `Integer` | `varInteger` (3) | `fftNumeric` |
-| 1 | `string` | `varUString` (258) | `fftString` |
-| 2 | `TDateTime` | `varDate` (7) | `fftDateTime` |
-| 3 | `Boolean` | `varBoolean` (11) | `fftBoolean` |
-| 4 | `Null` | `0` (особый случай) | `fftString` (default) |
-
-### TTestFrxDevCustomDataSet
-Тестовый наследник `TfrxDevCustomDataSet`, реэкспортирующий `protected`-свойства как `public`:
-
-```delphi
-TTestFrxDevCustomDataSet = class(TfrxDevCustomDataSet)
-public
-  property FieldIndexes;  // TList<Integer>
-  property FieldTypes;    // TList<TfrxFieldType>
-  property CurrentIndex;  // Integer
-end;
+```text
+loader\frxDevDS\frxDevCustomDataSet.pas
 ```
 
-### TTestTVTRecordAdapter
-Тестовый наследник `TVTRecordAdapter`, реэкспортирующий `protected`-свойства как `public`:
+Целевые классы:
 
-```delphi
-TTestTVTRecordAdapter = class(TVTRecordAdapter)
-public
-  property FieldIndexes;  // TList<Integer>
-  property FieldTypes;    // TList<TfrxFieldType>
-  property FieldNames;    // TStringList
-end;
-```
+- `TfrxDevCustomDataSet` — адаптер `TVTBaseDataSource<TVTBaseRecord>` к FastReport;
+- `TVTRecordAdapter` — адаптер одной записи для Master-Detail.
 
-**Зачем:** Устойчивее и производительнее, чем RTTI. Работает в любой конфигурации (Debug/Release).
+## Разделы тестов
 
-### VCL-инициализация
-`TcxVirtualTreeList` требует глобальный `Application` singleton из `Vcl.Forms`. В консольном DUnitX-раннере `Vcl.Forms` подключён в `.dpr`, поэтому `Application` создаётся автоматически.
+### 4.1 `TfrxDevCustomDataSetFixture` — 34 теста
 
----
+| Раздел | Количество | Покрытие |
+|---|---:|---|
+| 4.1.1 Привязка к источнику | 7 | Проверка аргументов, построение полей, скрытые колонки, имена, повторная привязка |
+| 4.1.2 Навигация | 11 | `Open`, `Close`, `First`, `Next`, `Eof`, `RecordCount`, пустой источник |
+| 4.1.3 `GetValue` / `GetDisplayText` | 8 | Делегирование активному адаптеру, значения разных типов, неизвестные поля, типы полей |
+| 4.1.4 Адаптер записи / Master-Detail | 8 | Создание и кэширование адаптеров, метаданные, навигация одной записи, очистка кэша |
+| **Итого** | **34** | |
 
-## ✅ Реализованные тесты
+Для навигационных тестов источник создаётся с `FTreeList`, а после добавления записей вызывается `DataChanged`. Это связывает записи с VCL-узлами, используемыми `InternalFirst` и `InternalNext`.
 
-### 4.1.1 — Привязка к источнику (AssignDataSource) — 7 тестов
+### 4.2 `TfrxDevCustomDataSetAdapterFixture` — 18 тестов
 
-| № | Тест | Что проверяет |
-|---|------|---------------|
-| 4.1.1.1 | `AssignDataSource_NilDataSource_RaisesException` | `nil` в `ADataSource` → `EArgumentNilException` с текстом `'ADataSource must not be nil'` |
-| 4.1.1.2 | `AssignDataSource_NilTreeList_RaisesException` | `nil` в `ATreeList` → `EArgumentNilException` с текстом `'ATreeList must not be nil'` |
-| 4.1.1.3 | `AssignDataSource_BuildsFieldListFromColumns` | 3 видимые колонки → `Fields.Count=3`, `FieldIndexes.Count=3`, `FieldTypes.Count=3` |
-| 4.1.1.4 | `AssignDataSource_HiddenColumn_Skipped` | Колонка с `Visible=False` пропускается |
-| 4.1.1.5 | `AssignDataSource_EmptyColumnCaption_GeneratesColN` | Пустые `Caption.Text` → авто-имена `Col0`, `Col1`, ... |
-| 4.1.1.6 | `AssignDataSource_DuplicateColumnNames_AddsSuffix` | Дублирующиеся имена → суффикс `_N` (`Name`, `Name_1`, `Name_2`) |
-| 4.1.1.7 | `AssignDataSource_ClearsPreviousState` | Повторная привязка очищает предыдущее состояние |
+Это автономная фикстура. Она не создаёт `TcxVirtualTreeList`, `TfrxDevCustomDataSet` или `TVTLoadAllDataSource` и не требует VCL-узлов.
 
-### 4.1.2 — Навигация по записям — 11 тестов
+| Раздел | Количество | Тесты |
+|---|---:|---|
+| 4.2.1 Конструктор и инициализация | 2 | `Create_InitializesFieldsCorrectly`, `Create_WithNilCollections_DoesNotRaise` |
+| 4.2.2 Навигация одной записи | 7 | `Open_ResetsRecNo`, `First_ResetsRecNo`, `Next_SetsEofToTrue`, `Eof_TrueAfterNext`, `RecordCount_AlwaysOne`, `First_AfterNext_ResetsState`, `Next_AfterEof_IsSafe` |
+| 4.2.3 `GetValue` | 3 | Известное поле, неизвестное поле, `nil`-источник |
+| 4.2.4 `GetFieldList` | 1 | Копирование имён полей |
+| 4.2.5 `FieldsCount` | 1 | Количество имён полей |
+| 4.2.6 Дополнительное поведение | 4 | `GetDisplayText`, `GetFieldType`, неизвестный тип, поиск без учёта регистра |
+| **Итого** | **18** | |
 
-| № | Тест | Что проверяет |
-|---|------|---------------|
-| 4.1.2.1 | `Open_SetsCurrentIndexToMinusOne` | `Open` сбрасывает `CurrentIndex = -1` |
-| 4.1.2.2 | `First_SetsCurrentIndexToZero` | `First` устанавливает `CurrentIndex = 0`, создаёт активный адаптер |
-| 4.1.2.3 | `Next_IncrementsIndex` | Последовательная навигация: `CurrentIndex` инкрементируется |
-| 4.1.2.4 | `Eof_TrueWhenNoMoreNodes` | `Eof = True` после прохождения всех записей |
-| 4.1.2.5 | `Eof_TrueWhenNoDataSource` | Без привязки `Eof = True` |
-| 4.1.2.6 | `RecordCount_ReturnsRootTotalCount` | `RecordCount = RootHandle.TotalCount` |
-| 4.1.2.7 | `Close_ResetsNavigationState` | `Close` полностью сбрасывает состояние |
-| 4.1.2.8 | `First_OnEmptyDataSource_SetsNilAdapter` | `First` на пустом источнике |
-| 4.1.2.9 | `RecordCount_NoDataSource_ReturnsZero` | `RecordCount = 0` без привязки |
-| 4.1.2.10 | `First_MultipleCalls_ResetToBeginning` | Повторный `First` сбрасывает в начало |
-| 4.1.2.11 | `Next_AfterEof_NoException` | `Next` после `Eof` не падает |
+## Тестовые классы и данные
 
-### 4.1.3 — GetValue / GetDisplayText — 8 тестов
+### `TMockRecord`
 
-| № | Тест | Что проверяет |
-|---|------|---------------|
-| 4.1.3.1 | `GetValue_ReturnsNull_WhenNoActiveAdapter` | Без активного адаптера `GetValue` → `Null` |
-| 4.1.3.2 | `GetDisplayText_ReturnsEmpty_WhenNoActiveAdapter` | Без активного адаптера `GetDisplayText` → `''` |
-| 4.1.3.3 | `GetValue_CallsAdapterGetValue` | Делегирование для 5 типов данных с сохранением VarType |
-| 4.1.3.4 | `GetDisplayText_CallsAdapterGetDisplayText` | Форматирование в WideString |
-| 4.1.3.5 | `GetValue_UnknownField_ReturnsNull` | Несуществующее поле → `Null`, поиск case-insensitive |
-| 4.1.3.6 | `GetFieldType_ReturnsCorrectType` | Маппинг VarType → FastReport-тип |
-| 4.1.3.7 | `GetValue_AfterNext_ReturnsNextRecordValues` | После `Next` значения меняются |
-| 4.1.3.8 | `GetValue_EmptyDataSource_ReturnsNull` | На пустом источнике `GetValue` → `Null` |
+`TMockRecord` — наследник `TVTBaseRecord` с пятью колонками:
 
-### 4.1.4 — Адаптер записи (Master-Detail) — 8 тестов
+| Константа | Индекс | Значение по умолчанию в тестах | `VarType` |
+|---|---:|---|---|
+| `COL_INTEGER` | 0 | `42` | `varInteger` |
+| `COL_STRING` | 1 | `'Test'` | `varString` / `varUString` |
+| `COL_DATE` | 2 | `EncodeDate(2026, 1, 15)` | `varDate` |
+| `COL_BOOLEAN` | 3 | `True` | `varBoolean` |
+| `COL_NULL` | 4 | `Null` | `varNull` |
 
-| № | Тест | Что проверяет |
-|---|------|---------------|
-| 4.1.4.1 | `GetAdapterForRecord_CreatesNew_IfNotExists` | Создание нового адаптера с привязкой к записи через `SourceRecord` |
-| 4.1.4.2 | `GetAdapterForRecord_ReturnsExisting_IfExists` | Кэш адаптеров (AreSame для одной записи) |
-| 4.1.4.3 | `GetAdapterForRecord_DifferentRecords_DifferentAdapters` | Разные адаптеры для разных записей |
-| 4.1.4.4 | `GetAdapterForRecord_PreservesFieldMetadata` | Копирование `FieldNames`, `FieldIndexes`, `FieldTypes` (адаптер владеет своими копиями) |
-| 4.1.4.5 | `GetAdapterForRecord_RecordCount_AlwaysOne` | `RecordCount = 1` всегда (семантика "одна запись на адаптер") |
-| 4.1.4.6 | `GetAdapterForRecord_Navigation_OneRecordLifecycle` | Полный цикл: `Open` → `First` → `Next` → `Eof=True` |
-| 4.1.4.7 | `GetAdapterForRecord_GetValue_DelegatesToSource` | Делегирование `GetValue` исходной записи, case-insensitive поиск |
-| 4.1.4.8 | `GetAdapterForRecord_CacheClearedOnReassign` | Повторная `AssignDataSource` очищает кэш адаптеров |
+### `TTestFrxDevCustomDataSet`
 
----
-
-## 🔑 Ключевые архитектурные решения
-
-### 1. Два варианта Setup для разных разделов
-
-```delphi
-// Для 4.1.1 (привязка): FDataSource с nil
-FDataSource := TVTLoadAllDataSource<TMockRecord>.Create(nil);
-
-// Для 4.1.2+ (навигация, GetValue, Master-Detail): FDataSource с FTreeList
-FDataSource := TVTLoadAllDataSource<TMockRecord>.Create(FTreeList);
-```
-
-**Зачем:** Навигация и `GetValue` требуют VCL-узлов в `FTreeList`, которые создаются автоматически только при передаче `FTreeList` в конструктор.
-
-### 2. Критическое правило: `DataChanged` после заполнения данных
-
-```delphi
-PopulateDataSource(N);
-FDataSource.DataChanged;  // ← КРИТИЧНО
-```
-
-**Зачем:** `DataChanged` связывает записи `TVTBaseRecord` с VCL-узлами `TcxTreeListNode`. Без этого `FTreeList.Root.getFirstChild` возвращает `nil`, и `InternalFirst`/`InternalNext` не работают.
-
-### 3. Обязательный explicit cast при привязке
-
-```delphi
-FDataSet.AssignDataSource(TVTBaseDataSource<TVTBaseRecord>(FDataSource), FTreeList);
-```
-
-**Зачем:** Delphi generics не поддерживают ковариантность — `TVTLoadAllDataSource<TMockRecord>` несовместим с `TVTBaseDataSource<TVTBaseRecord>` без явного cast.
-
-### 4. Тестовый наследник вместо RTTI
+Тестовый наследник `TfrxDevCustomDataSet`, открывающий protected-свойства:
 
 ```delphi
 TTestFrxDevCustomDataSet = class(TfrxDevCustomDataSet)
@@ -200,7 +95,13 @@ public
   property FieldTypes;
   property CurrentIndex;
 end;
+```
 
+### `TTestTVTRecordAdapter`
+
+Для тестов адаптера используется именно `TTestTVTRecordAdapter`, а не `TVTRecordAdapter` напрямую. Наследник открывает protected-свойства и protected-методы:
+
+```delphi
 TTestTVTRecordAdapter = class(TVTRecordAdapter)
 public
   property FieldIndexes;
@@ -209,137 +110,138 @@ public
 end;
 ```
 
-**Преимущества:**
-- ✅ Устойчивость к оптимизациям компилятора в Release
-- ✅ Быстрее (нет накладных расходов на рефлексию)
-- ✅ Не требует `{$RTTI EXPLICIT FIELDS([vcPrivate])}`
-- ✅ Единственное поле без прямого доступа — `FActiveAdapter` (проверяется косвенно через `GetValue`)
+Все локальные переменные адаптера в тестах раздела 4.2 должны иметь тип `TTestTVTRecordAdapter`, а экземпляры создаются через `TTestTVTRecordAdapter.Create(...)`. Это позволяет обращаться к protected API без RTTI.
 
-### 5. Использование `CreateColumn` вместо `Columns.Add`
+## Ключевые правила тестовой инфраструктуры
+
+### 1. `DataChanged` для тестов с TreeList
 
 ```delphi
-Col := FTreeList.CreateColumn;  // ✅ ПРАВИЛЬНО
-// Col := FTreeList.Columns.Add; // ❌ НЕПРАВИЛЬНО (метод не существует)
+PopulateDataSource(Count);
+FDataSource.DataChanged;
 ```
 
-### 6. Поиск имён полей case-insensitive
+Без этого `FTreeList.Root.getFirstChild` может не содержать корректно связанную запись, и навигация вернёт `nil`.
 
-`TStringList.CaseSensitive = False` по умолчанию, поэтому `GetValue('id')` и `GetValue('ID')` возвращают одно и то же. Это документировано в тестах 4.1.3.5 и 4.1.4.7.
+### 2. Явное приведение generic-типа
 
----
+При передаче источника в `AssignDataSource` используется:
 
-## 🚀 Как собрать и запустить
+```delphi
+FDataSet.AssignDataSource(
+  TVTBaseDataSource<TVTBaseRecord>(FDataSource),
+  FTreeList
+);
+```
 
-### Требования
-- Delphi XE или новее
-- DevExpress VCL (установлен в IDE)
-- FastReport VCL (установлен в IDE)
-- DUnitX (встроен в Delphi или установлен отдельно)
+### 3. Создание колонок
 
-### Из IDE
-1. Открыть `frxDevCustomDataSetFixture.dproj` в Delphi
-2. Выбрать конфигурацию **Debug | Win32**
-3. Убедиться, что в **Search Path** указаны:
-   ```
-   ..\..\..\Common
-   ..\..\frxDevDS
-   ```
-4. Запустить (F9)
+Для `TcxVirtualTreeList` используется:
 
-### Из командной строки
+```delphi
+Col := FTreeList.CreateColumn;
+```
+
+`FTreeList.Columns.Add` в используемом API не применяется.
+
+### 4. Изоляция коллекций адаптера
+
+`TVTRecordAdapter.Create` копирует `TStringList` и оба `TList`. Адаптер владеет своими копиями. Тест 4.2.1 проверяет не только `AreNotSame`, но и то, что последующие изменения исходных списков не изменяют данные адаптера.
+
+### 5. Семантика одной записи
+
+`TVTRecordAdapter` всегда сообщает `RecordCount = 1`. Начальное состояние и состояние после `First` имеют `Eof = False`; после `Next` устанавливается `Eof = True`. Повторный `Next` не должен выбрасывать исключение.
+
+### 6. Регистронезависимый поиск
+
+Имена полей хранятся в `TStringList`, у которой `CaseSensitive = False` по умолчанию. Поэтому `GetValue('ID')` и `GetValue('id')` должны находить одно поле.
+
+## Зависимости
+
+### Production units
+
+Указаны непосредственно в `frxDevCustomDataSetFixture.dpr`:
+
+```text
+Common\cxVirtualTreeListHelper.pas
+Common\frxDevDSIntf.pas
+loader\frxDevDS\frxDevCustomDataSet.pas
+```
+
+### Внешние библиотеки
+
+- Delphi RTL/VCL, включая `Vcl.Forms`;
+- DevExpress VCL: `cxTL`, `cxTLData`, `cxCustomData`;
+- FastReport VCL: `frxClass`, `frxDsgnIntf`;
+- DUnitX: test framework, console logger и NUnit XML logger.
+
+`Vcl.Forms` подключён в `.dpr` до тестовой fixture, потому что `TcxVirtualTreeList` требует VCL-контекст.
+
+## Сборка и запуск
+
+### Из Delphi IDE
+
+1. Открыть `frxDevCustomDataSetFixture.dproj`.
+2. Выбрать `Debug | Win32` или `Release | Win32`.
+3. Проверить доступность DevExpress, FastReport и DUnitX в конфигурации Delphi.
+4. Запустить проект.
+
+Настройки проекта:
+
+- `MainSource`: `frxDevCustomDataSetFixture.dpr`;
+- `AppType`: `Console`;
+- DCU по умолчанию: `Win32\Debug` или `Win32\Release`;
+- executable для Release-настройки: `exe`.
+
+### Командная строка
+
+После сборки запуск выполняется из каталога с executable:
+
 ```cmd
 frxDevCustomDataSetFixture.exe
 ```
 
-### С выводом в NUnit XML (для CI/CD)
-```cmd
-frxDevCustomDataSetFixture.exe --format=NUNIT --output=dunitx-results.xml
+NUnit XML создаётся logger’ом DUnitX. Путь и имя зависят от `TDUnitX.Options.XMLOutputFile`; сохранённый в репозитории пример находится в:
+
+```text
+exe\dunitx-results.xml
 ```
 
----
+В `.dpr` runner:
 
-## 🐛 Типовые проблемы
+- вызывает `TDUnitX.CheckCommandLine`;
+- использует RTTI для обнаружения `[TestFixture]`;
+- подключает console logger;
+- подключает NUnit XML logger;
+- устанавливает ненулевой exit code при неуспешных тестах;
+- в обычном локальном запуске ожидает Enter перед завершением, если не определён `CI`.
 
-### Проблема 1: `EInvalidOperation: Cannot create form`
-**Причина:** `TcxVirtualTreeList.Create(nil)` требует VCL-контекст.  
-**Решение:** Убедитесь, что `Vcl.Forms` подключён в `.dpr` **до** `ufrxDevCustomDataSetFixture`.
+## Типовые проблемы
 
-### Проблема 2: `GetValue` возвращает `Null` после `First`
-**Причина:** Записи не связаны с VCL-узлами.  
-**Решение:** Вызвать `FDataSource.DataChanged` после `PopulateDataSource`.
+| Симптом | Причина | Решение |
+|---|---|---|
+| `FCurrentNode = nil` после `First` | Источник создан без `FTreeList` или не вызван `DataChanged` | Использовать `SetupForNavigation` и вызвать `DataChanged` |
+| `GetValue` возвращает `Null` после `First` | Нет активного адаптера или запись не связана с узлом | Проверить `Open`, `First`, `DataChanged` и `Obj(CurrentNode)` |
+| `EInvalidCast` при `AssignDataSource` | Несовместимые generic-инстанцирования | Использовать явный cast к `TVTBaseDataSource<TVTBaseRecord>` |
+| Ошибка при создании `TcxVirtualTreeList` | Нет VCL-контекста | Оставить `Vcl.Forms` в `.dpr` до fixture |
+| Недоступен protected метод адаптера | Используется `TVTRecordAdapter` вместо тестового наследника | Использовать `TTestTVTRecordAdapter` |
+| Ошибочное ожидание сброса состояния после `Close` адаптера | `TVTRecordAdapter.Close` не переопределяет внутренние флаги, а вызывает `inherited` | Проверять сброс через `Open` или `First`, не объявлять иное поведение контрактом |
 
-### Проблема 3: `EAccessViolation` в `InternalFirst`
-**Причина:** `FDataSource` создан с `nil`, VCL-узлы не созданы.  
-**Решение:** Использовать `SetupForNavigation`, который создаёт `FDataSource` с `FTreeList`.
+## Дополнительная документация
 
-### Проблема 4: `EInvalidCast` в `AssignDataSource`
-**Причина:** Delphi generics не поддерживают ковариантность.  
-**Решение:** Обязательный explicit cast `TVTBaseDataSource<TVTBaseRecord>(FDataSource)`.
+- `frxDevCustomDataSetFixture.md` — детальная спецификация разделов 4.1 и 4.2, сценарии, ожидаемые результаты и матрица покрытия.
+- `DUnitXLoader.md` — общая спецификация тестов проекта `loader`.
+- `loader\frxDevDS\frxDevCustomDataSet.pas` — production-реализация адаптеров.
 
-### Проблема 5: `E2029` / `Columns.Add` не существует
-**Причина:** `TcxVirtualTreeList` не имеет метода `Columns.Add`.  
-**Решение:** Использовать только `FTreeList.CreateColumn`.
+## Ограничения
 
-### Проблема 6: `FCurrentNode = nil` после `First`
-**Причина:** `FTreeList.Root.getFirstChild` возвращает `nil`.  
-**Решение:** Передать `FTreeList` в конструктор `TVTLoadAllDataSource`.
+- Тесты `TfrxDevCustomDataSetFixture` зависят от DevExpress VCL и VCL-узлов.
+- Тесты не используют реальную БД, DLL или внешние сервисы.
+- Автоматическая проверка утечек памяти не является отдельным тестом.
+- README отражает 52 теста, зарегистрированных в текущем `ufrxDevCustomDataSetFixture.pas`; запуск/компиляция не выполнялись в рамках обновления этого документа.
 
-### Проблема 7: `Adapter.SourceRecord = nil`
-**Причина:** Запись не привязана к VCL-узлу.  
-**Решение:** Вызвать `FDataSource.DataChanged` после `InsertRecordHandle`.
+## Лицензия и авторство
 
----
+Тесты созданы в рамках проекта `loader` для автоматизации проверки интеграции FastReport с виртуальным деревом.
 
-## 📊 Матрица покрытия раздела 4.1
-
-### TfrxDevCustomDataSet
-
-| Метод | Тесты |
-|-------|-------|
-| `AssignDataSource` | 4.1.1.1–4.1.1.7, 4.1.4.8 |
-| `Open` | 4.1.2.1 |
-| `Close` | 4.1.2.7 |
-| `First` | 4.1.2.2, 4.1.2.8, 4.1.2.10 |
-| `Next` | 4.1.2.3, 4.1.2.11 |
-| `Eof` | 4.1.2.4, 4.1.2.5 |
-| `GetValue` | 4.1.3.1, 4.1.3.3, 4.1.3.5, 4.1.3.7, 4.1.3.8 |
-| `GetDisplayText` | 4.1.3.2, 4.1.3.4 |
-| `GetFieldType` | 4.1.3.6 |
-| `RecordCount` | 4.1.2.6, 4.1.2.9 |
-| `GetAdapterForRecord` | 4.1.4.1–4.1.4.8 |
-| `BuildFieldListFromTreeList` | через 4.1.1.3–4.1.1.6 |
-
-### TVTRecordAdapter
-
-| Метод | Тесты |
-|-------|-------|
-| `Create` | 4.1.4.1, 4.1.4.4 |
-| `Open` / `Close` / `First` / `Next` / `Eof` | 4.1.4.6 |
-| `GetValue` | 4.1.4.7 (через 4.1.3.3, 4.1.3.5) |
-| `GetDisplayText` | через 4.1.3.4 |
-| `GetFieldList` / `FieldsCount` | 4.1.4.4 |
-| `RecordCount` | 4.1.4.5 |
-| `SourceRecord` (property) | 4.1.4.1, 4.1.4.3 |
-
----
-
-## 📝 Следующие шаги
-
-Согласно спецификации `DUnitXLoader.md`, следующие модули для реализации:
-
-| Модуль | Раздел | Приоритет | Описание |
-|--------|--------|-----------|----------|
-| **frxDevCustomDataSet** | 4.2 TVTRecordAdapterFixture | P1 | Изолированные тесты самого адаптера (12 тестов) |
-| **VirtualDataCache** | 5.1 | P2 | Кэш с LRU-eviction и семафором (12 тестов) |
-| **uCatalogService** | 6.1 | P2 | Сервис каталога с мок-БД (24 теста) |
-| **uCalcPrice** | 7.1 | P1 | Расчёт цен с НДС (12 тестов) |
-
----
-
-## 📄 Лицензия и авторство
-
-Тесты созданы в рамках проекта `loader` для автоматизации контроля качества адаптера FastReport.
-
-**Дата последней актуализации:** Август 2026  
-**Версия спецификации:** 1.6  
-**Статус:** Раздел 4.1 реализован полностью (34 теста)
+Дата актуализации: **2026-08-19**.

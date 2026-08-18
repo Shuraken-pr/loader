@@ -2440,7 +2440,7 @@ begin
   Assert.WillNotRaise(
     procedure
     begin
-      Adapter := TVTRecordAdapter.Create(nil, nil, nil, nil, nil);
+      Adapter := TTestTVTRecordAdapter.Create(nil, nil, nil, nil, nil);
       try
         Assert.IsNotNull(Adapter, 'Adapter должен быть создан даже с nil параметрами');
       finally
@@ -2454,7 +2454,7 @@ begin
   Assert.WillNotRaise(
     procedure
     begin
-      Adapter := TVTRecordAdapter.Create(
+      Adapter := TTestTVTRecordAdapter.Create(
         nil, nil, FFieldNames, FFieldIndexes, FFieldTypes);
       try
         Assert.IsNotNull(Adapter, 'Adapter с nil Source должен быть создан');
@@ -2469,7 +2469,7 @@ end;
 { === 4.2.2.1 Open_ResetsRecNo === }
 procedure TfrxDevCustomDataSetAdapterFixture.Open_ResetsRecNo;
 var
-  Adapter: TVTRecordAdapter;
+  Adapter: TTestTVTRecordAdapter;
 begin
   { Спецификация:
     - Open сбрасывает FCurrentRecNo в 0 и FEofFlag в False.
@@ -2483,7 +2483,7 @@ begin
         ...
       end; }
 
-  Adapter := TVTRecordAdapter.Create(
+  Adapter := TTestTVTRecordAdapter.Create(
     nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
   try
     // Имитируем состояние после Next (Eof = True)
@@ -2510,7 +2510,7 @@ end;
 { === 4.2.2.2 First_ResetsRecNo === }
 procedure TfrxDevCustomDataSetAdapterFixture.First_ResetsRecNo;
 var
-  Adapter: TVTRecordAdapter;
+  Adapter: TTestTVTRecordAdapter;
 begin
   { Спецификация:
     - First сбрасывает FCurrentRecNo в 0.
@@ -2524,7 +2524,7 @@ begin
         ...
       end; }
 
-  Adapter := TVTRecordAdapter.Create(
+  Adapter := TTestTVTRecordAdapter.Create(
     nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
   try
     // Имитируем состояние в конце (Eof = True)
@@ -2547,7 +2547,7 @@ end;
 { === 4.2.2.3 Next_SetsEofToTrue === }
 procedure TfrxDevCustomDataSetAdapterFixture.Next_SetsEofToTrue;
 var
-  Adapter: TVTRecordAdapter;
+  Adapter: TTestTVTRecordAdapter;
 begin
   { Спецификация:
     - После First + Next FEofFlag становится True.
@@ -2563,7 +2563,7 @@ begin
         ...
       end; }
 
-  Adapter := TVTRecordAdapter.Create(
+  Adapter := TTestTVTRecordAdapter.Create(
     nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
   try
     Adapter.First;
@@ -2584,7 +2584,7 @@ end;
 { === 4.2.2.4 Eof_TrueAfterNext === }
 procedure TfrxDevCustomDataSetAdapterFixture.Eof_TrueAfterNext;
 var
-  Adapter: TVTRecordAdapter;
+  Adapter: TTestTVTRecordAdapter;
 begin
   { Спецификация:
     - Eof возвращает True после Next.
@@ -2596,7 +2596,7 @@ begin
         Result := FEofFlag;
       end; }
 
-  Adapter := TVTRecordAdapter.Create(
+  Adapter := TTestTVTRecordAdapter.Create(
     nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
   try
     // === Assert: до First Eof = False (сброс в конструкторе) ===
@@ -2621,7 +2621,7 @@ end;
 { === 4.2.2.5 RecordCount_AlwaysOne === }
 procedure TfrxDevCustomDataSetAdapterFixture.RecordCount_AlwaysOne;
 var
-  Adapter: TVTRecordAdapter;
+  Adapter: TTestTVTRecordAdapter;
   EmptyNames: TStringList;
   EmptyIndexes: TList<Integer>;
   EmptyTypes: TList<TfrxFieldType>;
@@ -2638,7 +2638,7 @@ begin
       end; }
 
   // === Test 1: полный набор метаданных ===
-  Adapter := TVTRecordAdapter.Create(
+  Adapter := TTestTVTRecordAdapter.Create(
     nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
   try
     Assert.AreEqual(1, Adapter.RecordCount,
@@ -2652,7 +2652,7 @@ begin
   EmptyIndexes := TList<Integer>.Create;
   EmptyTypes := TList<TfrxFieldType>.Create;
   try
-    Adapter := TVTRecordAdapter.Create(
+    Adapter := TTestTVTRecordAdapter.Create(
       nil, FSource, EmptyNames, EmptyIndexes, EmptyTypes);
     try
       Assert.AreEqual(1, Adapter.RecordCount,
@@ -2667,7 +2667,7 @@ begin
   end;
 
   // === Test 3: nil Source ===
-  Adapter := TVTRecordAdapter.Create(
+  Adapter := TTestTVTRecordAdapter.Create(
     nil, nil, FFieldNames, FFieldIndexes, FFieldTypes);
   try
     Assert.AreEqual(1, Adapter.RecordCount,
@@ -2680,13 +2680,13 @@ end;
 { === 4.2.2.6 First_AfterNext_ResetsState === }
 procedure TfrxDevCustomDataSetAdapterFixture.First_AfterNext_ResetsState;
 var
-  Adapter: TVTRecordAdapter;
+  Adapter: TTestTVTRecordAdapter;
 begin
   { Спецификация:
     - Повторный First после Next сбрасывает состояние.
     - Это свойство идемпотентности First. }
 
-  Adapter := TVTRecordAdapter.Create(
+  Adapter := TTestTVTRecordAdapter.Create(
     nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
   try
     Adapter.First;
@@ -2711,13 +2711,13 @@ end;
 { === 4.2.2.7 Next_AfterEof_IsSafe === }
 procedure TfrxDevCustomDataSetAdapterFixture.Next_AfterEof_IsSafe;
 var
-  Adapter: TVTRecordAdapter;
+  Adapter: TTestTVTRecordAdapter;
 begin
   { Спецификация:
     - Повторный Next после Eof не вызывает исключений.
     - Это свойство идемпотентности Next и защита от ошибок клиента. }
 
-  Adapter := TVTRecordAdapter.Create(
+  Adapter := TTestTVTRecordAdapter.Create(
     nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
   try
     Adapter.First;
@@ -2764,7 +2764,7 @@ begin
         -> FFieldIndexes[0] = TMockRecord.COL_INTEGER (0)
         -> FSource.GetValue(0) = 42 }
 
-  Adapter := TVTRecordAdapter.Create(
+  Adapter := TTestTVTRecordAdapter.Create(
     nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
   try
     // === Assert: Integer поле (ID) ===
@@ -2807,7 +2807,7 @@ begin
         Result := FSource.GetValue(FFieldIndexes[ColIdx]);
       // Если IndexOf вернул -1, условие ложно, Result остаётся Null. }
 
-  Adapter := TVTRecordAdapter.Create(
+  Adapter := TTestTVTRecordAdapter.Create(
     nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
   try
     // === Assert: существующие поля работают ===
@@ -2843,7 +2843,7 @@ begin
       ColIdx := FFieldNames.IndexOf(Index);
       ... }
 
-  Adapter := TVTRecordAdapter.Create(
+  Adapter := TTestTVTRecordAdapter.Create(
     nil, nil, FFieldNames, FFieldIndexes, FFieldTypes);
   try
     // === Assert: GetValue не падает и возвращает Null ===
@@ -2881,7 +2881,7 @@ begin
         List.Assign(FFieldNames);
       end; }
 
-  Adapter := TVTRecordAdapter.Create(
+  Adapter := TTestTVTRecordAdapter.Create(
     nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
   try
     List := TStringList.Create;
@@ -2926,7 +2926,7 @@ begin
       end; }
 
   // === Test 1: стандартные метаданные (3 поля) ===
-  Adapter := TVTRecordAdapter.Create(
+  Adapter := TTestTVTRecordAdapter.Create(
     nil, FSource, FFieldNames, FFieldIndexes, FFieldTypes);
   try
     Assert.AreEqual(3, Adapter.FieldsCount,
@@ -2940,7 +2940,7 @@ begin
   EmptyIndexes := TList<Integer>.Create;
   EmptyTypes := TList<TfrxFieldType>.Create;
   try
-    Adapter := TVTRecordAdapter.Create(
+    Adapter := TTestTVTRecordAdapter.Create(
       nil, FSource, EmptyNames, EmptyIndexes, EmptyTypes);
     try
       Assert.AreEqual(0, Adapter.FieldsCount,

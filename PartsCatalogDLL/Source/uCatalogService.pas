@@ -3,14 +3,21 @@
 interface
 
 uses
-  System.SysUtils, System.Generics.Collections, uEntities, dmDatabase, FireDAC.Stan.Param, Data.DB;
+  System.SysUtils, System.Generics.Collections, System.Variants, uEntities, 
+  uCatalogRepositoryIntf;
 
 type
   TCatalogService = class
   private
-    FDM: TdmDB;
+    FRepo: ICatalogRepository;
+    
+    // Хелперы для маппинга
+    function MapTypeStrToEnum(const ATypeStr: string): TAttrType;
+    function MapTypeEnumToStr(AType: TAttrType): string;
+    function FormatDBValueToStr(const AAttrType: string; 
+      const AValStr, AValNum, AValDate, AValBool: Variant): string;
   public
-    constructor Create(ADM: TdmDB);
+    constructor Create(ARepo: ICatalogRepository);
 
     // Получить плоский список категорий (UI сам построит из него дерево)
     function GetCategories: TArray<TCategory>;
@@ -22,12 +29,14 @@ type
     function GetParts(ACategoryID: Integer; const ASearchTerm: string = ''): TArray<TPartRow>;
 
     function SavePart(ACategoryID: Integer; APartID: Integer; const ACode: string;
-    const AValues: TArray<TPair<string, string>>): Boolean;
+      const AValues: TArray<TPair<string, string>>): Boolean;
+      
     // Сохранение категории (ACategoryID = 0 для создания новой)
     function SaveCategory(ACategoryID: Integer; const AName: string; AParentID: Integer): Boolean;
 
     // Сохранение атрибута (AAttributeID = 0 для создания нового)
-    function SaveAttribute(ACategoryID: Integer; AAttributeID: Integer; const AName: string; AType: TAttrType): Boolean;
+    function SaveAttribute(ACategoryID: Integer; AAttributeID: Integer; 
+      const AName: string; AType: TAttrType): Boolean;
 
     // Удаление атрибута (возвращает True, если успешно, или False, если есть ограничения БД)
     function DeleteAttribute(AAttributeID: Integer; out AErrorMsg: string): Boolean;
@@ -43,10 +52,52 @@ implementation
 
 { TCatalogService }
 
-constructor TCatalogService.Create(ADM: TdmDB);
+constructor TCatalogService.Create(ARepo: ICatalogRepository);
 begin
   inherited Create;
-  FDM := ADM;
+  FRepo := ARepo;
+end;
+
+function TCatalogService.MapTypeStrToEnum(const ATypeStr: string): TAttrType;
+begin
+  if SameText(ATypeStr, 'string') then Result := atString
+  else if SameText(ATypeStr, 'number') then Result := atNumber
+  else if SameText(ATypeStr, 'date') then Result := atDate
+  else if SameText(ATypeStr, 'boolean') then Result := atBoolean
+  else Result := atString; // Default
+end;
+
+function TCatalogService.MapTypeEnumToStr(AType: TAttrType): string;
+begin
+  case AType of
+    atString: Result := 'string';
+    atNumber: Result := 'number';
+    atDate: Result := 'date';
+    atBoolean: Result := 'boolean';
+  else
+    Result := 'string';
+  end;
+end;
+
+function TCatalogService.FormatDBValueToStr(const AAttrType: string; 
+  const AValStr, AValNum, AValDate, AValBool: Variant): string;
+begin
+  // Формируем строковое представление значения в зависимости от того, какая колонка заполнена
+  if not VarIsNull(AValStr) and not VarIsEmpty(AValStr) then
+    Result := VarToStr(AValStr)
+  else if not VarIsNull(AValNum) and not VarIsEmpty(AValNum) then
+    Result := VarToStr(AValNum)
+  else if not VarIsNull(AValDate) and not VarIsEmpty(AValDate) then
+    Result := FormatDateTime('dd.mm.yyyy', VarToDateTime(AValDate))
+  else if not VarIsNull(AValBool) and not VarIsEmpty(AValBool) then
+  begin
+    if VarIsType(AValBool, varBoolean) and boolean(AValBool) then
+      Result := 'Да'
+    else
+      Result := 'Нет';
+  end
+  else
+    Result := '';
 end;
 
 function TCatalogService.DeleteAttribute(AAttributeID: Integer;
@@ -54,17 +105,15 @@ function TCatalogService.DeleteAttribute(AAttributeID: Integer;
 begin
   Result := False;
   AErrorMsg := '';
-  FDM.BeginTransaction;
+  FRepo.BeginTransaction;
   try
-    FDM.qryDeleteAttribute.Close;
-    FDM.qryDeleteAttribute.ParamByName('id').AsInteger := AAttributeID;
-    FDM.qryDeleteAttribute.ExecSQL;
-    FDM.CommitTransaction;
+    FRepo.DeleteAttribute(AAttributeID);
+    FRepo.CommitTransaction;
     Result := True;
   except
     on E: Exception do
     begin
-      FDM.RollbackTransaction;
+      FRepo.RollbackTransaction;
       // Перехватываем ошибку внешнего ключа (23503) или триггера
       if Pos('23503', E.Message) > 0 then
         AErrorMsg := 'Невозможно удалить атрибут: он используется в существующих деталях.'
@@ -76,21 +125,18 @@ end;
 
 function TCatalogService.DeletePart(APartID: Integer): Boolean;
 begin
-  FDM.BeginTransaction;
+  FRepo.BeginTransaction;
   try
     // Выполняем удаление.
     // Благодаря ON DELETE CASCADE в схеме БД, значения атрибутов (part_values)
     // удалятся автоматически вместе с деталью.
-    FDM.qryDeletePart.Close;
-    FDM.qryDeletePart.ParamByName('id').AsInteger := APartID;
-    FDM.qryDeletePart.ExecSQL;
-
-    FDM.CommitTransaction;
+    FRepo.DeletePart(APartID);
+    FRepo.CommitTransaction;
     Result := True;
   except
     on E: Exception do
     begin
-      FDM.RollbackTransaction;
+      FRepo.RollbackTransaction;
       // Для деталей критических ограничений обычно нет, но на всякий случай пробрасываем ошибку
       raise Exception.Create('Ошибка при удалении детали: ' + E.Message);
     end;
@@ -102,18 +148,15 @@ begin
   Result := False;
   AErrorMsg := '';
 
-  FDM.BeginTransaction;
+  FRepo.BeginTransaction;
   try
-    FDM.qryDeleteCategory.Close;
-    FDM.qryDeleteCategory.ParamByName('id').AsInteger := ACategoryID;
-    FDM.qryDeleteCategory.ExecSQL;
-
-    FDM.CommitTransaction;
+    FRepo.DeleteCategory(ACategoryID);
+    FRepo.CommitTransaction;
     Result := True;
   except
     on E: Exception do
     begin
-      FDM.RollbackTransaction;
+      FRepo.RollbackTransaction;
 
       // FireDAC оборачивает ошибки PostgreSQL. Код нарушения внешнего ключа (foreign key violation)
       // всегда содержит '23503' в тексте сообщения.
@@ -128,99 +171,80 @@ end;
 
 function TCatalogService.GetCategories: TArray<TCategory>;
 var
-  Count: Integer;
+  DBItems: TArray<TDBCategory>;
+  i: Integer;
 begin
-  FDM.qryCategories.Close;
-  FDM.qryCategories.Open;
-
-  Count := 0;
-  SetLength(Result, FDM.qryCategories.RecordCount);
-  while not FDM.qryCategories.Eof do
+  DBItems := FRepo.SelectCategories;
+  SetLength(Result, Length(DBItems));
+  for i := 0 to High(DBItems) do
   begin
-    Result[Count].ID := FDM.qryCategories.FieldByName('id').AsInteger;
-    Result[Count].ParentID := FDM.qryCategories.FieldByName('parent_id').AsInteger; // AsInteger вернет 0 для NULL
-    Result[Count].Name := FDM.qryCategories.FieldByName('name').AsString;
-    Result[Count].ChildCount := FDM.qryCategories.FieldByName('child_count').AsInteger;
-    Inc(Count);
-    FDM.qryCategories.Next;
+    Result[i].ID := DBItems[i].ID;
+    Result[i].ParentID := DBItems[i].ParentID;
+    Result[i].Name := DBItems[i].Name;
+    Result[i].ChildCount := DBItems[i].ChildCount;
   end;
-  FDM.qryCategories.Close;
 end;
 
 function TCatalogService.GetCategoryAttributes(ACategoryID: Integer): TArray<TAttributeDef>;
 var
-  Count: Integer;
-  TypeStr: string;
+  DBItems: TArray<TDBAttribute>;
+  i: Integer;
 begin
-  FDM.qryAttributes.Close;
-  FDM.qryAttributes.ParamByName('category_id').AsInteger := ACategoryID;
-  FDM.qryAttributes.Open;
-
-  Count := 0;
-  SetLength(Result, FDM.qryAttributes.RecordCount);
-  while not FDM.qryAttributes.Eof do
+  DBItems := FRepo.SelectAttributes(ACategoryID);
+  SetLength(Result, Length(DBItems));
+  for i := 0 to High(DBItems) do
   begin
-    Result[Count].ID := FDM.qryAttributes.FieldByName('id').AsInteger;
-    Result[Count].Name := FDM.qryAttributes.FieldByName('name').AsString;
-
-    TypeStr := FDM.qryAttributes.FieldByName('attr_type').AsString;
-    if SameText(TypeStr, 'string') then Result[Count].AttrType := atString
-    else if SameText(TypeStr, 'number') then Result[Count].AttrType := atNumber
-    else if SameText(TypeStr, 'date') then Result[Count].AttrType := atDate
-    else if SameText(TypeStr, 'boolean') then Result[Count].AttrType := atBoolean;
-
-    Inc(Count);
-    FDM.qryAttributes.Next;
+    Result[i].ID := DBItems[i].ID;
+    Result[i].Name := DBItems[i].Name;
+    Result[i].AttrType := MapTypeStrToEnum(DBItems[i].TypeStr);
   end;
-  FDM.qryAttributes.Close;
 end;
 
 function TCatalogService.GetParts(ACategoryID: Integer; const ASearchTerm: string = ''): TArray<TPartRow>;
 var
   PartDict: TDictionary<Integer, TPartRow>;
+  DBItems: TArray<TDBPartValue>;
+  i: Integer;
   CurrentPartID: Integer;
   CurrentRow: TPartRow;
   AttrName, ValStr: string;
   Count: Integer;
   Keys: TArray<Integer>;
   Key: Integer;
+  AttrTypeStr: string;
 begin
-  FDM.qryParts.Close;
-  FDM.qryParts.ParamByName('category_id').AsInteger := ACategoryID;
-  FDM.qryParts.ParamByName('search_term').AsString := ASearchTerm;
-  FDM.qryParts.Open;
+  DBItems := FRepo.SelectParts(ACategoryID, ASearchTerm);
 
   PartDict := TDictionary<Integer, TPartRow>.Create;
   try
-    while not FDM.qryParts.Eof do
+    for i := 0 to High(DBItems) do
     begin
-      CurrentPartID := FDM.qryParts.FieldByName('part_id').AsInteger;
+      CurrentPartID := DBItems[i].PartID;
 
       if not PartDict.TryGetValue(CurrentPartID, CurrentRow) then
       begin
         CurrentRow := TPartRow.Create;
         CurrentRow.PartID := CurrentPartID;
-        CurrentRow.Code := FDM.qryParts.FieldByName('code').AsString;
+        CurrentRow.Code := DBItems[i].Code;
         PartDict.Add(CurrentPartID, CurrentRow);
       end;
 
-      AttrName := FDM.qryParts.FieldByName('attr_name').AsString;
-
-      // Формируем строковое представление значения в зависимости от того, какая колонка заполнена
-      if not FDM.qryParts.FieldByName('value_string').IsNull then
-        ValStr := FDM.qryParts.FieldByName('value_string').AsString
-      else if not FDM.qryParts.FieldByName('value_number').IsNull then
-        ValStr := FDM.qryParts.FieldByName('value_number').AsString
-      else if not FDM.qryParts.FieldByName('value_date').IsNull then
-        ValStr := FormatDateTime('dd.mm.yyyy', FDM.qryParts.FieldByName('value_date').AsDateTime)
-      else if not FDM.qryParts.FieldByName('value_bool').IsNull then
-        ValStr := IfThen(FDM.qryParts.FieldByName('value_bool').AsBoolean, 'Да', 'Нет')
+      AttrName := DBItems[i].AttrName;
+      
+      // Определяем тип атрибута (название типа не приходит из SelectParts, 
+      // но мы можем его восстановить по заполненному варианту, либо упростить,
+      // так как в оригинале он использовался только для форматирования даты)
+      if not VarIsNull(DBItems[i].ValDate) and not VarIsEmpty(DBItems[i].ValDate) then
+        AttrTypeStr := 'date'
+      else if not VarIsNull(DBItems[i].ValBool) and not VarIsEmpty(DBItems[i].ValBool) then
+        AttrTypeStr := 'boolean'
+      else if not VarIsNull(DBItems[i].ValNum) and not VarIsEmpty(DBItems[i].ValNum) then
+        AttrTypeStr := 'number'
       else
-        ValStr := '';
+        AttrTypeStr := 'string';
 
+      ValStr := FormatDBValueToStr(AttrTypeStr, DBItems[i].ValStr, DBItems[i].ValNum, DBItems[i].ValDate, DBItems[i].ValBool);
       CurrentRow.Values.AddOrSetValue(AttrName, ValStr);
-
-      FDM.qryParts.Next;
     end;
 
     // Преобразуем словарь в массив для возврата
@@ -237,8 +261,6 @@ begin
     // Очищаем словарь, но не сами объекты TPartRow, так как мы их вернули в массив
     PartDict.Free;
   end;
-
-  FDM.qryParts.Close;
 end;
 
 function TCatalogService.SaveAttribute(ACategoryID, AAttributeID: Integer;
@@ -246,35 +268,19 @@ function TCatalogService.SaveAttribute(ACategoryID, AAttributeID: Integer;
 var
   TypeStr: string;
 begin
-  case AType of
-    atString: TypeStr := 'string';
-    atNumber: TypeStr := 'number';
-    atDate: TypeStr := 'date';
-    atBoolean: TypeStr := 'boolean';
-  end;
+  TypeStr := MapTypeEnumToStr(AType);
 
-  FDM.BeginTransaction;
+  FRepo.BeginTransaction;
   try
     if AAttributeID = 0 then
-    begin
-      FDM.qryInsertAttribute.Close;
-      FDM.qryInsertAttribute.ParamByName('category_id').AsInteger := ACategoryID;
-      FDM.qryInsertAttribute.ParamByName('name').AsString := AName;
-      FDM.qryInsertAttribute.ParamByName('attr_type').AsString := TypeStr;
-      FDM.qryInsertAttribute.Open;
-    end
+      FRepo.InsertAttribute(ACategoryID, AName, TypeStr)
     else
-    begin
-      FDM.qryUpdateAttribute.Close;
-      FDM.qryUpdateAttribute.ParamByName('name').AsString := AName;
-      FDM.qryUpdateAttribute.ParamByName('attr_type').AsString := TypeStr;
-      FDM.qryUpdateAttribute.ParamByName('id').AsInteger := AAttributeID;
-      FDM.qryUpdateAttribute.ExecSQL;
-    end;
-    FDM.CommitTransaction;
+      FRepo.UpdateAttribute(AAttributeID, AName, TypeStr);
+      
+    FRepo.CommitTransaction;
     Result := True;
   except
-    FDM.RollbackTransaction;
+    FRepo.RollbackTransaction;
     raise;
   end;
 end;
@@ -282,35 +288,17 @@ end;
 function TCatalogService.SaveCategory(ACategoryID: Integer; const AName: string;
   AParentID: Integer): Boolean;
 begin
-  FDM.BeginTransaction;
+  FRepo.BeginTransaction;
   try
     if ACategoryID = 0 then
-    begin
-      // Создание новой
-      FDM.qryInsertCategory.Close;
-      FDM.qryInsertCategory.ParamByName('name').AsString := AName;
-      if AParentID = 0 then
-        FDM.qryInsertCategory.ParamByName('parent_id').Clear
-      else
-        FDM.qryInsertCategory.ParamByName('parent_id').AsInteger := AParentID;
-      FDM.qryInsertCategory.Open;
-    end
+      FRepo.InsertCategory(AName, AParentID)
     else
-    begin
-      // Обновление существующей
-      FDM.qryUpdateCategory.Close;
-      FDM.qryUpdateCategory.ParamByName('name').AsString := AName;
-      if AParentID = 0 then
-        FDM.qryUpdateCategory.ParamByName('parent_id').Clear
-      else
-        FDM.qryUpdateCategory.ParamByName('parent_id').AsInteger := AParentID;
-      FDM.qryUpdateCategory.ParamByName('id').AsInteger := ACategoryID;
-      FDM.qryUpdateCategory.ExecSQL;
-    end;
-    FDM.CommitTransaction;
+      FRepo.UpdateCategory(ACategoryID, AName, AParentID);
+      
+    FRepo.CommitTransaction;
     Result := True;
   except
-    FDM.RollbackTransaction;
+    FRepo.RollbackTransaction;
     raise; // Пробрасываем исключение дальше, чтобы UI мог его перехватить
   end;
 end;
@@ -322,78 +310,30 @@ var
   PartID: Integer;
   AttrID: Integer;
   ValStr: string;
-  ValInt: integer;
+  AttrTypeStr: string;
 begin
-  FDM.BeginTransaction;
+  FRepo.BeginTransaction;
   try
     // 1. Upsert детали
-    FDM.qryUpsertPart.Close;
-    FDM.qryUpsertPart.ParamByName('code').AsString := ACode;
-    FDM.qryUpsertPart.ParamByName('category_id').AsInteger := ACategoryID;
-    FDM.qryUpsertPart.Open;
-    PartID := FDM.qryUpsertPart.Fields[0].AsInteger;
-    FDM.qryUpsertPart.Close;
+    PartID := FRepo.UpsertPart(ACategoryID, APartID, ACode);
 
     // 2. Сохранение значений
     for i := 0 to High(AValues) do
     begin
       // Находим ID атрибута по имени
-      FDM.qryGetAttribute.Close;
-      FDM.qryGetAttribute.ParamByName('category_id').AsInteger := ACategoryID;
-      FDM.qryGetAttribute.ParamByName('name').AsString := AValues[i].Key;
-      FDM.qryGetAttribute.Open;
-
-      if FDM.qryGetAttribute.IsEmpty then
+      if not FRepo.FindAttribute(ACategoryID, AValues[i].Key, AttrID, AttrTypeStr) then
         raise Exception.CreateFmt('Атрибут "%s" не найден в категории', [AValues[i].Key]);
 
-      AttrID := FDM.qryGetAttribute.FieldByName('id').AsInteger;
       ValStr := AValues[i].Value;
 
-      FDM.qryUpsertValue.Close;
-      FDM.qryUpsertValue.ParamByName('part_id').AsInteger := PartID;
-      FDM.qryUpsertValue.ParamByName('attribute_id').AsInteger := AttrID;
-
-      var AttrType := FDM.qryGetAttribute.FieldByName('attr_type').AsString;
-      if SameText(AttrType, 'string') then
-      begin
-        FDM.qryUpsertValue.ParamByName('value_string').AsString := ValStr;
-        FDM.qryUpsertValue.ParamByName('value_number').Clear;
-        FDM.qryUpsertValue.ParamByName('value_date').Clear;
-        FDM.qryUpsertValue.ParamByName('value_bool').Clear;
-      end
-      else if SameText(AttrType, 'number') then
-      begin
-        FDM.qryUpsertValue.ParamByName('value_string').Clear;
-        if TryStrToInt(ValStr, ValInt) then
-          FDM.qryUpsertValue.ParamByName('value_number').AsInteger := ValInt
-        else
-          FDM.qryUpsertValue.ParamByName('value_number').AsInteger := 0;
-        FDM.qryUpsertValue.ParamByName('value_date').Clear;
-        FDM.qryUpsertValue.ParamByName('value_bool').Clear;
-      end
-      else if SameText(AttrType, 'date') then
-      begin
-        FDM.qryUpsertValue.ParamByName('value_string').Clear;
-        FDM.qryUpsertValue.ParamByName('value_number').Clear;
-        FDM.qryUpsertValue.ParamByName('value_date').AsDate := StrToDate(ValStr);
-        FDM.qryUpsertValue.ParamByName('value_bool').Clear;
-      end
-      else if SameText(AttrType, 'boolean') then
-      begin
-        FDM.qryUpsertValue.ParamByName('value_string').Clear;
-        FDM.qryUpsertValue.ParamByName('value_number').Clear;
-        FDM.qryUpsertValue.ParamByName('value_date').Clear;
-        FDM.qryUpsertValue.ParamByName('value_bool').AsBoolean := SameText(ValStr, 'true') or SameText(ValStr, 'Да');
-      end;
-
-      FDM.qryUpsertValue.ExecSQL;
-      FDM.qryGetAttribute.Close;
+      // Делегируем сохранение значения и его парсинг репозиторию
+      FRepo.UpsertValue(PartID, AttrID, AttrTypeStr, ValStr);
     end;
 
-    FDM.CommitTransaction;
+    FRepo.CommitTransaction;
     Result := True;
   except
-    FDM.RollbackTransaction;
+    FRepo.RollbackTransaction;
     raise;
   end;
 end;

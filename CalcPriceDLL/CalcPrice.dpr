@@ -12,7 +12,8 @@ uses
   uCalcPrice in 'uCalcPrice.pas' {frmCalcPrice},
   dmSkins in '..\CommonModules\dmSkins.pas' {dmSkin: TDataModule},
   intf_skin in '..\..\Common\intf_skin.pas',
-  uSkinHelper in '..\..\Common\uSkinHelper.pas';
+  uSkinHelper in '..\..\Common\uSkinHelper.pas',
+  uCalcPricesProc in 'uCalcPricesProc.pas';
 
 type
   TDLLCalcPrice = class(TInterfacedObject, IDLLIntf, IDllIntfRun, ICalcPrice, ISkinAware)

@@ -170,6 +170,7 @@
         </DCCReference>
         <DCCReference Include="..\..\Common\intf_skin.pas"/>
         <DCCReference Include="..\..\Common\uSkinHelper.pas"/>
+        <DCCReference Include="uCalcPricesProc.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

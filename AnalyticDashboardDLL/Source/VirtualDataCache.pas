@@ -41,8 +41,15 @@ type
     FLastError: string;
 
     procedure DoLoadPage(PageIndex: Integer);
-    procedure EnforceCacheLimit;
     procedure InternalClearPages;
+  protected
+    property Pages: TObjectDictionary<Integer, TObjectList<T>> read FPages;
+    property LoadingPages: TDictionary<Integer, Boolean> read FLoadingPages;
+    property PageAccessOrder: TList<Integer> read FPageAccessOrder;
+    property FailedPages: TDictionary<Integer, string> read FFailedPages;
+    property SQLParams: TDictionary<string, Variant> read FSQLParams;
+    property SQLTemplate: string read FSQLTemplate;
+    procedure EnforceCacheLimit;
   public
     constructor Create(const AConnDefName: string; APageSize: Integer;
       AMapFunc: TMapRecordFunc<T>);

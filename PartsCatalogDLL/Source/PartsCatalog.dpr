@@ -29,7 +29,8 @@ uses
   FireDAC.Moni.Custom.Logger in '..\..\..\Common\FireDAC.Moni.Custom.Logger.pas',
   FDMoniCustomLoggerHelper in '..\..\..\Common\FDMoniCustomLoggerHelper.pas',
   uDBConnectionSettings in '..\..\..\Common\uDBConnectionSettings.pas',
-  uMultiDBSettingsForm in '..\..\..\Common\uMultiDBSettingsForm.pas' {frmMultiDBSettings};
+  uMultiDBSettingsForm in '..\..\..\Common\uMultiDBSettingsForm.pas' {frmMultiDBSettings},
+  uDBCatalogRepository in 'uDBCatalogRepository.pas';
 
 {$R *.res}
 

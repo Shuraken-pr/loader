@@ -209,6 +209,7 @@
             <Form>frmMultiDBSettings</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="uDBCatalogRepository.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

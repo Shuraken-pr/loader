@@ -18,7 +18,7 @@ uses
   dxSkinsCore, dxLayoutLookAndFeels, dxSkinsdxRibbonPainter,        // ← для TdxRibbon + TdxBarManager
   dxLayoutPainters, uSkinHelper, dmSkins, dxSkinDevExpressDarkStyle,
   dxSkinDevExpressStyle, dxSkinOffice2007Blue, dxSkinOffice2010Silver,
-  dxSkinOffice2013LightGray, dxSkinVS2010,
+  dxSkinOffice2013LightGray, dxSkinVS2010, uDBCatalogRepository, uCatalogRepositoryIntf,
   intf_dll_manager, frxDevDSIntf, Data.DB, Datasnap.Provider, Datasnap.DBClient,
   dxRibbonGallery;
 
@@ -106,6 +106,7 @@ type
   private
     { Private declarations }
     FCallback: TProc<WideString>;
+    FRepo: ICatalogRepository;
     FCatalogService: TCatalogService;
     FCurrentAttributes: TArray<TAttributeDef>;
     FCurrentCategoryID: Integer;
@@ -139,13 +140,15 @@ implementation
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   dmDB.Connect;
-  FCatalogService := TCatalogService.Create(dmDB);
+  FRepo := TdmDBCatalogRepository.Create(dmDB);
+  FCatalogService := TCatalogService.Create(FRepo);
 end;
 
 procedure TfrmMain.FormDestroy(Sender: TObject);
 begin
   FPartDS.Free;
   FCategoryDS.Free;
+  FRepo := nil;
   FCatalogService.Free;
 end;
 

@@ -9,62 +9,65 @@ function CheckNum(ANum: double): boolean;
 
 implementation
 
-uses Math;
+uses Math, SysUtils;
 
 function CheckNum(ANum: double): boolean;
 begin
-  Result := int(ANum*100)/100 = ANum;
+  // РСЃРїРѕР»СЊР·СѓРµРј SameValue РґР»СЏ РєРѕСЂСЂРµРєС‚РЅРѕРіРѕ СЃСЂР°РІРЅРµРЅРёСЏ С‡РёСЃРµР» СЃ РїР»Р°РІР°СЋС‰РµР№ С‚РѕС‡РєРѕР№
+  // СЃ РґРѕРїСѓСЃРєРѕРј 1e-5, С‡С‚РѕР±С‹ РёР·Р±РµР¶Р°С‚СЊ РїСЂРѕР±Р»РµРј С‚РѕС‡РЅРѕСЃС‚Рё РїСЂРµРґСЃС‚Р°РІР»РµРЅРёСЏ double
+  Result := SameValue(ANum, Round(ANum * 100) / 100, 1e-5);
 end;
 
 procedure CalcPricesProc(InputPriceWithNDS: double; ProcNDS: Integer;
   out CorrectedPriceWithNDS, CorrectedPriceWithoutNDS: double);
 var
   koefficient: double;
-  UpPriceWithNDS, DownPriceWithNDS: double;
-  UpPriceWithoutNDS, DownPriceWithoutNDS: double;
+  BaseWithoutNDS: double;
+  i: Integer;
+  TestWithoutNDS, TestWithNDS: double;
+  BestWithoutNDS, BestWithNDS: double;
+  MinDiff: double;
+  Diff: double;
 begin
-  //для расчёта цены без НДС
-  koefficient := 1 + ProcNDS/100;
-  //изначальная цена с НДС
-  UpPriceWithNDS := InputPriceWithNDS;
-  DownPriceWithNDS := UpPriceWithNDS;
-  //изначальная цена без НДС
-  UpPriceWithoutNDS := UpPriceWithNDS/koefficient;
-  DownPriceWithoutNDS := UpPriceWithoutNDS;
-
   if IsZero(ProcNDS) then
   begin
-    CorrectedPriceWithNDS := UpPriceWithNDS;
-    CorrectedPriceWithoutNDS := UpPriceWithoutNDS;
-  end
-    else
-  begin
-    //цикл проверки цены без НДС, пока не получим нужный результат
-    while not CheckNum(UpPriceWithoutNDS) and not CheckNum(DownPriceWithoutNDS) do
-    begin
-      if DownPriceWithNDS > 0.01 then
-      begin
-        //уменьшаем цену с НДС на 0.01
-        DownPriceWithNDS := Round(DownPriceWithNDS*100 - 1)/100;
-        DownPriceWithoutNDS := DownPriceWithNDS/koefficient;
-      end;
-      //повышаем цену с НДС на 0.01
-      UpPriceWithNDS := Round(UpPriceWithNDS*100 + 1)/100;
-      UpPriceWithoutNDS := UpPriceWithNDS/koefficient;
-    end;
+    CorrectedPriceWithNDS := InputPriceWithNDS;
+    CorrectedPriceWithoutNDS := InputPriceWithNDS;
+    Exit;
+  end;
 
-    //проверяем, какая цена корректная: которую увеличивали или уменьшали.
-    if CheckNum(UpPriceWithoutNDS) then
+  koefficient := 1 + ProcNDS / 100.0;
+  BaseWithoutNDS := Round(InputPriceWithNDS / koefficient * 100) / 100;
+  
+  MinDiff := 1e9;
+  BestWithoutNDS := BaseWithoutNDS;
+  BestWithNDS := BaseWithoutNDS * koefficient;
+
+  // РС‰РµРј РІ РґРёР°РїР°Р·РѕРЅРµ +/- 10 РєРѕРїРµРµРє РѕС‚ Р±Р°Р·РѕРІРѕРіРѕ РјР°С‚РµРјР°С‚РёС‡РµСЃРєРѕРіРѕ Р·РЅР°С‡РµРЅРёСЏ
+  for i := -10 to 10 do
+  begin
+    TestWithoutNDS := BaseWithoutNDS + i * 0.01;
+    if TestWithoutNDS < 0 then Continue;
+    
+    // Р’С‹С‡РёСЃР»СЏРµРј С†РµРЅСѓ СЃ РќР”РЎ Рё РѕРєСЂСѓРіР»СЏРµРј РґРѕ 2 Р·РЅР°РєРѕРІ РїРѕ РїСЂР°РІРёР»Р°Рј РјР°С‚РµРјР°С‚РёРєРё
+    TestWithNDS := Round(TestWithoutNDS * koefficient * 100) / 100;
+    
+    // РџСЂРѕРІРµСЂСЏРµРј, С‡С‚Рѕ РѕР±Рµ С†РµРЅС‹ РєРѕСЂСЂРµРєС‚РЅС‹ (РёРјРµСЋС‚ РЅРµ Р±РѕР»РµРµ 2 Р·РЅР°РєРѕРІ РїРѕСЃР»Рµ Р·Р°РїСЏС‚РѕР№)
+    // Рё СЂР°Р·РЅРёС†Р° СЃ РёСЃС…РѕРґРЅРѕР№ С†РµРЅРѕР№ РјРёРЅРёРјР°Р»СЊРЅР°
+    if CheckNum(TestWithoutNDS) and CheckNum(TestWithNDS) then
     begin
-      CorrectedPriceWithNDS := UpPriceWithNDS;
-      CorrectedPriceWithoutNDS := UpPriceWithoutNDS;
-    end
-      else
-    begin
-      CorrectedPriceWithNDS := DownPriceWithNDS;
-      CorrectedPriceWithoutNDS := DownPriceWithoutNDS;
+      Diff := Abs(TestWithNDS - InputPriceWithNDS);
+      if Diff < MinDiff then
+      begin
+        MinDiff := Diff;
+        BestWithoutNDS := TestWithoutNDS;
+        BestWithNDS := TestWithNDS;
+      end;
     end;
   end;
+
+  CorrectedPriceWithoutNDS := BestWithoutNDS;
+  CorrectedPriceWithNDS := BestWithNDS;
 end;
 
 end.
